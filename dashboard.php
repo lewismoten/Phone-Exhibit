@@ -15,6 +15,7 @@ html_header('Dashboard');
     <li><a href="upload-audio.php">Upload audio</a></li>
     <li><a href="record-audio.php">Record audio</a></li>
     <li><a href="reserve-number.php">Reserve a Number</a></li>
+    <li><a href="my-numbers.php">My Numbers</a></li>
     <li><a href="legal.php">Legal Notice</a></li>
     <li><a href="change-password.php">Change password</a></li>
     <li><a href="logout.php">Logout</a></li>

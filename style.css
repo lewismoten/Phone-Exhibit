@@ -1,6 +1,6 @@
 body {
     font-family: system-ui, Arial, sans-serif;
-    max-width: 720px;
+    max-width: 850px;
     margin: 40px auto;
     padding: 0 16px;
     line-height: 1.5;
@@ -9,6 +9,16 @@ form {
     border: 1px solid #ddd;
     padding: 20px;
     border-radius: 12px;
+}
+form.inline-form {
+  display:inline;
+  border:none;
+  padding:0;
+  margin-left:8px;
+}
+form.inline-form button {
+    margin-top: 2px;
+    padding: 2px 3px;
 }
 label {
     display: block;
