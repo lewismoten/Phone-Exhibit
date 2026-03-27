@@ -20,4 +20,6 @@ html_header('Dashboard');
     <li><a href="change-password.php">Change password</a></li>
     <li><a href="logout.php">Logout</a></li>
 </ul>
+<?= get_site_content('dashboard_callout') ?>
+
 <?php html_footer(); ?>

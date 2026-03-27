@@ -446,3 +446,10 @@ function require_current_terms_acceptance(): void
         }
     }
 }
+
+function get_site_content(string $key): string
+{
+    $stmt = db()->prepare("SELECT html_content FROM site_content WHERE key_name = ?");
+    $stmt->execute([$key]);
+    return (string)($stmt->fetchColumn() ?? '');
+}

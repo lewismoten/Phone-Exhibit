@@ -910,3 +910,88 @@ ADD COLUMN soft_delete_reason VARCHAR(255) NULL AFTER soft_deleted_at;
 
 ALTER TABLE number_profiles
 ADD COLUMN archived_at DATETIME NULL AFTER soft_delete_reason;
+
+CREATE TABLE site_content (
+    key_name VARCHAR(100) PRIMARY KEY,
+    html_content MEDIUMTEXT NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+ALTER DATABASE regaldra_phone
+CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_unicode_ci;
+
+ALTER TABLE site_content
+CONVERT TO CHARACTER SET utf8mb4
+COLLATE utf8mb4_unicode_ci;
+
+INSERT INTO site_content (key_name, html_content)
+VALUES ('homepage_callout', '<section class="callout">
+    <h2>📞 A Dialable Audio Exhibit</h2>
+
+    <p>
+        An interactive audio exhibit is being developed for the Stone Branch Center for the Arts.
+        Visitors will pick up rotary and analog telephones and dial into a collection of recordings—
+        each one created by members of the community.
+    </p>
+
+    <p>
+        We''re inviting artists, musicians, writers, storytellers, historians, comedians, experimental creators,
+        and local businesses from Front Royal, Warren County, and across the Shenandoah Valley
+        to contribute.
+    </p>
+
+    <h3>What you can contribute</h3>
+
+    <ul>
+        <li>🎶 Music — full songs or short clips</li>
+        <li>📖 Poems, stories, or spoken word</li>
+        <li>🎙️ Oral histories and local memories</li>
+        <li>🎭 Comedy, characters, or playful performances</li>
+        <li>🔊 Sound experiments, ASMR, or abstract audio</li>
+        <li>🧩 Riddles, audio games, or interactive ideas</li>
+        <li>💭 Reflections on your creative work</li>
+        <li>👀 Anything unusual, unexpected, or uniquely yours</li>
+    </ul>
+
+    <h3>For local businesses</h3>
+
+    <ul>
+        <li>📣 Short audio advertisements (like a radio commercial)</li>
+        <li>📅 Announcements for events, specials, or seasonal offerings</li>
+        <li>🔄 The ability to update your message over time</li>
+    </ul>
+
+    <h3>How it works</h3>
+
+    <p>
+        Visitors will explore the exhibit by dialing phone numbers. Each number connects to a different
+        recording—turning the space into a living, interactive sound gallery.
+    </p>
+
+    <p>
+        All audio will be adapted to a vintage telephone sound (8 kHz, narrowband), so recordings
+        don''t need to be perfect—clarity and authenticity matter most.
+    </p>
+
+    <p>
+        This project is designed to grow over time, with new recordings, evolving content,
+        and unexpected discoveries with every call.
+    </p>
+
+    <p class="call-to-action">
+        <strong>Ready to participate?</strong><br>
+        Create an account to upload your audio, reserve a number, and become part of the exhibit.
+    </p>
+</section>');
+
+INSERT INTO site_content (key_name, html_content)
+VALUES ('dashboard_callout', '<p>
+    This platform powers a dialable audio exhibit at the Stone Branch Center for the Arts.
+    Visitors use analog phones to explore recordings created by artists, storytellers,
+    and local businesses.
+</p>
+
+<p>
+    Upload your audio, reserve a number, and become part of a living sound gallery.
+</p>');

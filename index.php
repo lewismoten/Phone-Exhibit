@@ -8,6 +8,8 @@ $user = current_user();
 <h1>Phone Exhibits</h1>
 <p>Authentication system for contributor accounts.</p>
 
+<?= get_site_content('homepage_callout') ?>
+
 <?php if ($user): ?>
     <p>You are signed in as <strong><?= e($user['username']) ?></strong>.</p>
     <p><a href="dashboard.php">Go to dashboard</a></p>
