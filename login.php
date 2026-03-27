@@ -24,8 +24,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute([password_hash_for_storage($password), $user['id']]);
             }
 
+            $terms = current_terms();
+            $stmt = db()->prepare('
+                UPDATE users
+                SET
+                    last_terms_seen_at = NOW(),
+                WHERE id = ?
+            ');
+            $stmt->execute([
+                $user['id'],
+            ]);
+
             login_user((int)$user['id']);
-            header('Location: dashboard.php');
+            if ($user['agreed_terms_version'] !== $terms['version']) {
+              header('Location: accept-terms.php');
+            } else {
+              header('Location: dashboard.php');
+            }
             exit;
         }
     }
@@ -34,6 +49,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 html_header('Login');
 ?>
 <h1>Login</h1>
+<?php
+require __DIR__ . '/legal-notice.php';
+?>
 <?php if ($error): ?><div class="error"><?= e($error) ?></div><?php endif; ?>
 <?php if ($msg = flash_get('success')): ?><div class="success"><?= e($msg) ?></div><?php endif; ?>
 <form method="post">

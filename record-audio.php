@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/functions.php';
 require_login();
+require_current_terms_acceptance();
 
 html_header('Record Audio');
 ?>

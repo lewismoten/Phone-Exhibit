@@ -12,9 +12,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim((string)($_POST['email'] ?? ''));
     $password = (string)($_POST['password'] ?? '');
     $confirm = (string)($_POST['confirm_password'] ?? '');
+    $agree = $_POST['agree'];
 
     if ($username === '' || $email === '' || $password === '') {
         $error = 'All fields are required.';
+    } elseif (empty($agree)) {
+      $error = 'You must agree to the notice to create an account.';
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = 'Please enter a valid email address.';
     } elseif (!preg_match('/^[A-Za-z0-9_\-.]{3,50}$/', $username)) {
@@ -25,12 +28,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = $msg;
     } elseif (find_user_by_username_or_email($username) || find_user_by_username_or_email($email)) {
         $error = 'That username or email is already in use.';
+        
     } else {
-        $stmt = db()->prepare('INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)');
+        $terms = current_terms();
+
+        $stmt = db()->prepare('
+            INSERT INTO users (
+                username,
+                email,
+                password_hash,
+                agreed_terms_version,
+                agreed_to_terms_at,
+                last_terms_seen_at
+            )
+            VALUES (?, ?, ?, ?, NOW(), NOW())
+        ');
+
         $stmt->execute([
             $username,
             $email,
             password_hash_for_storage($password),
+            $terms['version'],
         ]);
 
         login_user((int)db()->lastInsertId());
@@ -57,6 +75,14 @@ html_header('Create Account');
 
     <label for="confirm_password">Confirm password</label>
     <input id="confirm_password" name="confirm_password" type="password" required>
+
+    <?php require __DIR__ . '/legal-summary.php'; ?>
+    <?php require __DIR__ . '/legal-notice.php'; ?>
+
+    <label>
+    <input type="checkbox" name="agree" value="1" required>
+    I agree to the Audio Contribution & Exhibit Notice
+    </label>
 
     <button type="submit">Create account</button>
 </form>

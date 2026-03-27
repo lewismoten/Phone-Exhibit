@@ -56,7 +56,15 @@ function current_user(): ?array
     }
 
     $stmt = db()->prepare('
-        SELECT id, username, email, is_active, created_at
+        SELECT 
+          id,
+          username,
+          email,
+          is_active,
+          created_at,
+          agreed_terms_version,
+          agreed_to_terms_at,
+          last_terms_seen_at
         FROM users
         WHERE id = ?
         LIMIT 1
@@ -169,46 +177,8 @@ function html_header(string $title): void
     echo '<meta charset="utf-8">';
     echo '<meta name="viewport" content="width=device-width, initial-scale=1">';
     echo '<title>' . e($title) . '</title>';
-    echo '<style>
-        body {
-            font-family: system-ui, Arial, sans-serif;
-            max-width: 720px;
-            margin: 40px auto;
-            padding: 0 16px;
-            line-height: 1.5;
-        }
-        form {
-            border: 1px solid #ddd;
-            padding: 20px;
-            border-radius: 12px;
-        }
-        label {
-            display: block;
-            margin-top: 12px;
-            font-weight: 600;
-        }
-        input {
-            width: 100%;
-            padding: 10px;
-            margin-top: 6px;
-            box-sizing: border-box;
-        }
-        button {
-            margin-top: 16px;
-            padding: 10px 14px;
-        }
-        .error {
-            color: #a00;
-            margin: 10px 0;
-        }
-        .success {
-            color: #0a0;
-            margin: 10px 0;
-        }
-        nav a {
-            margin-right: 12px;
-        }
-    </style>';
+    echo '<script type="text/javascript" src="common.js"></script>';
+    echo '<link rel="stylesheet" type="text/css" href="style.css" />';
     echo '</head>';
     echo '<body>';
     echo '<nav>';
@@ -222,6 +192,7 @@ function html_header(string $title): void
         echo '<a href="login.php">Login</a>';
         echo '<a href="register.php">Register</a>';
     }
+    echo '<a href="legal.php">Legal Notice</a>';
 
     echo '</nav><hr>';
 }
@@ -439,4 +410,39 @@ function audio_playback_url(array $row): string
     }
 
     return rtrim(UPLOAD_BASE_URL, '/') . '/' . ltrim($row['relative_path'], '/');
+}
+function current_terms(): ?array
+{
+    $stmt = db()->query("
+        SELECT id, version, content, created_at
+        FROM terms_versions
+        WHERE is_active = 1
+        ORDER BY id DESC
+        LIMIT 1
+    ");
+
+    $row = $stmt->fetch();
+    return $row ?: null;
+}
+function require_current_terms_acceptance(): void
+{
+    $user = current_user();
+    $terms = current_terms();
+
+    if (!$user || !$terms) {
+        return;
+    }
+
+    $userVersion = trim((string)($user['agreed_terms_version'] ?? ''));
+    $currentVersion = trim((string)($terms['version'] ?? ''));
+
+    if ($userVersion !== $currentVersion) {
+        $current = basename((string)($_SERVER['PHP_SELF'] ?? 'dashboard.php'));
+
+        if ($current !== 'accept-terms.php' && $current !== 'logout.php') {
+            $redirect = $current !== '' ? $current : 'dashboard.php';
+            header('Location: accept-terms.php?redirect=' . urlencode($redirect));
+            exit;
+        }
+    }
 }

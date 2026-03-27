@@ -1,0 +1,38 @@
+body {
+    font-family: system-ui, Arial, sans-serif;
+    max-width: 720px;
+    margin: 40px auto;
+    padding: 0 16px;
+    line-height: 1.5;
+}
+form {
+    border: 1px solid #ddd;
+    padding: 20px;
+    border-radius: 12px;
+}
+label {
+    display: block;
+    margin-top: 12px;
+    font-weight: 600;
+}
+input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 6px;
+    box-sizing: border-box;
+}
+button {
+    margin-top: 16px;
+    padding: 10px 14px;
+}
+.error {
+    color: #a00;
+    margin: 10px 0;
+}
+.success {
+    color: #0a0;
+    margin: 10px 0;
+}
+nav a {
+    margin-right: 12px;
+}

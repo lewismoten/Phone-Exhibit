@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__ . '/functions.php';
 require_login();
+require_current_terms_acceptance();
 
 $user = current_user();
 $q = trim((string)($_GET['q'] ?? ''));
