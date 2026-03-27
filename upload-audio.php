@@ -7,6 +7,23 @@ $user = current_user();
 $error = '';
 $success = flash_get('success') ?? '';
 
+$isAjaxUpload = strtolower((string)($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '')) === 'xmlhttprequest';
+
+function ajax_error_response(string $message, int $statusCode = 400): void
+{
+    global $isAjaxUpload;
+
+    if ($isAjaxUpload) {
+        http_response_code($statusCode);
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => false,
+            'message' => $message,
+        ]);
+        exit;
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verify_csrf();
 
@@ -17,17 +34,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
             $error = 'Upload failed. Please try again.';
+            ajax_error_response($error, 415);
         } elseif (($file['size'] ?? 0) <= 0) {
             $error = 'The uploaded file is empty.';
+            ajax_error_response($error, 415);
         } elseif (($file['size'] ?? 0) > MAX_AUDIO_UPLOAD_BYTES) {
             $error = 'The uploaded file exceeds the size limit.';
+            ajax_error_response($error, 415);
         } else {
             $tmpPath = (string)$file['tmp_name'];
             $originalName = trim((string)$file['name']);
             $mimeType = detect_uploaded_mime_type($tmpPath);
             $allowed = allowed_audio_mime_types();
             if (!array_key_exists($mimeType, $allowed)) {
-                $error = 'Unsupported audio format.';
+                $error = "Unsupported audio format: $mimeType";
+                ajax_error_response($error, 415);
             } else {
                 $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
                 if ($ext === '') {
@@ -42,6 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if (!move_uploaded_file($tmpPath, $fullPath)) {
                     $error = 'Unable to store the uploaded file.';
+                    ajax_error_response($error, 415);
                 } else {
                     $originalMetadata = extract_audio_metadata($fullPath, $mimeType, $ext);
 

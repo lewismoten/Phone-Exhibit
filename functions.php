@@ -338,6 +338,8 @@ function allowed_audio_mime_types(): array
         'audio/aac' => 'aac',
         'audio/ogg' => 'ogg',
         'audio/webm' => 'webm',
+        'video/webm' => 'webm',
+        'application/ogg' => 'ogg',
     ];
 }
 
