@@ -25,16 +25,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             $terms = current_terms();
-            $stmt = db()->prepare('
-                UPDATE users
-                SET
-                    last_terms_seen_at = NOW(),
-                WHERE id = ?
-            ');
-            $stmt->execute([
-                $user['id'],
-            ]);
-
             login_user((int)$user['id']);
             if ($user['agreed_terms_version'] !== $terms['version']) {
               header('Location: accept-terms.php');
@@ -49,9 +39,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 html_header('Login');
 ?>
 <h1>Login</h1>
-<?php
-require __DIR__ . '/legal-notice.php';
-?>
 <?php if ($error): ?><div class="error"><?= e($error) ?></div><?php endif; ?>
 <?php if ($msg = flash_get('success')): ?><div class="success"><?= e($msg) ?></div><?php endif; ?>
 <form method="post">
