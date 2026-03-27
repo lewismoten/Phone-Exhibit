@@ -25,9 +25,16 @@ if (!$row) {
     exit;
 }
 
-$fullPath = rtrim(UPLOAD_BASE_DIR, '/') . DIRECTORY_SEPARATOR . $row['relative_path'];
+$fullPath = rtrim(UPLOAD_BASE_DIR, '/\\') . DIRECTORY_SEPARATOR . $row['relative_path'];
 if (is_file($fullPath)) {
     @unlink($fullPath);
+}
+
+if (!empty($row['converted_relative_path'])) {
+    $convertedFullPath = rtrim(UPLOAD_BASE_DIR, '/\\') . DIRECTORY_SEPARATOR . $row['converted_relative_path'];
+    if (is_file($convertedFullPath)) {
+        @unlink($convertedFullPath);
+    }
 }
 
 $stmt = db()->prepare('UPDATE audio_files SET is_deleted = 1 WHERE id = ? AND user_id = ?');

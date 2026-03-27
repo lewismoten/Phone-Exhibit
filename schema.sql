@@ -47,3 +47,18 @@ CREATE TABLE audio_files (
     INDEX idx_audio_files_created_at (created_at),
     INDEX idx_audio_files_original_filename (original_filename)
 ) ENGINE=InnoDB;
+
+ALTER TABLE audio_files
+    ADD COLUMN converted_filename VARCHAR(255) NULL AFTER stored_filename,
+    ADD COLUMN converted_relative_path VARCHAR(500) NULL AFTER relative_path,
+    ADD COLUMN converted_mime_type VARCHAR(100) NULL AFTER mime_type,
+    ADD COLUMN converted_file_ext VARCHAR(20) NULL AFTER file_ext,
+    ADD COLUMN converted_file_size_bytes BIGINT UNSIGNED NULL AFTER file_size_bytes,
+    ADD COLUMN converted_duration_seconds DECIMAL(10,3) NULL AFTER duration_seconds,
+    ADD COLUMN converted_audio_format VARCHAR(50) NULL AFTER audio_format,
+    ADD COLUMN converted_audio_type VARCHAR(100) NULL AFTER audio_type,
+    ADD COLUMN converted_channels TINYINT UNSIGNED NULL AFTER channels,
+    ADD COLUMN converted_channel_mode VARCHAR(20) NULL AFTER channel_mode,
+    ADD COLUMN converted_sample_rate_hz INT UNSIGNED NULL AFTER sample_rate_hz,
+    ADD COLUMN conversion_status VARCHAR(20) NOT NULL DEFAULT 'pending' AFTER updated_at,
+    ADD COLUMN conversion_error TEXT NULL AFTER conversion_status;

@@ -13,12 +13,20 @@ $where = 'WHERE user_id = ? AND is_deleted = 0';
 $params = [$user['id']];
 
 if ($q !== '') {
-    $where .= ' AND (original_filename LIKE ? OR audio_format LIKE ? OR audio_type LIKE ?)';
+    $where .= ' AND (
+        original_filename LIKE ?
+        OR audio_format LIKE ?
+        OR audio_type LIKE ?
+        OR converted_audio_format LIKE ?
+        OR converted_audio_type LIKE ?
+    )';
     $like = '%' . $q . '%';
     $params[] = $like;
     $params[] = $like;
     $params[] = $like;
-}
+    $params[] = $like;
+    $params[] = $like;
+  }
 
 $countStmt = db()->prepare("SELECT COUNT(*) FROM audio_files $where");
 $countStmt->execute($params);
@@ -61,17 +69,29 @@ html_header('My Audio Files');
     <?php foreach ($rows as $row): ?>
         <article style="border:1px solid #ddd;border-radius:12px;padding:16px;margin:16px 0;">
             <h2 style="margin-top:0;"><?= e($row['original_filename']) ?></h2>
+            <?php
+            $displaySize = $row['converted_file_size_bytes'] ?? $row['file_size_bytes'];
+            $displayDuration = $row['converted_duration_seconds'] ?? $row['duration_seconds'];
+            $displayFormat = $row['converted_audio_format'] ?: $row['audio_format'] ?: strtoupper((string)$row['file_ext']);
+            $displayAudioType = $row['converted_audio_type'] ?: $row['audio_type'];
+            $displayChannelMode = $row['converted_channel_mode'] ?: $row['channel_mode'] ?: 'Unknown';
+            $displaySampleRate = $row['converted_sample_rate_hz'] ?? $row['sample_rate_hz'];
+            ?>
             <p>
-                <strong>Size:</strong> <?= e(human_file_size((int)$row['file_size_bytes'])) ?><br>
-                <strong>Duration:</strong> <?= e(format_duration($row['duration_seconds'] !== null ? (float)$row['duration_seconds'] : null)) ?><br>
-                <strong>Format:</strong> <?= e((string)($row['audio_format'] ?: strtoupper((string)$row['file_ext']))) ?><br>
-                <strong>Audio type:</strong> <?= e((string)$row['audio_type']) ?><br>
-                <strong>Channels:</strong> <?= e((string)($row['channel_mode'] ?: 'Unknown')) ?><br>
-                <strong>Sample rate:</strong> <?= $row['sample_rate_hz'] ? e(number_format((int)$row['sample_rate_hz']) . ' Hz') : 'Unknown' ?>
+                <strong>Size:</strong> <?= e(human_file_size((int)$displaySize)) ?><br>
+                <strong>Duration:</strong> <?= e(format_duration($displayDuration !== null ? (float)$displayDuration : null)) ?><br>
+                <strong>Format:</strong> <?= e((string)$displayFormat) ?><br>
+                <strong>Audio type:</strong> <?= e((string)$displayAudioType) ?><br>
+                <strong>Channels:</strong> <?= e((string)$displayChannelMode) ?><br>
+                <strong>Sample rate:</strong> <?= $displaySampleRate ? e(number_format((int)$displaySampleRate) . ' Hz') : 'Unknown' ?><br>
+                <strong>Conversion:</strong> <?= e((string)$row['conversion_status']) ?>
             </p>
+            <?php if (!empty($row['conversion_error'])): ?>
+              <div class="error"><?= e((string)$row['conversion_error']) ?></div>
+            <?php endif; ?>
 
             <audio controls preload="none" style="width:100%;max-width:480px;">
-                <source src="<?= e(audio_public_url($row)) ?>" type="<?= e((string)$row['mime_type']) ?>">
+                <source src="<?= e(audio_playback_url($row)) ?>" type="<?= e((string)($row['converted_mime_type'] ?: $row['mime_type'])) ?>">
                 Your browser does not support audio playback.
             </audio>
 

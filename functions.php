@@ -377,7 +377,7 @@ function extract_audio_metadata(string $fullPath, string $mimeType, string $exte
         $info = $analyzer->analyze($fullPath);
 
         $metadata['duration_seconds'] = isset($info['playtime_seconds']) ? (float)$info['playtime_seconds'] : null;
-        $metadata['audio_format'] = (string)($info['fileformat'] ?? $extension ?: 'unknown');
+        $metadata['audio_format'] = (string)($info['fileformat'] ?? ($extension ?: 'unknown'));
         $metadata['audio_type'] = (string)($info['mime_type'] ?? $mimeType);
         $metadata['channels'] = isset($info['audio']['channels']) ? (int)$info['audio']['channels'] : null;
         $metadata['sample_rate_hz'] = isset($info['audio']['sample_rate']) ? (int)$info['audio']['sample_rate'] : null;
@@ -390,4 +390,51 @@ function extract_audio_metadata(string $fullPath, string $mimeType, string $exte
 function pagination_offset(int $page, int $perPage): int
 {
     return max(0, ($page - 1) * $perPage);
+}
+
+function ffmpeg_exists(): bool
+{
+    return is_file(FFMPEG_BIN) && is_executable(FFMPEG_BIN);
+}
+
+function converted_wav_filename(string $storedFilename): string
+{
+    $base = pathinfo($storedFilename, PATHINFO_FILENAME);
+    return $base . '.phone.wav';
+}
+
+function convert_audio_for_phone(string $inputPath, string $outputPath): array
+{
+    if (!ffmpeg_exists()) {
+        throw new RuntimeException('FFmpeg is not installed or not executable.');
+    }
+
+    $filter = 'highpass=f=300,lowpass=f=3000';
+
+    $cmd = sprintf(
+        '%s -y -i %s -ac 1 -ar 8000 -c:a pcm_s16le -af %s %s 2>&1',
+        escapeshellarg(FFMPEG_BIN),
+        escapeshellarg($inputPath),
+        escapeshellarg($filter),
+        escapeshellarg($outputPath)
+    );
+
+    $output = [];
+    $exitCode = 0;
+    exec($cmd, $output, $exitCode);
+
+    return [
+        'success' => $exitCode === 0 && is_file($outputPath),
+        'exit_code' => $exitCode,
+        'log' => implode("\n", $output),
+    ];
+}
+
+function audio_playback_url(array $row): string
+{
+    if (!empty($row['converted_relative_path'])) {
+        return rtrim(UPLOAD_BASE_URL, '/') . '/' . ltrim($row['converted_relative_path'], '/');
+    }
+
+    return rtrim(UPLOAD_BASE_URL, '/') . '/' . ltrim($row['relative_path'], '/');
 }

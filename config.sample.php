@@ -18,3 +18,6 @@ const UPLOAD_BASE_URL = '/uploads/audio';
 const ONE_KB = 1024;
 const ONE_MB = ONE_KB * 1024;
 const MAX_AUDIO_UPLOAD_BYTES = 100 * ONE_MB;
+
+const FFMPEG_BIN = '/bin/ffmpeg';
+const KEEP_ORIGINAL_AUDIO = true;
