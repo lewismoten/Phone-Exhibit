@@ -9,7 +9,9 @@ html_header('Dashboard');
 <h1>Dashboard</h1>
 <p>Welcome, <strong><?= e($user['username']) ?></strong>.</p>
 <p>This is where audio submission and management can go next.</p>
-<ul>
+  <ul>
+    <li><a href="upload-audio.php">Upload audio</a></li>
+    <li><a href="audio-files.php">My audio files</a></li>
     <li><a href="change-password.php">Change password</a></li>
     <li><a href="logout.php">Logout</a></li>
 </ul>

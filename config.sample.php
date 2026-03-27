@@ -12,3 +12,9 @@ const PASSWORD_RESET_EXPIRY_MINUTES = 60;
 
 const MAIL_FROM_ADDRESS = 'noreply@your-domain.example';
 const MAIL_FROM_NAME = 'Phone Exhibit';
+
+const UPLOAD_BASE_DIR = __DIR__ . '/uploads/audio';
+const UPLOAD_BASE_URL = '/uploads/audio';
+const ONE_KB = 1024;
+const ONE_MB = ONE_KB * 1024;
+const MAX_AUDIO_UPLOAD_BYTES = 100 * ONE_MB;

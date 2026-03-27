@@ -23,3 +23,27 @@ CREATE TABLE password_resets (
     INDEX idx_password_resets_token_hash (token_hash),
     INDEX idx_password_resets_expires_at (expires_at)
 ) ENGINE=InnoDB;
+
+CREATE TABLE audio_files (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED NOT NULL,
+    original_filename VARCHAR(255) NOT NULL,
+    stored_filename VARCHAR(255) NOT NULL,
+    relative_path VARCHAR(500) NOT NULL,
+    mime_type VARCHAR(100) NOT NULL,
+    file_ext VARCHAR(20) NOT NULL,
+    file_size_bytes BIGINT UNSIGNED NOT NULL,
+    duration_seconds DECIMAL(10,3) NULL,
+    audio_format VARCHAR(50) NULL,
+    audio_type VARCHAR(100) NULL,
+    channels TINYINT UNSIGNED NULL,
+    channel_mode VARCHAR(20) NULL,
+    sample_rate_hz INT UNSIGNED NULL,
+    is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_audio_files_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_audio_files_user_id (user_id),
+    INDEX idx_audio_files_created_at (created_at),
+    INDEX idx_audio_files_original_filename (original_filename)
+) ENGINE=InnoDB;

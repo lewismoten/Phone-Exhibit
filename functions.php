@@ -4,6 +4,7 @@ require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/PHPMailer/src/PHPMailer.php';
 require_once __DIR__ . '/PHPMailer/src/SMTP.php';
 require_once __DIR__ . '/PHPMailer/src/Exception.php';
+require_once __DIR__ . '/lib/getid3/getid3.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -258,4 +259,135 @@ function send_password_reset_email(string $email, string $resetUrl): void
     } catch (Exception $e) {
         error_log('Mailer error: ' . $mail->ErrorInfo);
     }
+}
+function ensure_directory(string $path): void
+{
+    if (!is_dir($path) && !mkdir($path, 0755, true) && !is_dir($path)) {
+        throw new RuntimeException('Unable to create upload directory.');
+    }
+}
+
+function audio_upload_dir_for_user(int $userId): string
+{
+    return rtrim(UPLOAD_BASE_DIR, '/') . DIRECTORY_SEPARATOR . $userId;
+}
+
+function human_file_size(int $bytes): string
+{
+    $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    $size = (float)$bytes;
+    $i = 0;
+
+    while ($size >= 1024 && $i < count($units) - 1) {
+        $size /= 1024;
+        $i++;
+    }
+
+    return number_format($size, $size < 10 && $i > 0 ? 1 : 0) . ' ' . $units[$i];
+}
+
+function format_duration(?float $seconds): string
+{
+    if ($seconds === null) {
+        return 'Unknown';
+    }
+
+    $total = (int)round($seconds);
+    $hours = intdiv($total, 3600);
+    $minutes = intdiv($total % 3600, 60);
+    $secs = $total % 60;
+
+    if ($hours > 0) {
+        return sprintf('%d:%02d:%02d', $hours, $minutes, $secs);
+    }
+
+    return sprintf('%d:%02d', $minutes, $secs);
+}
+
+function channel_mode_label(?int $channels): string
+{
+    if ($channels === null) {
+        return 'Unknown';
+    }
+
+    return match ($channels) {
+        1 => 'Mono',
+        2 => 'Stereo',
+        default => $channels . ' channels',
+    };
+}
+
+function safe_upload_filename(string $originalName): string
+{
+    $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+    $random = bin2hex(random_bytes(16));
+    return $random . ($ext !== '' ? '.' . $ext : '');
+}
+
+function allowed_audio_mime_types(): array
+{
+    return [
+        'audio/mpeg' => 'mp3',
+        'audio/mp3' => 'mp3',
+        'audio/wav' => 'wav',
+        'audio/x-wav' => 'wav',
+        'audio/wave' => 'wav',
+        'audio/flac' => 'flac',
+        'audio/x-flac' => 'flac',
+        'audio/mp4' => 'm4a',
+        'audio/aac' => 'aac',
+        'audio/ogg' => 'ogg',
+        'audio/webm' => 'webm',
+    ];
+}
+
+function detect_uploaded_mime_type(string $tmpFile): string
+{
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $mime = $finfo->file($tmpFile);
+    return is_string($mime) ? $mime : 'application/octet-stream';
+}
+
+function audio_public_url(array $row): string
+{
+    return rtrim(UPLOAD_BASE_URL, '/') . '/' . ltrim($row['user_id'] . '/' . $row['stored_filename'], '/');
+}
+
+function get_audio_file_for_user(int $id, int $userId): ?array
+{
+    $stmt = db()->prepare('SELECT * FROM audio_files WHERE id = ? AND user_id = ? AND is_deleted = 0 LIMIT 1');
+    $stmt->execute([$id, $userId]);
+    $row = $stmt->fetch();
+    return $row ?: null;
+}
+
+function extract_audio_metadata(string $fullPath, string $mimeType, string $extension): array
+{
+    $metadata = [
+        'duration_seconds' => null,
+        'audio_format' => strtoupper($extension),
+        'audio_type' => $mimeType,
+        'channels' => null,
+        'channel_mode' => null,
+        'sample_rate_hz' => null,
+    ];
+
+    if (class_exists('getID3')) {
+        $analyzer = new getID3();
+        $info = $analyzer->analyze($fullPath);
+
+        $metadata['duration_seconds'] = isset($info['playtime_seconds']) ? (float)$info['playtime_seconds'] : null;
+        $metadata['audio_format'] = (string)($info['fileformat'] ?? $extension ?: 'unknown');
+        $metadata['audio_type'] = (string)($info['mime_type'] ?? $mimeType);
+        $metadata['channels'] = isset($info['audio']['channels']) ? (int)$info['audio']['channels'] : null;
+        $metadata['sample_rate_hz'] = isset($info['audio']['sample_rate']) ? (int)$info['audio']['sample_rate'] : null;
+        $metadata['channel_mode'] = channel_mode_label($metadata['channels']);
+    }
+
+    return $metadata;
+}
+
+function pagination_offset(int $page, int $perPage): int
+{
+    return max(0, ($page - 1) * $perPage);
 }
