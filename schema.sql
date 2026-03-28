@@ -1007,3 +1007,18 @@ ALTER TABLE audio_files
 ALTER TABLE audio_files
     ADD INDEX idx_audio_files_conversion_status (conversion_status),
     ADD INDEX idx_audio_files_is_deleted_conversion_status (is_deleted, conversion_status);
+
+ALTER TABLE audio_files
+    ADD COLUMN transcription_status VARCHAR(20) DEFAULT 'pending',
+    ADD COLUMN transcription_text MEDIUMTEXT NULL,
+    ADD COLUMN transcription_error TEXT NULL;
+
+ALTER TABLE audio_files
+  ADD COLUMN transcription_attempts INT DEFAULT 0;
+
+ALTER TABLE audio_files
+  ADD COLUMN transcription_started_at DATETIME NULL,
+  ADD COLUMN transcription_completed_at DATETIME NULL;
+
+CREATE INDEX idx_audio_transcription_status ON audio_files (transcription_status);
+CREATE INDEX idx_audio_conv_trans ON audio_files (conversion_status, transcription_status, is_deleted);

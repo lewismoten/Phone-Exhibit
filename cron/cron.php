@@ -1,37 +1,38 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/../functions.php';
+
 if (PHP_SAPI !== 'cli') {
     http_response_code(403);
     exit("CLI only.\n");
 }
 
-echo "[" . date('Y-m-d H:i:s') . "] Master cron starting...\n";
+log_line("Master cron starting...");
 
 /**
  * Simple job runner
  */
 function run_job(string $name, callable $fn): void
 {
-    echo "---- Running: {$name}\n";
+    log_line("---- Running: {$name}");
 
     try {
         $fn();
-        echo "---- Completed: {$name}\n";
+        log_line("---- Completed: {$name}");
     } catch (Throwable $e) {
-        echo "---- Failed: {$name} | {$e->getMessage()}\n";
+        log_line("---- Failed: {$name} | {$e->getMessage()}");
     }
 }
 
-/**
- * Jobs
- */
 run_job('audio conversions', function () {
-    require __DIR__ . '/process-audio-conversions.php';
+    require_once __DIR__ . '/process-audio-conversions.php';
+    run_audio_conversion_worker();
 });
 
-// future jobs can go here:
-// run_job('cleanup', fn() => require __DIR__ . '/cleanup.php');
-// run_job('email queue', fn() => require __DIR__ . '/email-queue.php');
+run_job('transcriptions', function () {
+    require_once __DIR__ . '/process-transcriptions.php';
+    run_transcription_worker();
+});
 
-echo "Master cron done.\n";
+log_line("Master cron done.");

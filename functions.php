@@ -468,3 +468,52 @@ function upload_error_message(int $error): string
         default => 'Unknown upload error.',
     };
 }
+
+function transcribe_with_api(string $filePath): string
+{
+    if (!is_file($filePath)) {
+        throw new RuntimeException('Audio file not found for transcription.');
+    }
+
+    $ch = curl_init();
+
+    curl_setopt_array($ch, [
+        CURLOPT_URL => 'https://api.openai.com/v1/audio/transcriptions',
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST => true,
+        CURLOPT_HTTPHEADER => [
+            'Authorization: Bearer ' . OPENAI_API_KEY
+        ],
+        CURLOPT_POSTFIELDS => [
+            'file' => new CURLFile($filePath),
+            'model' => 'gpt-4o-mini-transcribe'
+        ],
+        CURLOPT_TIMEOUT => 300,
+    ]);
+
+    $response = curl_exec($ch);
+
+    if ($response === false) {
+        throw new RuntimeException('cURL error: ' . curl_error($ch));
+    }
+
+    $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($status !== 200) {
+        throw new RuntimeException("API HTTP {$status}: {$response}");
+    }
+
+    $data = json_decode($response, true);
+
+    if (!isset($data['text'])) {
+        throw new RuntimeException('Invalid API response.');
+    }
+
+    return $data['text'];
+}
+function log_line(string $message): void
+{
+    $timestamp = date('Y-m-d H:i:s');
+    echo "[{$timestamp}] {$message}\n";
+}

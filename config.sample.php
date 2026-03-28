@@ -21,3 +21,5 @@ const MAX_AUDIO_UPLOAD_BYTES = 100 * ONE_MB;
 
 const FFMPEG_BIN = '/bin/ffmpeg';
 const KEEP_ORIGINAL_AUDIO = true;
+
+const OPENAI_API_KEY = 'YOUR_API_KEY';
