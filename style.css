@@ -46,3 +46,55 @@ button {
 nav a {
     margin-right: 12px;
 }
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    background-color: #f3f4f6;
+    color: #374151;
+}
+.status-badge::before {
+    content: '•';
+}
+.status-complete,
+.status-completed {
+    background-color: #e8f7ec;
+    color: #1f7a3d;
+}
+.status-complete::before,
+.status-completed::before {
+    content: '✅';
+}
+.status-pending {
+    background-color: #fff7e6;
+    color: #9a6700;
+}
+.status-pending::before {
+    content: '⏳';
+}
+.status-processing {
+    background-color: #eef4ff;
+    color: #1d4ed8;
+}
+.status-processing::before {
+    content: '⚙️';
+}
+.status-failed {
+    background-color: #fdecec;
+    color: #b42318;
+}
+.status-failed::before {
+    content: '❌';
+}
+.status-draft {
+    background-color: #f3f4f6;
+    color: #374151;
+}
+.status-draft::before {
+    content: '📝';
+}

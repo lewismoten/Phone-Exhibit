@@ -517,3 +517,22 @@ function log_line(string $message): void
     $timestamp = date('Y-m-d H:i:s');
     echo "[{$timestamp}] {$message}\n";
 }
+function original_audio_playback_url(array $row): ?string
+{
+    $relativePath = trim((string)($row['relative_path'] ?? ''));
+    if ($relativePath === '') {
+        return null;
+    }
+
+    return rtrim(UPLOAD_BASE_URL, '/') . '/' . ltrim($relativePath, '/');
+}
+
+function converted_audio_playback_url(array $row): ?string
+{
+    $relativePath = trim((string)($row['converted_relative_path'] ?? ''));
+    if ($relativePath === '') {
+        return null;
+    }
+
+    return rtrim(UPLOAD_BASE_URL, '/') . '/' . ltrim($relativePath, '/');
+}
