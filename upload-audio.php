@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $file = $_FILES['audio_file'];
 
         if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
-            $error = 'Upload failed. Please try again.';
+            $error = 'Upload failed. Please try again. '.upload_error_message((int)$file['error']);
             ajax_error_response($error, 415);
         } elseif (($file['size'] ?? 0) <= 0) {
             $error = 'The uploaded file is empty.';

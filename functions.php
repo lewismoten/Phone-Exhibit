@@ -453,3 +453,18 @@ function get_site_content(string $key): string
     $stmt->execute([$key]);
     return (string)($stmt->fetchColumn() ?? '');
 }
+
+function upload_error_message(int $error): string
+{
+    return match ($error) {
+        UPLOAD_ERR_OK => 'No upload error.',
+        UPLOAD_ERR_INI_SIZE => 'The uploaded file exceeds the server\'s upload_max_filesize limit of '.ini_get('upload_max_filesize').'.',
+        UPLOAD_ERR_FORM_SIZE => 'The uploaded file exceeds the form MAX_FILE_SIZE limit.',
+        UPLOAD_ERR_PARTIAL => 'The file was only partially uploaded.',
+        UPLOAD_ERR_NO_FILE => 'No file was uploaded.',
+        UPLOAD_ERR_NO_TMP_DIR => 'Missing temporary upload folder on the server.',
+        UPLOAD_ERR_CANT_WRITE => 'The server failed to write the uploaded file to disk.',
+        UPLOAD_ERR_EXTENSION => 'A PHP extension stopped the file upload.',
+        default => 'Unknown upload error.',
+    };
+}
