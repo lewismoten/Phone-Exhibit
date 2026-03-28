@@ -23,3 +23,5 @@ const FFMPEG_BIN = '/bin/ffmpeg';
 const KEEP_ORIGINAL_AUDIO = true;
 
 const OPENAI_API_KEY = 'YOUR_API_KEY';
+const OPENAI_TRANSCRIPTION_MODEL = 'gpt-4o-mini-transcribe';
+const OPENAI_TRANSCRIPTION_COST_PER_MINUTE = 0.003;

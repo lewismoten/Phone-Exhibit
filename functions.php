@@ -486,7 +486,7 @@ function transcribe_with_api(string $filePath): string
         ],
         CURLOPT_POSTFIELDS => [
             'file' => new CURLFile($filePath),
-            'model' => 'gpt-4o-mini-transcribe'
+            'model' => OPENAI_TRANSCRIPTION_MODEL
         ],
         CURLOPT_TIMEOUT => 300,
     ]);

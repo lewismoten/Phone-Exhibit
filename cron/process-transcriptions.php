@@ -139,6 +139,8 @@ function run_transcription_worker(): void
 
     foreach ($rows as $row) {
         $id = (int)$row['id'];
+        $seconds = $row['duration_seconds'];
+        $cost = ($seconds / 60) * OPENAI_TRANSCRIPTION_COST_PER_MINUTE;
 
         try {
           // userid and stored file name
@@ -151,7 +153,7 @@ function run_transcription_worker(): void
 
             mark_audio_transcription_complete($id, $text);
 
-            log_line("Completed ID {$id}");
+            log_line("Transcribed {$seconds}s for ID {$id} (~\${$cost})");
         } catch (Throwable $e) {
             mark_audio_transcription_failed($id, $e->getMessage());
             log_line("Failed ID {$id}: {$e->getMessage()}");
