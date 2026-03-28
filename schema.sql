@@ -995,3 +995,15 @@ VALUES ('dashboard_callout', '<p>
 <p>
     Upload your audio, reserve a number, and become part of a living sound gallery.
 </p>');
+
+ALTER TABLE audio_files
+    MODIFY COLUMN conversion_status VARCHAR(20) NOT NULL DEFAULT 'pending';
+
+ALTER TABLE audio_files
+    ADD COLUMN conversion_started_at DATETIME NULL AFTER conversion_status,
+    ADD COLUMN conversion_completed_at DATETIME NULL AFTER conversion_started_at,
+    ADD COLUMN conversion_attempts INT UNSIGNED NOT NULL DEFAULT 0 AFTER conversion_completed_at;
+
+ALTER TABLE audio_files
+    ADD INDEX idx_audio_files_conversion_status (conversion_status),
+    ADD INDEX idx_audio_files_is_deleted_conversion_status (is_deleted, conversion_status);

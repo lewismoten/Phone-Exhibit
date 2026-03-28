@@ -68,46 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } else {
                     $originalMetadata = extract_audio_metadata($fullPath, $mimeType, $ext);
 
-                    $convertedFilename = converted_wav_filename($storedFilename);
-                    $convertedFullPath = $userDir . DIRECTORY_SEPARATOR . $convertedFilename;
-                    $convertedRelativePath = $user['id'] . '/' . $convertedFilename;
-
                     $conversionStatus = 'pending';
-                    $conversionError = null;
-
-                    $convertedMetadata = [
-                        'duration_seconds' => null,
-                        'audio_format' => null,
-                        'audio_type' => null,
-                        'channels' => null,
-                        'channel_mode' => null,
-                        'sample_rate_hz' => null,
-                    ];
-
-                    $convertedMimeType = null;
-                    $convertedExt = 'wav';
-                    $convertedSize = null;
-
-                    try {
-                        $conversion = convert_audio_for_phone($fullPath, $convertedFullPath);
-
-                        if ($conversion['success']) {
-                            $conversionStatus = 'complete';
-                            $convertedMimeType = 'audio/wav';
-                            $convertedSize = filesize($convertedFullPath);
-                            $convertedMetadata = extract_audio_metadata($convertedFullPath, $convertedMimeType, $convertedExt);
-
-                            if (!KEEP_ORIGINAL_AUDIO) {
-                                @unlink($fullPath);
-                            }
-                        } else {
-                            $conversionStatus = 'failed';
-                            $conversionError = $conversion['log'];
-                        }
-                    } catch (Throwable $e) {
-                        $conversionStatus = 'failed';
-                        $conversionError = $e->getMessage();
-                    }
 
                     $relativePath = $user['id'] . '/' . $storedFilename;
 
@@ -116,67 +77,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             user_id,
                             original_filename,
                             stored_filename,
-                            converted_filename,
                             relative_path,
-                            converted_relative_path,
                             mime_type,
-                            converted_mime_type,
                             file_ext,
-                            converted_file_ext,
                             file_size_bytes,
-                            converted_file_size_bytes,
                             duration_seconds,
-                            converted_duration_seconds,
                             audio_format,
-                            converted_audio_format,
                             audio_type,
-                            converted_audio_type,
                             channels,
-                            converted_channels,
                             channel_mode,
-                            converted_channel_mode,
                             sample_rate_hz,
-                            converted_sample_rate_hz,
-                            conversion_status,
-                            conversion_error
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                            conversion_status
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
                     );
 
                     $stmt->execute([
                         $user['id'],
                         $originalName,
                         $storedFilename,
-                        $conversionStatus === 'complete' ? $convertedFilename : null,
                         $relativePath,
-                        $conversionStatus === 'complete' ? $convertedRelativePath : null,
                         $mimeType,
-                        $convertedMimeType,
                         $ext,
-                        $conversionStatus === 'complete' ? $convertedExt : null,
                         filesize($fullPath),
-                        $convertedSize,
                         $originalMetadata['duration_seconds'],
-                        $convertedMetadata['duration_seconds'],
                         $originalMetadata['audio_format'],
-                        $convertedMetadata['audio_format'],
                         $originalMetadata['audio_type'],
-                        $convertedMetadata['audio_type'],
                         $originalMetadata['channels'],
-                        $convertedMetadata['channels'],
                         $originalMetadata['channel_mode'],
-                        $convertedMetadata['channel_mode'],
                         $originalMetadata['sample_rate_hz'],
-                        $convertedMetadata['sample_rate_hz'],
                         $conversionStatus,
-                        $conversionError,
                     ]);
 
-                    if ($conversionStatus === 'complete') {
-                        flash_set('success', 'Audio uploaded and converted successfully.');
-                    } else {
-                        flash_set('error', 'Audio uploaded, but conversion failed.');
-                    }
-
+                    flash_set('success', 'Audio uploaded successfully and queued for conversion.');
                     header('Location: audio-files.php');
                     exit;
                 }

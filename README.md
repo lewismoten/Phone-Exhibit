@@ -6,3 +6,16 @@ Converts audio files with a high pass filter 300-3000 Hz into 8kHz 16bit PCM mon
 * request/install ffmpeg on your server
 * getID3: https://github.com/JamesHeinrich/getID3 and put in /lib/getid3
 * get PHPMailer and put in /PHPMailer/src
+
+
+## Cron Jobs
+
+Master worker, calls all other cron jobs to process audio files.
+```
+* * * * * /usr/bin/php /home/USER/public_html/phone/cron/cron.php >> /home/USER/logs/cron-$(date +\%Y-\%m-\%d).log 2>&1
+```
+
+Delete old logs
+```
+0 3 * * * find /path/to/logs -name "cron-*.log" -mtime +90 -delete
+```
