@@ -2,3 +2,5 @@
 /error_log
 /PHPMailer
 /lib
+.DS_Store
+Archive.zip
