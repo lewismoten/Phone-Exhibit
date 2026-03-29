@@ -1,13 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/db.php';
-require_once __DIR__ . '/PHPMailer/src/PHPMailer.php';
-require_once __DIR__ . '/PHPMailer/src/SMTP.php';
-require_once __DIR__ . '/PHPMailer/src/Exception.php';
 require_once __DIR__ . '/lib/getid3/getid3.php';
-
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
 
 ini_set('session.use_strict_mode', '1');
 ini_set('session.use_only_cookies', '1');
@@ -199,38 +193,55 @@ function html_header(string $title): void
 
 function html_footer(): void
 {
-    echo '</body></html>';
+    echo '<hr>Footer</body></html>';
 }
 
 function send_password_reset_email(string $email, string $resetUrl): void
 {
-    $mail = new PHPMailer(true);
-
-    try {
-        $mail->isSendmail();
-
-        $mail->setFrom(MAIL_FROM_ADDRESS, MAIL_FROM_NAME);
-        $mail->addAddress($email);
-
-        $mail->Subject = APP_NAME.': Password Reset';
-        $mail->Body =
-            "A password reset was requested for your account.\n\n" .
+    $body = "A password reset was requested for your account.\n\n" .
             "Use this link to reset your password:\n" .
             $resetUrl . "\n\n" .
             "If you did not request this, you can ignore this email.";
 
-        $sent = $mail->send();
-
-        if ($sent) {
-            error_log('Email sent successfully to: ' . $email);
-        } else {
-            error_log('Email send failed: ' . $mail->ErrorInfo);
-        }
-
-    } catch (Exception $e) {
-        error_log('Mailer error: ' . $mail->ErrorInfo);
-    }
+    send_email($email, 'Password Reset', $body);
 }
+function send_email(string $email, string $subject, string $body): void {
+    
+    $url = 'https://api.mailgun.net/v3/'.MAILGUN_DOMAIN.'/messages';
+
+    $data = [
+        'from' => MAIL_FROM_NAME.' <'.MAILGUN_LOCAL_PART.'@'.MAILGUN_DOMAIN>',
+        'to' => $email,
+        'subject' => APP_NAME.': '.$subject,
+        'text' => $body
+    ];
+
+    $ch = curl_init();
+    curl_setopt_array($ch, [
+        CURLOPT_HTTPAUTH => CURLAUTH_BASIC,
+        CURLOPT_USERPWD => "api:" . MAILGUN_APIKEY,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_URL => $url,
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => $data,
+        CURLOPT_TIMEOUT => 10,
+    ]);
+
+    $result = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+    if (curl_errno($ch)) {
+        error_log('Email cURL error: '.curl_error($ch));
+    } else {
+        if ($httpCode >= 200 && $httpCode < 300) {
+            error_log('Email success: ' . $result);
+        } else {
+            error_log('Mailgun error (' . $httpCode . '): ' . $result);
+        }
+    }
+
+}
+
 function ensure_directory(string $path): void
 {
     if (!is_dir($path) && !mkdir($path, 0755, true) && !is_dir($path)) {

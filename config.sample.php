@@ -10,8 +10,13 @@ const APP_NAME = 'Phone Exhibit';
 const BASE_URL = 'https://your-domain.example';
 const PASSWORD_RESET_EXPIRY_MINUTES = 60;
 
-const MAIL_FROM_ADDRESS = 'noreply@your-domain.example';
 const MAIL_FROM_NAME = 'Phone Exhibit';
+// Sender appears as: MAILGUN_LOCAL_PART@MAILGUN_DOMAIN
+//const MAILGUN_LOCAL_PART = 'postmaster';
+//const MAILGUN_DOMAIN = 'sandbox00000000000000000000000000000000.mailgun.org';
+const MAILGUN_LOCAL_PART = 'noreply'; 
+const MAILGUN_DOMAIN = 'mg.your-domain.example';
+const MAILGUN_APIKEY = '00000000000000000000000000000000-00000000-00000000';
 
 const UPLOAD_BASE_DIR = __DIR__ . '/uploads/audio';
 const UPLOAD_BASE_URL = '/uploads/audio';
