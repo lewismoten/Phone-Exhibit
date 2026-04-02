@@ -35,4 +35,9 @@ run_job('transcriptions', function () {
     run_transcription_worker();
 });
 
+
+run_job('tty', function () {
+    require_once __DIR__ . '/process-tty.php';
+    run_tty_worker();
+});
 log_line("Master cron done.");

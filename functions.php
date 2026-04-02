@@ -210,7 +210,7 @@ function send_email(string $email, string $subject, string $body): void {
     $url = 'https://api.mailgun.net/v3/'.MAILGUN_DOMAIN.'/messages';
 
     $data = [
-        'from' => MAIL_FROM_NAME.' <'.MAILGUN_LOCAL_PART.'@'.MAILGUN_DOMAIN>',
+        'from' => MAIL_FROM_NAME.' <'.MAILGUN_LOCAL_PART.'@'.MAILGUN_DOMAIN.'>',
         'to' => $email,
         'subject' => APP_NAME.': '.$subject,
         'text' => $body
@@ -375,7 +375,39 @@ function pagination_offset(int $page, int $perPage): int
 {
     return max(0, ($page - 1) * $perPage);
 }
+function tty_audio_playback_url(array $row): ?string
+{
+    $storedFilename = trim((string)($row['stored_filename'] ?? ''));
+    $userId = (int)($row['user_id'] ?? 0);
 
+    if ($storedFilename === '' || $userId <= 0) {
+        return null;
+    }
+
+    $ttyFilename = tty_wav_filename($storedFilename);
+    $relativePath = $userId . '/' . $ttyFilename;
+
+    return upload_file_url($relativePath);
+}
+function upload_file_url(string $relativePath): string
+{
+    return '/uploads/audio/' . ltrim($relativePath, '/');
+}
+function get_minimodem_path(): ?string
+{
+    if (defined('MINIMODEM_BIN') && MINIMODEM_BIN) {
+        if (is_file(MINIMODEM_BIN) && is_executable(MINIMODEM_BIN)) {
+            return MINIMODEM_BIN;
+        }
+    }
+
+    $output = [];
+    $exitCode = 0;
+
+    exec('command -v minimodem 2>/dev/null', $output, $exitCode);
+
+    return ($exitCode === 0 && !empty($output[0])) ? trim($output[0]) : null;
+}
 function ffmpeg_exists(): bool
 {
     return is_file(FFMPEG_BIN) && is_executable(FFMPEG_BIN);
@@ -385,6 +417,11 @@ function converted_wav_filename(string $storedFilename): string
 {
     $base = pathinfo($storedFilename, PATHINFO_FILENAME);
     return $base . '.phone.wav';
+}
+function tty_wav_filename(string $storedFilename): string
+{
+    $base = pathinfo($storedFilename, PATHINFO_FILENAME);
+    return $base . '.tty.wav';
 }
 
 function convert_audio_for_phone(string $inputPath, string $outputPath): array
@@ -414,6 +451,80 @@ function convert_audio_for_phone(string $inputPath, string $outputPath): array
     ];
 }
 
+function tty_wrap(string $text, int $width = 32): string
+{
+    $lines = explode("\n", $text);
+    $wrapped = [];
+
+    foreach ($lines as $line) {
+        $wrapped[] = wordwrap($line, $width, "\n", true);
+    }
+
+    return implode("\n", $wrapped);
+}
+
+function convert_text_for_tty(string $text, string $outputPath, bool $raw = false): array
+{
+    $bin = get_minimodem_path();
+    if (!$bin) {
+        throw new RuntimeException('minimodem not found');
+    }
+
+    $text = preg_replace('/[^\x09\x0A\x0D\x20-\x7E]/', ' ', $text) ?? '';
+
+    if (!$raw) {
+        $text = trim(preg_replace('/[^A-Z0-9]+/', ' ', strtoupper($text)) ?? '');
+    }
+
+    $text = tty_wrap($text);
+    $text = str_replace(["\r\n", "\r"], "\n", $text);
+    $text .= "\n";
+
+    $tmpFile = tempnam(sys_get_temp_dir(), 'tty_txt_');
+    if ($tmpFile === false) {
+        throw new RuntimeException('Unable to create temporary text file.');
+    }
+
+    $outputDir = dirname($outputPath);
+    if (!is_dir($outputDir) && !mkdir($outputDir, 0775, true) && !is_dir($outputDir)) {
+        throw new RuntimeException('Unable to create output directory.');
+    }
+
+    try {
+        if (file_put_contents($tmpFile, $text) === false) {
+            throw new RuntimeException('Unable to write temporary text file.');
+        }
+
+        $cmd1 = sprintf(
+            '%s --tx 45.45 -R 8000 -f %s < %s 2>&1',
+            escapeshellarg($bin),
+            escapeshellarg($outputPath),
+            escapeshellarg($tmpFile)
+        );
+
+        $output1 = [];
+        $exitCode1 = 0;
+        exec($cmd1, $output1, $exitCode1);
+
+        $success = (
+            $exitCode1 === 0 &&
+            is_file($outputPath) &&
+            filesize($outputPath) > 0
+        );
+
+        return [
+            'success' => $success,
+            'exit_code' => $exitCode1,
+            'log' => implode("\n", $output1),
+            'command' => $cmd1,
+        ];
+
+    } finally {
+        if (is_file($tmpFile)) {
+            unlink($tmpFile);
+        }
+    }
+}
 function audio_playback_url(array $row): string
 {
     if (!empty($row['converted_relative_path'])) {

@@ -22,6 +22,10 @@
       This helps with search, moderation, and identifying whether content is appropriate for public or family-friendly environments.
     </li>
 
+    <li>📟 <strong>Your audio may be converted for TTY devices</strong><br>
+      Transcriptions may be used to generate TTY (teletypewriter) tones for assistive communication devices. This allows individuals with hearing disabilities to experience the exhibit and may produce printed versions of your audio.
+    </li>
+
     <li>⚠️ <strong>You must label explicit content</strong><br>
       If your audio contains explicit material, you are responsible for marking it. We may add warnings or restrict it.
     </li>

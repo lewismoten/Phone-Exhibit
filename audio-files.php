@@ -109,6 +109,13 @@ html_header('My Audio Files');
             $transcriptionText = trim((string)($row['transcription_text'] ?? ''));
             $transcriptionPreview = transcript_preview($transcriptionText);
             $transcriptionStatus = (string)($row['transcription_status'] ?? 'pending');
+
+            $ttyStatus = (string)($row['tty_status'] ?? 'pending');
+            $hasTty = !empty($row['tty_relative_path']) && $ttyStatus === 'complete';
+            $ttySize = !empty($row['tty_file_size_bytes']) ? human_file_size((int)$row['tty_file_size_bytes']) : null;
+            $ttyDuration = $row['tty_duration_seconds'] !== null ? format_duration((float)$row['tty_duration_seconds']) : null;
+            $ttyUrl = $hasTty ? tty_audio_playback_url($row) : null;
+
             ?>
             <article style="
                 border:1px solid #ddd;
@@ -198,6 +205,29 @@ html_header('My Audio Files');
                     </div>
                 </div>
 
+                <div style="border:1px solid #eee;border-radius:10px;padding:10px;background:#fafafa;">
+                  <div style="font-size:13px;font-weight:600;margin-bottom:6px;">📟 TTY Audio</div>
+                  <div>
+                    <?= status_badge($ttyStatus) ?>
+                    <span title="TTY Duration">⏱ <?= e($ttyDuration ?? '—') ?></span>
+                    <span title="TTY File Size">💾 <?= $ttySize ? e($ttySize) : '—' ?></span>
+                    <span title="TTY Format">🎚 WAV</span>
+                  </div>
+
+                  <?php if (!empty($ttyUrl)): ?>
+                      <audio controls preload="none" style="width:100%;">
+                          <source src="<?= e($ttyUrl) ?>" type="audio/wav">
+                          Your browser does not support audio playback.
+                      </audio>
+                  <?php elseif ($ttyStatus === 'failed'): ?>
+                      <div style="font-size:13px;color:#b42318;">TTY conversion failed.</div>
+                  <?php elseif ($ttyStatus === 'skipped'): ?>
+                      <div style="font-size:13px;color:#666;">TTY audio was skipped.</div>
+                  <?php else: ?>
+                      <div style="font-size:13px;color:#666;">TTY audio not available yet.</div>
+                  <?php endif; ?>
+              </div>
+
                 <?php if (!empty($row['conversion_error'])): ?>
                     <div style="margin-top:8px;font-size:13px;color:#b42318;">
                         <strong>Conversion error:</strong> <?= e((string)$row['conversion_error']) ?>
@@ -207,6 +237,12 @@ html_header('My Audio Files');
                 <?php if (!empty($row['transcription_error'])): ?>
                     <div style="margin-top:8px;font-size:13px;color:#b42318;">
                         <strong>Transcription error:</strong> <?= e((string)$row['transcription_error']) ?>
+                    </div>
+                <?php endif; ?>
+
+                <?php if (!empty($row['tty_error'])): ?>
+                    <div style="margin-top:8px;font-size:13px;color:#b42318;">
+                        <strong>TTY error:</strong> <?= e((string)$row['tty_error']) ?>
                     </div>
                 <?php endif; ?>
 
