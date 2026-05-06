@@ -156,12 +156,90 @@ function append_random_playback_extensions(
         }
     }
 }
+function download_wav_archive(): void
+{
+    $stmt = db()->query("
+        SELECT
+            id,
+            exhibit_phone_number,
+            tty_phone_number,
+            converted_relative_path,
+            tty_relative_path
+        FROM audio_files
+        WHERE is_deleted = 0
+          AND (
+              (exhibit_phone_number IS NOT NULL AND exhibit_phone_number <> '')
+              OR
+              (tty_phone_number IS NOT NULL AND tty_phone_number <> '')
+          )
+        ORDER BY id ASC
+    ");
+
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $zipPath = tempnam(sys_get_temp_dir(), 'phone_wavs_');
+    if ($zipPath === false) {
+        throw new RuntimeException('Unable to create temporary ZIP file.');
+    }
+
+    $zipFile = $zipPath . '.zip';
+    rename($zipPath, $zipFile);
+
+    $zip = new ZipArchive();
+
+    if ($zip->open($zipFile, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+        throw new RuntimeException('Unable to create ZIP archive.');
+    }
+
+    foreach ($rows as $row) {
+        $id = (int)$row['id'];
+
+        $phone = preg_replace('/[^0-9]/', '', (string)($row['exhibit_phone_number'] ?? ''));
+        if ($phone !== '' && !empty($row['converted_relative_path'])) {
+            $sourcePath = rtrim(UPLOAD_BASE_DIR, DIRECTORY_SEPARATOR)
+                . DIRECTORY_SEPARATOR
+                . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, (string)$row['converted_relative_path']);
+
+            if (is_file($sourcePath)) {
+                $zip->addFile($sourcePath, 'phone-exhibit/' . $phone . '-' . $id . '.wav');
+            }
+        }
+
+        $ttyPhone = preg_replace('/[^0-9]/', '', (string)($row['tty_phone_number'] ?? ''));
+        if ($ttyPhone !== '' && !empty($row['tty_relative_path'])) {
+            $sourcePath = rtrim(UPLOAD_BASE_DIR, DIRECTORY_SEPARATOR)
+                . DIRECTORY_SEPARATOR
+                . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, (string)$row['tty_relative_path']);
+
+            if (is_file($sourcePath)) {
+                $zip->addFile($sourcePath, 'phone-exhibit-tty/' . $ttyPhone . '-' . $id . '.wav');
+            }
+        }
+    }
+
+    $zip->close();
+
+    if (!is_file($zipFile) || filesize($zipFile) === 0) {
+        @unlink($zipFile);
+        throw new RuntimeException('ZIP archive was not created.');
+    }
+
+    header('Content-Type: application/zip');
+    header('Content-Disposition: attachment; filename="phone-exhibit-wavs-' . date('Ymd-His') . '.zip"');
+    header('Content-Length: ' . filesize($zipFile));
+
+    readfile($zipFile);
+    @unlink($zipFile);
+}
 
 if (isset($_GET['download_config'])) {
     download_phone_config();
     exit;
 }
-
+if (isset($_GET['download_wavs'])) {
+    download_wav_archive();
+    exit;
+}
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         verify_csrf();
@@ -280,7 +358,10 @@ html_header('Admin Audio Phone List');
 
 <h1>Admin Audio Phone List</h1>
 <p>
-    <a href="?download_config=1" class="button">Download phone config</a>
+  Download:
+    <a href="?download_config=1" class="button">Phone config</a>
+    |
+    <a href="?download_wavs=1" class="button">WAV archive</a>
 </p>
 
 <?php if ($success): ?>
