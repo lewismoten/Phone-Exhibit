@@ -1146,3 +1146,19 @@ By creating an account, logging in, submitting content, or continuing to use the
 
 ALTER TABLE number_profiles
     ADD COLUMN is_real_contact_number TINYINT(1) NOT NULL DEFAULT 0;
+
+ALTER TABLE audio_files
+ADD COLUMN exhibit_phone_number VARCHAR(20) NULL AFTER tty_status;
+
+CREATE INDEX idx_audio_files_exhibit_phone_number
+ON audio_files (exhibit_phone_number);
+
+ALTER TABLE audio_files
+ADD COLUMN short_name VARCHAR(120) NULL AFTER original_filename;
+
+ALTER TABLE users
+ADD COLUMN role VARCHAR(50) NOT NULL DEFAULT 'user' AFTER password_hash;
+
+UPDATE users
+SET role = 'admin'
+WHERE id = 1;

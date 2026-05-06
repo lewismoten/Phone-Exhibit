@@ -42,7 +42,6 @@ function verify_csrf(): void
         exit('Invalid CSRF token.');
     }
 }
-
 function current_user(): ?array
 {
     if (empty($_SESSION['user_id'])) {
@@ -496,7 +495,7 @@ function convert_text_for_tty(string $text, string $outputPath, bool $raw = fals
         }
 
         $cmd1 = sprintf(
-            '%s --tx 45.45 -R 8000 -f %s < %s 2>&1',
+            '%s --tx tdd -R 8000 -f %s < %s 2>&1',
             escapeshellarg($bin),
             escapeshellarg($outputPath),
             escapeshellarg($tmpFile)
@@ -657,4 +656,28 @@ function converted_audio_playback_url(array $row): ?string
     }
 
     return rtrim(UPLOAD_BASE_URL, '/') . '/' . ltrim($relativePath, '/');
+}
+
+function require_admin(): void
+{
+    if (empty($_SESSION['user_id'])) {
+        http_response_code(403);
+        exit('Login required.');
+    }
+
+    $stmt = db()->prepare("
+        SELECT role
+        FROM users
+        WHERE id = ?
+        LIMIT 1
+    ");
+
+    $stmt->execute([$_SESSION['user_id']]);
+
+    $role = (string)$stmt->fetchColumn();
+
+    if ($role !== 'admin') {
+        http_response_code(403);
+        exit('Administrator access required.');
+    }
 }
