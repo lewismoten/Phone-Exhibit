@@ -1185,3 +1185,14 @@ ADD COLUMN tty_phone_number VARCHAR(20) NULL AFTER exhibit_phone_number;
 
 CREATE INDEX idx_audio_files_tty_phone_number
 ON audio_files (tty_phone_number);
+
+INSERT INTO exhibit_settings (setting_key, setting_value) VALUES
+('live_recording_enabled', '1'),
+('live_recording_extension', '7100'),
+('live_director_pin', '654321'),
+('live_recording_pin_digits', '6'),
+('live_target_number_digits', '7'),
+('live_recording_min_silence_seconds', '3'),
+('live_recording_max_seconds', '300'),
+('live_recordings_dir', '/var/lib/asterisk/sounds/phone-exhibit-live')
+ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value);

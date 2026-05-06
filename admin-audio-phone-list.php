@@ -77,7 +77,7 @@ function download_phone_config(): void
 
     append_random_playback_extensions($lines, $regular, 'phone-exhibit');
     append_random_playback_extensions($lines, $tty, 'phone-exhibit-tty', 'TTY ');
-    append_admin($lines);
+    append_admin_last($lines);
 
     $content = implode("\n", $lines) . "\n";
 
@@ -87,10 +87,11 @@ function download_phone_config(): void
 
     echo $content;
 }
-function append_admin(array &$lines): void {
-
+function append_admin_last(array &$lines): void
+{
     $settings = get_exhibit_settings();
 
+    // Pending/review recording portal
     $recordingExtension = preg_replace('/[^0-9]/', '', $settings['recording_extension'] ?? '7000');
     $directorPin = preg_replace('/[^0-9]/', '', $settings['director_pin'] ?? '123456');
     $pinDigits = (int)($settings['recording_pin_digits'] ?? 6);
@@ -102,11 +103,11 @@ function append_admin(array &$lines): void {
 
     if ($enabled && $recordingExtension !== '' && $directorPin !== '') {
         $lines[] = '';
-        $lines[] = '; Recording portal';
+        $lines[] = '; Pending/review recording portal';
         $lines[] = 'exten => ' . $recordingExtension . ',1,Answer()';
-        $lines[] = ' same => n,Read(PIN,,'. $pinDigits .',,3,10)';
+        $lines[] = ' same => n,Read(PIN,,' . $pinDigits . ',,3,10)';
         $lines[] = ' same => n,GotoIf($["${PIN}" = "' . $directorPin . '"]?ok:badpin)';
-        $lines[] = ' same => n(ok),Read(TARGET,,'. $targetDigits .',,3,15)';
+        $lines[] = ' same => n(ok),Read(TARGET,,' . $targetDigits . ',,3,15)';
         $lines[] = ' same => n,GotoIf($["${REGEX("^[0-9]+$" ${TARGET})}" = "1"]?record:badnumber)';
         $lines[] = ' same => n(record),Set(TSTAMP=${STRFTIME(${EPOCH},,%Y%m%d-%H%M%S)})';
         $lines[] = ' same => n,Set(BASE=' . $pendingDir . '/${TARGET}-${TSTAMP}-${UNIQUEID})';
@@ -118,6 +119,52 @@ function append_admin(array &$lines): void {
         $lines[] = ' same => n(badpin),Playback(auth-incorrect)';
         $lines[] = ' same => n,Hangup()';
         $lines[] = ' same => n(badnumber),Playback(invalid)';
+        $lines[] = ' same => n,Hangup()';
+    }
+
+    // Live/immediate overwrite recording portal
+    $liveRecordingExtension = preg_replace('/[^0-9]/', '', $settings['live_recording_extension'] ?? '7100');
+    $liveDirectorPin = preg_replace('/[^0-9]/', '', $settings['live_director_pin'] ?? '654321');
+    $livePinDigits = (int)($settings['live_recording_pin_digits'] ?? 6);
+    $liveTargetDigits = (int)($settings['live_target_number_digits'] ?? 7);
+    $liveMinSilence = (int)($settings['live_recording_min_silence_seconds'] ?? 3);
+    $liveMaxSeconds = (int)($settings['live_recording_max_seconds'] ?? 300);
+    $liveDir = rtrim($settings['live_recordings_dir'] ?? '/var/lib/asterisk/sounds/phone-exhibit-live', '/');
+    $liveEnabled = ($settings['live_recording_enabled'] ?? '1') === '1';
+
+    if ($liveEnabled && $liveRecordingExtension !== '' && $liveDirectorPin !== '') {
+        $lines[] = '';
+        $lines[] = '; Live recording portal - immediately overwrites live number';
+        $lines[] = 'exten => ' . $liveRecordingExtension . ',1,Answer()';
+        $lines[] = ' same => n,Read(PIN,,' . $livePinDigits . ',,3,10)';
+        $lines[] = ' same => n,GotoIf($["${PIN}" = "' . $liveDirectorPin . '"]?ok:badpin)';
+        $lines[] = ' same => n(ok),Read(TARGET,,' . $liveTargetDigits . ',,3,15)';
+        $lines[] = ' same => n,GotoIf($["${REGEX("^[0-9]+$" ${TARGET})}" = "1"]?record:badnumber)';
+        $lines[] = ' same => n(record),Set(TMP=' . $liveDir . '/${TARGET}-tmp-${UNIQUEID})';
+        $lines[] = ' same => n,Set(FINAL=' . $liveDir . '/${TARGET})';
+        $lines[] = ' same => n,Playback(beep)';
+        $lines[] = ' same => n,Record(${TMP}.wav,' . $liveMinSilence . ',' . $liveMaxSeconds . ',k)';
+        $lines[] = ' same => n,System(/bin/mv "${TMP}.wav" "${FINAL}.wav")';
+        $lines[] = ' same => n,System(/bin/chown asterisk:asterisk "${FINAL}.wav")';
+        $lines[] = ' same => n,Playback(auth-thankyou)';
+        $lines[] = ' same => n,Hangup()';
+        $lines[] = ' same => n(badpin),Playback(auth-incorrect)';
+        $lines[] = ' same => n,Hangup()';
+        $lines[] = ' same => n(badnumber),Playback(invalid)';
+        $lines[] = ' same => n,Hangup()';
+    }
+
+    // Fallback live playback lookup
+    if ($liveEnabled) {
+        $lines[] = '';
+        $lines[] = '; Fallback live recording playback';
+        $lines[] = '; If no explicit extension matched above, look for phone-exhibit-live/${EXTEN}.wav';
+        $lines[] = 'exten => _X.,1,Answer()';
+        $lines[] = ' same => n,Set(FILE=' . $liveDir . '/${EXTEN}.wav)';
+        $lines[] = ' same => n,GotoIf($[${STAT(e,${FILE})}]?play:notfound)';
+        $lines[] = ' same => n(play),Playback(phone-exhibit-live/${EXTEN})';
+        $lines[] = ' same => n,Hangup()';
+        $lines[] = ' same => n(notfound),Playback(invalid)';
         $lines[] = ' same => n,Hangup()';
     }
 }
@@ -296,6 +343,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'recording_max_seconds',
             'recordings_pending_dir',
             'recording_enabled',
+
+            'live_recording_enabled',
+            'live_recording_extension',
+            'live_director_pin',
+            'live_recording_pin_digits',
+            'live_target_number_digits',
+            'live_recording_min_silence_seconds',
+            'live_recording_max_seconds',
+            'live_recordings_dir',
         ];
 
         foreach ($settingKeys as $key) {
@@ -319,6 +375,15 @@ $defaults = [
     'recording_min_silence_seconds' => '3',
     'recording_max_seconds' => '300',
     'recordings_pending_dir' => '/var/spool/asterisk/recordings/pending',
+
+    'live_recording_enabled' => '1',
+    'live_recording_extension' => '7100',
+    'live_director_pin' => '654321',
+    'live_recording_pin_digits' => '6',
+    'live_target_number_digits' => '7',
+    'live_recording_min_silence_seconds' => '3',
+    'live_recording_max_seconds' => '300',
+    'live_recordings_dir' => '/var/lib/asterisk/sounds/phone-exhibit-live',
 ];
 
 $settings = array_merge($defaults, $settings);
@@ -376,106 +441,205 @@ html_header('Admin Audio Phone List');
     <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
 
     <section style="border:1px solid #ddd;border-radius:12px;padding:14px;margin-bottom:18px;background:#fafafa;">
-    <h2 style="margin-top:0;">Recording Portal Settings</h2>
+        <h2 style="margin-top:0;">Recording Portal Settings</h2>
 
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;">
-            <label>
-                <strong>Recording Enabled</strong><br>
-                <select name="recording_enabled" style="width:100%;">
-                    <option value="1" <?= $settings['recording_enabled'] === '1' ? 'selected' : '' ?>>Enabled</option>
-                    <option value="0" <?= $settings['recording_enabled'] === '0' ? 'selected' : '' ?>>Disabled</option>
-                </select>
-            </label>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;">
+                <label>
+                    <strong>Recording Enabled</strong><br>
+                    <select name="recording_enabled" style="width:100%;">
+                        <option value="1" <?= $settings['recording_enabled'] === '1' ? 'selected' : '' ?>>Enabled</option>
+                        <option value="0" <?= $settings['recording_enabled'] === '0' ? 'selected' : '' ?>>Disabled</option>
+                    </select>
+                </label>
 
-            <label>
-                <strong>Recording Extension</strong><br>
-                <input
-                    type="text"
-                    name="recording_extension"
-                    value="<?= e($settings['recording_extension']) ?>"
-                    pattern="[0-9]+"
-                    style="width:100%;"
-                    placeholder="7000"
-                >
-            </label>
+                <label>
+                    <strong>Recording Extension</strong><br>
+                    <input
+                        type="text"
+                        name="recording_extension"
+                        value="<?= e($settings['recording_extension']) ?>"
+                        pattern="[0-9]+"
+                        style="width:100%;"
+                        placeholder="7000"
+                    >
+                </label>
 
-            <label>
-                <strong>Director PIN</strong><br>
-                <input
-                    type="password"
-                    name="director_pin"
-                    value="<?= e($settings['director_pin']) ?>"
-                    pattern="[0-9]+"
-                    style="width:100%;"
-                    autocomplete="new-password"
-                >
-            </label>
+                <label>
+                    <strong>Director PIN</strong><br>
+                    <input
+                        type="password"
+                        name="director_pin"
+                        value="<?= e($settings['director_pin']) ?>"
+                        pattern="[0-9]+"
+                        style="width:100%;"
+                        autocomplete="new-password"
+                    >
+                </label>
 
-            <label>
-                <strong>PIN Digits</strong><br>
-                <input
-                    type="number"
-                    name="recording_pin_digits"
-                    value="<?= e($settings['recording_pin_digits']) ?>"
-                    min="1"
-                    max="12"
-                    style="width:100%;"
-                >
-            </label>
+                <label>
+                    <strong>PIN Digits</strong><br>
+                    <input
+                        type="number"
+                        name="recording_pin_digits"
+                        value="<?= e($settings['recording_pin_digits']) ?>"
+                        min="1"
+                        max="12"
+                        style="width:100%;"
+                    >
+                </label>
 
-            <label>
-                <strong>Target Number Digits</strong><br>
-                <input
-                    type="number"
-                    name="target_number_digits"
-                    value="<?= e($settings['target_number_digits']) ?>"
-                    min="1"
-                    max="20"
-                    style="width:100%;"
-                >
-            </label>
+                <label>
+                    <strong>Target Number Digits</strong><br>
+                    <input
+                        type="number"
+                        name="target_number_digits"
+                        value="<?= e($settings['target_number_digits']) ?>"
+                        min="1"
+                        max="20"
+                        style="width:100%;"
+                    >
+                </label>
 
-            <label>
-                <strong>Silence Stop Seconds</strong><br>
-                <input
-                    type="number"
-                    name="recording_min_silence_seconds"
-                    value="<?= e($settings['recording_min_silence_seconds']) ?>"
-                    min="1"
-                    max="30"
-                    style="width:100%;"
-                >
-            </label>
+                <label>
+                    <strong>Silence Stop Seconds</strong><br>
+                    <input
+                        type="number"
+                        name="recording_min_silence_seconds"
+                        value="<?= e($settings['recording_min_silence_seconds']) ?>"
+                        min="1"
+                        max="30"
+                        style="width:100%;"
+                    >
+                </label>
 
-            <label>
-                <strong>Max Recording Seconds</strong><br>
-                <input
-                    type="number"
-                    name="recording_max_seconds"
-                    value="<?= e($settings['recording_max_seconds']) ?>"
-                    min="5"
-                    max="1800"
-                    style="width:100%;"
-                >
-            </label>
+                <label>
+                    <strong>Max Recording Seconds</strong><br>
+                    <input
+                        type="number"
+                        name="recording_max_seconds"
+                        value="<?= e($settings['recording_max_seconds']) ?>"
+                        min="5"
+                        max="1800"
+                        style="width:100%;"
+                    >
+                </label>
 
-            <label style="grid-column:1 / -1;">
-                <strong>Pending Recordings Directory</strong><br>
-                <input
-                    type="text"
-                    name="recordings_pending_dir"
-                    value="<?= e($settings['recordings_pending_dir']) ?>"
-                    style="width:100%;"
-                    placeholder="/var/spool/asterisk/recordings/pending"
-                >
-            </label>
-        </div>
+                <label style="grid-column:1 / -1;">
+                    <strong>Pending Recordings Directory</strong><br>
+                    <input
+                        type="text"
+                        name="recordings_pending_dir"
+                        value="<?= e($settings['recordings_pending_dir']) ?>"
+                        style="width:100%;"
+                        placeholder="/var/spool/asterisk/recordings/pending"
+                    >
+                </label>
+            </div>
 
-        <p style="margin-bottom:0;">
-            <button type="submit">Save recording settings</button>
-        </p>
-</section>
+            <p style="margin-bottom:0;">
+                <button type="submit">Save recording settings</button>
+            </p>
+    </section>
+    <section style="border:1px solid #ddd;border-radius:12px;padding:14px;margin-bottom:18px;background:#f8fcff;">
+        <h2 style="margin-top:0;">Live Recording Portal Settings</h2>
 
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;">
+                <label>
+                    <strong>Live Recording Enabled</strong><br>
+                    <select name="live_recording_enabled" style="width:100%;">
+                        <option value="1" <?= $settings['live_recording_enabled'] === '1' ? 'selected' : '' ?>>Enabled</option>
+                        <option value="0" <?= $settings['live_recording_enabled'] === '0' ? 'selected' : '' ?>>Disabled</option>
+                    </select>
+                </label>
+
+                <label>
+                    <strong>Live Recording Extension</strong><br>
+                    <input
+                        type="text"
+                        name="live_recording_extension"
+                        value="<?= e($settings['live_recording_extension']) ?>"
+                        pattern="[0-9]+"
+                        style="width:100%;"
+                        placeholder="7100"
+                    >
+                </label>
+
+                <label>
+                    <strong>Live Director PIN</strong><br>
+                    <input
+                        type="password"
+                        name="live_director_pin"
+                        value="<?= e($settings['live_director_pin']) ?>"
+                        pattern="[0-9]+"
+                        style="width:100%;"
+                        autocomplete="new-password"
+                    >
+                </label>
+
+                <label>
+                    <strong>Live PIN Digits</strong><br>
+                    <input
+                        type="number"
+                        name="live_recording_pin_digits"
+                        value="<?= e($settings['live_recording_pin_digits']) ?>"
+                        min="1"
+                        max="12"
+                        style="width:100%;"
+                    >
+                </label>
+
+                <label>
+                    <strong>Live Target Number Digits</strong><br>
+                    <input
+                        type="number"
+                        name="live_target_number_digits"
+                        value="<?= e($settings['live_target_number_digits']) ?>"
+                        min="1"
+                        max="20"
+                        style="width:100%;"
+                    >
+                </label>
+
+                <label>
+                    <strong>Live Silence Stop Seconds</strong><br>
+                    <input
+                        type="number"
+                        name="live_recording_min_silence_seconds"
+                        value="<?= e($settings['live_recording_min_silence_seconds']) ?>"
+                        min="1"
+                        max="30"
+                        style="width:100%;"
+                    >
+                </label>
+
+                <label>
+                    <strong>Live Max Recording Seconds</strong><br>
+                    <input
+                        type="number"
+                        name="live_recording_max_seconds"
+                        value="<?= e($settings['live_recording_max_seconds']) ?>"
+                        min="5"
+                        max="1800"
+                        style="width:100%;"
+                    >
+                </label>
+
+                <label style="grid-column:1 / -1;">
+                    <strong>Live Recordings Directory</strong><br>
+                    <input
+                        type="text"
+                        name="live_recordings_dir"
+                        value="<?= e($settings['live_recordings_dir']) ?>"
+                        style="width:100%;"
+                        placeholder="/var/lib/asterisk/sounds/phone-exhibit-live"
+                    >
+                </label>
+            </div>
+
+            <p style="margin-bottom:0;">
+                <button type="submit">Save live recording settings</button>
+            </p>
+    </section>
     <table style="width:100%;border-collapse:collapse;">
         <thead>
             <tr>
