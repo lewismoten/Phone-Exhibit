@@ -26,21 +26,26 @@ function save_exhibit_setting(string $key, string $value): void
     ");
     $stmt->execute([$key, $value]);
 }
-
 function download_phone_config(): void
 {
     $stmt = db()->query("
         SELECT
             id,
             exhibit_phone_number,
+            tty_phone_number,
             short_name
         FROM audio_files
         WHERE is_deleted = 0
-          AND exhibit_phone_number IS NOT NULL
-          AND exhibit_phone_number <> ''
+          AND (
+              (exhibit_phone_number IS NOT NULL AND exhibit_phone_number <> '')
+              OR
+              (tty_phone_number IS NOT NULL AND tty_phone_number <> '')
+          )
         ORDER BY
             CAST(exhibit_phone_number AS UNSIGNED) ASC,
             exhibit_phone_number ASC,
+            CAST(tty_phone_number AS UNSIGNED) ASC,
+            tty_phone_number ASC,
             short_name ASC,
             id ASC
     ");
@@ -53,44 +58,36 @@ function download_phone_config(): void
     $lines[] = '';
     $lines[] = '[phone-exhibit]';
 
-    $grouped = [];
+    $regular = [];
+    $tty = [];
 
     foreach ($rows as $row) {
-        $phone = preg_replace('/[^0-9]/', '', (string)$row['exhibit_phone_number']);
-        if ($phone === '') {
-            continue;
-        }
-        $grouped[$phone][] = $row;
-    }
+        $id = (int)$row['id'];
 
-    foreach ($grouped as $phone => $items) {
-        $count = count($items);
-
-        $lines[] = '';
-        $lines[] = '; Phone ' . $phone . ' has ' . $count . ' audio file(s)';
-        $lines[] = 'exten => ' . $phone . ',1,Answer()';
-
-        if ($count === 1) {
-            $id = (int)$items[0]['id'];
-            $wavName = $phone . '-' . $id;
-
-            $lines[] = ' same => n,Playback(phone-exhibit/' . $wavName . ')';
-            $lines[] = ' same => n,Hangup()';
-            continue;
+        $phone = preg_replace('/[^0-9]/', '', (string)($row['exhibit_phone_number'] ?? ''));
+        if ($phone !== '') {
+            $regular[$phone][] = $row;
         }
 
-        $lines[] = ' same => n,Set(PICK=${RAND(1,' . $count . ')})';
-        $lines[] = ' same => n,Goto(${PICK})';
-
-        foreach ($items as $index => $item) {
-            $choice = $index + 1;
-            $id = (int)$item['id'];
-            $wavName = $phone . '-' . $id;
-
-            $lines[] = ' same => n(' . $choice . '),Playback(phone-exhibit/' . $wavName . ')';
-            $lines[] = ' same => n,Hangup()';
+        $ttyPhone = preg_replace('/[^0-9]/', '', (string)($row['tty_phone_number'] ?? ''));
+        if ($ttyPhone !== '') {
+            $tty[$ttyPhone][] = $row;
         }
     }
+
+    append_random_playback_extensions($lines, $regular, 'phone-exhibit');
+    append_random_playback_extensions($lines, $tty, 'phone-exhibit-tty', 'TTY ');
+    append_admin($lines);
+
+    $content = implode("\n", $lines) . "\n";
+
+    header('Content-Type: text/plain; charset=utf-8');
+    header('Content-Disposition: attachment; filename="phone-exhibit.conf"');
+    header('Content-Length: ' . strlen($content));
+
+    echo $content;
+}
+function append_admin(array &$lines): void {
 
     $settings = get_exhibit_settings();
 
@@ -123,14 +120,41 @@ function download_phone_config(): void
         $lines[] = ' same => n(badnumber),Playback(invalid)';
         $lines[] = ' same => n,Hangup()';
     }
+}
+function append_random_playback_extensions(
+    array &$lines,
+    array $grouped,
+    string $soundDir,
+    string $commentPrefix = ''
+): void {
+    foreach ($grouped as $phone => $items) {
+        $count = count($items);
 
-    $content = implode("\n", $lines) . "\n";
+        $lines[] = '';
+        $lines[] = '; ' . $commentPrefix . 'Phone ' . $phone . ' has ' . $count . ' audio file(s)';
+        $lines[] = 'exten => ' . $phone . ',1,Answer()';
 
-    header('Content-Type: text/plain; charset=utf-8');
-    header('Content-Disposition: attachment; filename="phone-exhibit.conf"');
-    header('Content-Length: ' . strlen($content));
+        if ($count === 1) {
+            $id = (int)$items[0]['id'];
+            $wavName = $phone . '-' . $id;
 
-    echo $content;
+            $lines[] = ' same => n,Playback(' . $soundDir . '/' . $wavName . ')';
+            $lines[] = ' same => n,Hangup()';
+            continue;
+        }
+
+        $lines[] = ' same => n,Set(PICK=${RAND(1,' . $count . ')})';
+        $lines[] = ' same => n,Goto(${PICK})';
+
+        foreach ($items as $index => $item) {
+            $choice = $index + 1;
+            $id = (int)$item['id'];
+            $wavName = $phone . '-' . $id;
+
+            $lines[] = ' same => n(' . $choice . '),Playback(' . $soundDir . '/' . $wavName . ')';
+            $lines[] = ' same => n,Hangup()';
+        }
+    }
 }
 
 if (isset($_GET['download_config'])) {
@@ -143,6 +167,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         verify_csrf();
 
         $phoneNumbers = $_POST['phone_number'] ?? [];
+        $ttyPhoneNumbers = $_POST['tty_phone_number'] ?? [];
         $shortNames = $_POST['short_name'] ?? [];
 
         if (!is_array($phoneNumbers)) {
@@ -152,6 +177,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = db()->prepare("
             UPDATE audio_files
             SET exhibit_phone_number = ?,
+                tty_phone_number = ?,
                 short_name = ?,
                 updated_at = NOW()
             WHERE id = ?
@@ -161,10 +187,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         foreach ($phoneNumbers as $id => $phoneNumber) {
             $id = (int)$id;
             $phoneNumber = trim((string)$phoneNumber);
+            $ttyPhoneNumber = trim((string)($ttyPhoneNumbers[$id] ?? ''));
             $shortName = trim((string)($shortNames[$id] ?? ''));
 
-            if ($phoneNumber !== '' && !preg_match('/^[0-9*#\- ]{1,20}$/', $phoneNumber)) {
-                throw new RuntimeException("Invalid phone number for audio ID {$id}.");
+            foreach (['phone' => $phoneNumber, 'TTY phone' => $ttyPhoneNumber] as $label => $number) {
+                if ($number !== '' && !preg_match('/^[0-9*#\- ]{1,20}$/', $number)) {
+                    throw new RuntimeException("Invalid {$label} number for audio ID {$id}.");
+                }
             }
             if (mb_strlen($shortName) > 120) {
                 throw new RuntimeException("Short name too long for audio ID {$id}.");
@@ -172,6 +201,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $stmt->execute([
                 $phoneNumber !== '' ? $phoneNumber : null,
+                $ttyPhoneNumber !== '' ? $ttyPhoneNumber : null,
                 $shortName !== '' ? $shortName : null,
                 $id,
             ]);
@@ -227,6 +257,9 @@ $stmt = db()->query("
         af.transcription_text,
         af.conversion_status,
         af.created_at,
+        af.tty_phone_number,
+        af.tty_relative_path,
+        af.tty_status,
         u.username
     FROM audio_files af
     INNER JOIN users u
@@ -367,6 +400,7 @@ html_header('Admin Audio Phone List');
             <tr>
                 <th style="text-align:left;border-bottom:1px solid #ddd;padding:6px;">Name</th>
                 <th style="text-align:left;border-bottom:1px solid #ddd;padding:6px;">Phone #</th>
+                <th style="text-align:left;border-bottom:1px solid #ddd;padding:6px;">TTY #</th>
                 <th style="text-align:left;border-bottom:1px solid #ddd;padding:6px;">Preview</th>
                 <th style="text-align:left;border-bottom:1px solid #ddd;padding:6px;">Transcript</th>
             </tr>
@@ -419,7 +453,15 @@ html_header('Admin Audio Phone List');
                             style="width:100px;"
                         >
                     </td>
-
+                    <td style="border-bottom:1px solid #eee;padding:6px;vertical-align:middle;width:130px;">
+                        <input
+                            type="text"
+                            name="tty_phone_number[<?= $id ?>]"
+                            value="<?= e((string)($row['tty_phone_number'] ?? '')) ?>"
+                            placeholder="201"
+                            style="width:100px;"
+                        >
+                    </td>
                     <td style="border-bottom:1px solid #eee;padding:6px;vertical-align:middle;width:260px;">
                         <?php if ($audioUrl): ?>
                             <audio controls preload="none" style="width:240px;">

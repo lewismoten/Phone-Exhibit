@@ -1179,3 +1179,9 @@ INSERT INTO exhibit_settings (setting_key, setting_value) VALUES
 ('recording_max_seconds', '300'),
 ('recordings_pending_dir', '/var/spool/asterisk/recordings/pending'),
 ('recording_enabled', '1');
+
+ALTER TABLE audio_files
+ADD COLUMN tty_phone_number VARCHAR(20) NULL AFTER exhibit_phone_number;
+
+CREATE INDEX idx_audio_files_tty_phone_number
+ON audio_files (tty_phone_number);
