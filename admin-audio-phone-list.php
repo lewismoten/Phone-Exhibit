@@ -9,6 +9,135 @@ require_admin();
 $success = '';
 $error = '';
 
+function get_exhibit_settings(): array
+{
+    $stmt = db()->query("SELECT setting_key, setting_value FROM exhibit_settings");
+    return $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+}
+
+function save_exhibit_setting(string $key, string $value): void
+{
+    $stmt = db()->prepare("
+        INSERT INTO exhibit_settings (setting_key, setting_value)
+        VALUES (?, ?)
+        ON DUPLICATE KEY UPDATE
+            setting_value = VALUES(setting_value),
+            updated_at = NOW()
+    ");
+    $stmt->execute([$key, $value]);
+}
+
+function download_phone_config(): void
+{
+    $stmt = db()->query("
+        SELECT
+            id,
+            exhibit_phone_number,
+            short_name
+        FROM audio_files
+        WHERE is_deleted = 0
+          AND exhibit_phone_number IS NOT NULL
+          AND exhibit_phone_number <> ''
+        ORDER BY
+            CAST(exhibit_phone_number AS UNSIGNED) ASC,
+            exhibit_phone_number ASC,
+            short_name ASC,
+            id ASC
+    ");
+
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $lines = [];
+    $lines[] = '; Generated phone exhibit config';
+    $lines[] = '; Generated at ' . date('Y-m-d H:i:s');
+    $lines[] = '';
+    $lines[] = '[phone-exhibit]';
+
+    $grouped = [];
+
+    foreach ($rows as $row) {
+        $phone = preg_replace('/[^0-9]/', '', (string)$row['exhibit_phone_number']);
+        if ($phone === '') {
+            continue;
+        }
+        $grouped[$phone][] = $row;
+    }
+
+    foreach ($grouped as $phone => $items) {
+        $count = count($items);
+
+        $lines[] = '';
+        $lines[] = '; Phone ' . $phone . ' has ' . $count . ' audio file(s)';
+        $lines[] = 'exten => ' . $phone . ',1,Answer()';
+
+        if ($count === 1) {
+            $id = (int)$items[0]['id'];
+            $wavName = $phone . '-' . $id;
+
+            $lines[] = ' same => n,Playback(phone-exhibit/' . $wavName . ')';
+            $lines[] = ' same => n,Hangup()';
+            continue;
+        }
+
+        $lines[] = ' same => n,Set(PICK=${RAND(1,' . $count . ')})';
+        $lines[] = ' same => n,Goto(${PICK})';
+
+        foreach ($items as $index => $item) {
+            $choice = $index + 1;
+            $id = (int)$item['id'];
+            $wavName = $phone . '-' . $id;
+
+            $lines[] = ' same => n(' . $choice . '),Playback(phone-exhibit/' . $wavName . ')';
+            $lines[] = ' same => n,Hangup()';
+        }
+    }
+
+    $settings = get_exhibit_settings();
+
+    $recordingExtension = preg_replace('/[^0-9]/', '', $settings['recording_extension'] ?? '7000');
+    $directorPin = preg_replace('/[^0-9]/', '', $settings['director_pin'] ?? '123456');
+    $pinDigits = (int)($settings['recording_pin_digits'] ?? 6);
+    $targetDigits = (int)($settings['target_number_digits'] ?? 7);
+    $minSilence = (int)($settings['recording_min_silence_seconds'] ?? 3);
+    $maxSeconds = (int)($settings['recording_max_seconds'] ?? 300);
+    $pendingDir = rtrim($settings['recordings_pending_dir'] ?? '/var/spool/asterisk/recordings/pending', '/');
+    $enabled = ($settings['recording_enabled'] ?? '1') === '1';
+
+    if ($enabled && $recordingExtension !== '' && $directorPin !== '') {
+        $lines[] = '';
+        $lines[] = '; Recording portal';
+        $lines[] = 'exten => ' . $recordingExtension . ',1,Answer()';
+        $lines[] = ' same => n,Read(PIN,,'. $pinDigits .',,3,10)';
+        $lines[] = ' same => n,GotoIf($["${PIN}" = "' . $directorPin . '"]?ok:badpin)';
+        $lines[] = ' same => n(ok),Read(TARGET,,'. $targetDigits .',,3,15)';
+        $lines[] = ' same => n,GotoIf($["${REGEX("^[0-9]+$" ${TARGET})}" = "1"]?record:badnumber)';
+        $lines[] = ' same => n(record),Set(TSTAMP=${STRFTIME(${EPOCH},,%Y%m%d-%H%M%S)})';
+        $lines[] = ' same => n,Set(BASE=' . $pendingDir . '/${TARGET}-${TSTAMP}-${UNIQUEID})';
+        $lines[] = ' same => n,Playback(beep)';
+        $lines[] = ' same => n,Record(${BASE}.wav,' . $minSilence . ',' . $maxSeconds . ',k)';
+        $lines[] = ' same => n,System(/usr/local/bin/write-recording-meta.sh "${BASE}" "${TARGET}" "${CALLERID(num)}" "${TSTAMP}")';
+        $lines[] = ' same => n,Playback(auth-thankyou)';
+        $lines[] = ' same => n,Hangup()';
+        $lines[] = ' same => n(badpin),Playback(auth-incorrect)';
+        $lines[] = ' same => n,Hangup()';
+        $lines[] = ' same => n(badnumber),Playback(invalid)';
+        $lines[] = ' same => n,Hangup()';
+    }
+
+    $content = implode("\n", $lines) . "\n";
+
+    header('Content-Type: text/plain; charset=utf-8');
+    header('Content-Disposition: attachment; filename="phone-exhibit.conf"');
+    header('Content-Length: ' . strlen($content));
+
+    echo $content;
+}
+
+if (isset($_GET['download_config'])) {
+    download_phone_config();
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         verify_csrf();
@@ -49,10 +178,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         $success = 'Phone numbers saved.';
+
+        $settingKeys = [
+            'recording_extension',
+            'director_pin',
+            'recording_pin_digits',
+            'target_number_digits',
+            'recording_min_silence_seconds',
+            'recording_max_seconds',
+            'recordings_pending_dir',
+            'recording_enabled',
+        ];
+
+        foreach ($settingKeys as $key) {
+            if (array_key_exists($key, $_POST)) {
+                save_exhibit_setting($key, trim((string)$_POST[$key]));
+            }
+        }
     } catch (Throwable $e) {
         $error = $e->getMessage();
     }
 }
+
+$settings = get_exhibit_settings();
+
+$defaults = [
+    'recording_enabled' => '1',
+    'recording_extension' => '7000',
+    'director_pin' => '123456',
+    'recording_pin_digits' => '6',
+    'target_number_digits' => '7',
+    'recording_min_silence_seconds' => '3',
+    'recording_max_seconds' => '300',
+    'recordings_pending_dir' => '/var/spool/asterisk/recordings/pending',
+];
+
+$settings = array_merge($defaults, $settings);
 
 $stmt = db()->query("
     SELECT
@@ -85,6 +246,9 @@ html_header('Admin Audio Phone List');
 ?>
 
 <h1>Admin Audio Phone List</h1>
+<p>
+    <a href="?download_config=1" class="button">Download phone config</a>
+</p>
 
 <?php if ($success): ?>
     <div class="success"><?= e($success) ?></div>
@@ -96,6 +260,107 @@ html_header('Admin Audio Phone List');
 
 <form method="post">
     <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+
+    <section style="border:1px solid #ddd;border-radius:12px;padding:14px;margin-bottom:18px;background:#fafafa;">
+    <h2 style="margin-top:0;">Recording Portal Settings</h2>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;">
+            <label>
+                <strong>Recording Enabled</strong><br>
+                <select name="recording_enabled" style="width:100%;">
+                    <option value="1" <?= $settings['recording_enabled'] === '1' ? 'selected' : '' ?>>Enabled</option>
+                    <option value="0" <?= $settings['recording_enabled'] === '0' ? 'selected' : '' ?>>Disabled</option>
+                </select>
+            </label>
+
+            <label>
+                <strong>Recording Extension</strong><br>
+                <input
+                    type="text"
+                    name="recording_extension"
+                    value="<?= e($settings['recording_extension']) ?>"
+                    pattern="[0-9]+"
+                    style="width:100%;"
+                    placeholder="7000"
+                >
+            </label>
+
+            <label>
+                <strong>Director PIN</strong><br>
+                <input
+                    type="password"
+                    name="director_pin"
+                    value="<?= e($settings['director_pin']) ?>"
+                    pattern="[0-9]+"
+                    style="width:100%;"
+                    autocomplete="new-password"
+                >
+            </label>
+
+            <label>
+                <strong>PIN Digits</strong><br>
+                <input
+                    type="number"
+                    name="recording_pin_digits"
+                    value="<?= e($settings['recording_pin_digits']) ?>"
+                    min="1"
+                    max="12"
+                    style="width:100%;"
+                >
+            </label>
+
+            <label>
+                <strong>Target Number Digits</strong><br>
+                <input
+                    type="number"
+                    name="target_number_digits"
+                    value="<?= e($settings['target_number_digits']) ?>"
+                    min="1"
+                    max="20"
+                    style="width:100%;"
+                >
+            </label>
+
+            <label>
+                <strong>Silence Stop Seconds</strong><br>
+                <input
+                    type="number"
+                    name="recording_min_silence_seconds"
+                    value="<?= e($settings['recording_min_silence_seconds']) ?>"
+                    min="1"
+                    max="30"
+                    style="width:100%;"
+                >
+            </label>
+
+            <label>
+                <strong>Max Recording Seconds</strong><br>
+                <input
+                    type="number"
+                    name="recording_max_seconds"
+                    value="<?= e($settings['recording_max_seconds']) ?>"
+                    min="5"
+                    max="1800"
+                    style="width:100%;"
+                >
+            </label>
+
+            <label style="grid-column:1 / -1;">
+                <strong>Pending Recordings Directory</strong><br>
+                <input
+                    type="text"
+                    name="recordings_pending_dir"
+                    value="<?= e($settings['recordings_pending_dir']) ?>"
+                    style="width:100%;"
+                    placeholder="/var/spool/asterisk/recordings/pending"
+                >
+            </label>
+        </div>
+
+        <p style="margin-bottom:0;">
+            <button type="submit">Save recording settings</button>
+        </p>
+</section>
 
     <table style="width:100%;border-collapse:collapse;">
         <thead>

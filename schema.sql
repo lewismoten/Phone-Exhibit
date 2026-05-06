@@ -1162,3 +1162,20 @@ ADD COLUMN role VARCHAR(50) NOT NULL DEFAULT 'user' AFTER password_hash;
 UPDATE users
 SET role = 'admin'
 WHERE id = 1;
+
+CREATE TABLE exhibit_settings (
+    setting_key VARCHAR(100) PRIMARY KEY,
+    setting_value TEXT NULL,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP
+);
+
+INSERT INTO exhibit_settings (setting_key, setting_value) VALUES
+('recording_extension', '7000'),
+('director_pin', '123456'),
+('recording_pin_digits', '6'),
+('target_number_digits', '7'),
+('recording_min_silence_seconds', '3'),
+('recording_max_seconds', '300'),
+('recordings_pending_dir', '/var/spool/asterisk/recordings/pending'),
+('recording_enabled', '1');
