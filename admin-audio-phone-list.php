@@ -14,6 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         verify_csrf();
 
         $phoneNumbers = $_POST['phone_number'] ?? [];
+        $shortNames = $_POST['short_name'] ?? [];
 
         if (!is_array($phoneNumbers)) {
             throw new RuntimeException('Invalid phone number data.');
@@ -22,6 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = db()->prepare("
             UPDATE audio_files
             SET exhibit_phone_number = ?,
+                short_name = ?,
                 updated_at = NOW()
             WHERE id = ?
               AND is_deleted = 0
@@ -30,13 +32,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         foreach ($phoneNumbers as $id => $phoneNumber) {
             $id = (int)$id;
             $phoneNumber = trim((string)$phoneNumber);
+            $shortName = trim((string)($shortNames[$id] ?? ''));
 
             if ($phoneNumber !== '' && !preg_match('/^[0-9*#\- ]{1,20}$/', $phoneNumber)) {
                 throw new RuntimeException("Invalid phone number for audio ID {$id}.");
             }
+            if (mb_strlen($shortName) > 120) {
+                throw new RuntimeException("Short name too long for audio ID {$id}.");
+            }
 
             $stmt->execute([
                 $phoneNumber !== '' ? $phoneNumber : null,
+                $shortName !== '' ? $shortName : null,
                 $id,
             ]);
         }
@@ -65,9 +72,11 @@ $stmt = db()->query("
         ON u.id = af.user_id
     WHERE af.is_deleted = 0
     ORDER BY
-        af.exhibit_phone_number IS NULL,
-        af.exhibit_phone_number ASC,
-        af.created_at DESC
+      af.exhibit_phone_number IS NULL,
+      CAST(af.exhibit_phone_number AS UNSIGNED) ASC,
+      af.exhibit_phone_number ASC,
+      af.short_name ASC,
+      af.original_filename ASC
 ");
 
 $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -123,11 +132,17 @@ html_header('Admin Audio Phone List');
 
                 <tr>
                     <td style="border-bottom:1px solid #eee;padding:6px;vertical-align:middle;">
-                        <strong><?= e($name) ?></strong><br>
-                        <small>
-                            @<?= e((string)$row['username']) ?>
-                            · ID <?= $id ?>
-                        </small>
+                        <input
+                            type="text"
+                            name="short_name[<?= $id ?>]"
+                            value="<?= e((string)($row['short_name'] ?: $row['original_filename'])) ?>"
+                            maxlength="120"
+                            style="width:100%;max-width:260px;"
+                        >
+
+                        <div style="font-size:12px;color:#666;margin-top:3px;">
+                            @<?= e((string)$row['username']) ?> · Audio ID <?= $id ?>
+                        </div>
                     </td>
 
                     <td style="border-bottom:1px solid #eee;padding:6px;vertical-align:middle;width:130px;">
