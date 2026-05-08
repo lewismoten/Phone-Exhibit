@@ -53,7 +53,7 @@ function download_phone_config(): void
     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     $lines = [];
-    $lines[] = '; Generated phone exhibit config';
+    $lines[] = '; Generated File: /etc/asterisk/phone-exhibit.conf';
     $lines[] = '; Generated at ' . date('Y-m-d H:i:s');
     $lines[] = '';
     $lines[] = '[phone-exhibit]';
@@ -91,6 +91,14 @@ function append_admin_last(array &$lines): void
 {
     $settings = get_exhibit_settings();
 
+    $lines[] = '';
+    $lines[] = '; Voicemail for additions';
+    $lines[] = 'exten => 1111,1,Answer()';
+    $lines[] = ' same => n,Playback(custom/restoring-the-signal-intro)';
+    $lines[] = ' same => n,VoiceMail(1111@default,u)';
+    $lines[] = ' same => n,Playback(vm-goodbye)';
+    $lines[] = ' same => n,Hangup()';
+/*
     // Pending/review recording portal
     $recordingExtension = preg_replace('/[^0-9]/', '', $settings['recording_extension'] ?? '7000');
     $directorPin = preg_replace('/[^0-9]/', '', $settings['director_pin'] ?? '123456');
@@ -167,6 +175,7 @@ function append_admin_last(array &$lines): void
         $lines[] = ' same => n(notfound),Playback(invalid)';
         $lines[] = ' same => n,Hangup()';
     }
+        */
 }
 function append_random_playback_extensions(
     array &$lines,
