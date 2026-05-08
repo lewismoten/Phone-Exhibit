@@ -94,7 +94,7 @@ function append_admin_last(array &$lines): void
     $lines[] = '';
     $lines[] = '; Voicemail for voice additions';
     $lines[] = 'exten => 1111,1,Answer()';
-    $lines[] = ' same => n,Playback(custom/restoring-the-signal-intro)';
+    $lines[] = ' same => n,Playback(custom/vm-voice-restoring-the-signal-voice-intro)';
     $lines[] = ' same => n,VoiceMail(1111@default,u)';
     $lines[] = ' same => n,Playback(vm-goodbye)';
     $lines[] = ' same => n,Hangup()';
@@ -102,9 +102,9 @@ function append_admin_last(array &$lines): void
     $lines[] = '';
     $lines[] = '; Voicemail for TTY additions';
     $lines[] = 'exten => 2222,1,Answer()';
-    $lines[] = ' same => n,Playback(custom/restoring-the-signal-tty-vm-intro)';
+    $lines[] = ' same => n,Playback(custom/vm-restoring-the-signal-tty-intro)';
     $lines[] = ' same => n,VoiceMail(2222@default,u)';
-    $lines[] = ' same => n,Playback(vm-goodbye)';
+    $lines[] = ' same => n,Playback(custom/vm-restoring-the-signal-tty-outro)';
     $lines[] = ' same => n,Hangup()';
     /*
     // Pending/review recording portal
