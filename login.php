@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             $terms = current_terms();
-            login_user((int)$user['id']);
+            login_user((int)$user['id'], (string)$user['role']);
             if ($user['agreed_terms_version'] !== $terms['version']) {
               header('Location: accept-terms.php');
             } else {

@@ -84,10 +84,11 @@ function require_login(): void
     }
 }
 
-function login_user(int $userId): void
+function login_user(int $userId, string $role): void
 {
     session_regenerate_id(true);
     $_SESSION['user_id'] = $userId;
+    $_SESSION['role'] = $role;
 }
 
 function logout_user(): void
@@ -179,12 +180,16 @@ function html_header(string $title): void
 
     if (current_user()) {
         echo '<a href="dashboard.php">Dashboard</a>';
+        if(is_admin()) {
+            echo '<a href="tty-message.php">TTY</a>';
+        }
         echo '<a href="change-password.php">Change Password</a>';
         echo '<a href="logout.php">Logout</a>';
     } else {
         echo '<a href="login.php">Login</a>';
         echo '<a href="register.php">Register</a>';
     }
+    echo '<a href="phone-directory.php">Directory</a>';
     echo '<a href="legal.php">Legal Notice</a>';
 
     echo '</nav><hr>';
@@ -658,25 +663,16 @@ function converted_audio_playback_url(array $row): ?string
     return rtrim(UPLOAD_BASE_URL, '/') . '/' . ltrim($relativePath, '/');
 }
 
+function is_admin(): bool {
+    return $_SESSION['role'] === 'admin';
+}
 function require_admin(): void
 {
     if (empty($_SESSION['user_id'])) {
         http_response_code(403);
         exit('Login required.');
     }
-
-    $stmt = db()->prepare("
-        SELECT role
-        FROM users
-        WHERE id = ?
-        LIMIT 1
-    ");
-
-    $stmt->execute([$_SESSION['user_id']]);
-
-    $role = (string)$stmt->fetchColumn();
-
-    if ($role !== 'admin') {
+    if(!is_admin()) {
         http_response_code(403);
         exit('Administrator access required.');
     }

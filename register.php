@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $terms['version'],
         ]);
 
-        login_user((int)db()->lastInsertId());
+        login_user((int)db()->lastInsertId(), '');
         header('Location: dashboard.php');
         exit;
     }

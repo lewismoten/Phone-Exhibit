@@ -92,13 +92,21 @@ function append_admin_last(array &$lines): void
     $settings = get_exhibit_settings();
 
     $lines[] = '';
-    $lines[] = '; Voicemail for additions';
+    $lines[] = '; Voicemail for voice additions';
     $lines[] = 'exten => 1111,1,Answer()';
     $lines[] = ' same => n,Playback(custom/restoring-the-signal-intro)';
     $lines[] = ' same => n,VoiceMail(1111@default,u)';
     $lines[] = ' same => n,Playback(vm-goodbye)';
     $lines[] = ' same => n,Hangup()';
-/*
+
+    $lines[] = '';
+    $lines[] = '; Voicemail for TTY additions';
+    $lines[] = 'exten => 2222,1,Answer()';
+    $lines[] = ' same => n,Playback(custom/restoring-the-signal-tty-vm-intro)';
+    $lines[] = ' same => n,VoiceMail(2222@default,u)';
+    $lines[] = ' same => n,Playback(vm-goodbye)';
+    $lines[] = ' same => n,Hangup()';
+    /*
     // Pending/review recording portal
     $recordingExtension = preg_replace('/[^0-9]/', '', $settings['recording_extension'] ?? '7000');
     $directorPin = preg_replace('/[^0-9]/', '', $settings['director_pin'] ?? '123456');
