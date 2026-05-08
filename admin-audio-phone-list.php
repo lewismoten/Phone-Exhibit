@@ -106,6 +106,15 @@ function append_admin_last(array &$lines): void
     $lines[] = ' same => n,VoiceMail(2222@default,u)';
     $lines[] = ' same => n,Playback(custom/vm-restoring-the-signal-tty-outro)';
     $lines[] = ' same => n,Hangup()';
+
+    $lines[] = '';
+    $lines[] = '; Voicemail for Royal Visit';
+    $lines[] = 'exten => 2323,1,Answer()';
+    $lines[] = ' same => n,Playback(custom/vm-royal-visit-intro)';
+    $lines[] = ' same => n,VoiceMail(2222@default,u)';
+    $lines[] = ' same => n,Playback(vm-goodbye)';
+    $lines[] = ' same => n,Hangup()';
+
     /*
     // Pending/review recording portal
     $recordingExtension = preg_replace('/[^0-9]/', '', $settings['recording_extension'] ?? '7000');
