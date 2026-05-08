@@ -182,6 +182,7 @@ function html_header(string $title): void
         echo '<a href="dashboard.php">Dashboard</a>';
         if(is_admin()) {
             echo '<a href="tty-message.php">TTY</a>';
+            echo '<a href="qr-code.php">QR</a>';
         }
         echo '<a href="change-password.php">Change Password</a>';
         echo '<a href="logout.php">Logout</a>';
