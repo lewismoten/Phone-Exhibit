@@ -1,9 +1,110 @@
+html, body {
+        margin: 0;
+        min-height: 100%;
+}
 body {
     font-family: system-ui, Arial, sans-serif;
-    max-width: 850px;
-    margin: 40px auto;
-    padding: 0 16px;
+    margin: 10px auto;
+    padding: 10px;
     line-height: 1.5;
+    background-image: url(images/deep-maroon-leather-seamless-background.jpg);
+    background-repeat: repeat;
+    font-family: Georgia, "Times New Roman", serif;
+    color: #37100e;
+}
+.page {
+    background-image: url(images/antique-parchment-seamless-background.jpg);
+    background-repeat: repeat;
+    color: #2b160d;
+    position: relative;
+    min-height: 600px;
+    /* margin: 0 auto; */
+    /* padding: 105px 42px 55px; */
+    padding: 20px 20px;
+    box-sizing: border-box;
+    overflow: hidden;
+    box-shadow: 0 10px 10px rgba(0,0,0,.45);
+}
+.page > .border-piece {
+    position: absolute;
+    z-index: 3;
+    pointer-events: none;
+    background-repeat: repeat;
+  }
+.page > .border-top,
+.page > .border-bottom {
+    left: 76px;
+    right: 76px;
+    height: 6px;
+    background-image: url("images/page-border-top.png");
+}
+.page > .border-left,
+.page > .border-right {
+    top: 86px;
+    bottom: 86px;
+    width: 7px;
+    background-image: url("images/page-border-right.png");
+}
+.page > .border-top-center-ornament {
+    top: -3px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 160px;
+    height: 40px;
+    background-size: contain;
+    background-position: center;
+    background-image: url('images/page-border-top-center-ornament.png');
+    z-index: 5;
+    pointer-events: none;
+}
+.border-top {
+    top: 0;
+    background-repeat: repeat-x;
+}
+.border-bottom {
+    bottom: 0;
+    background-repeat: repeat-x;
+    transform: scaleY(-1);
+}
+.border-right {
+    right: 0;
+    background-repeat: repeat-y;
+}
+.border-left {
+    left: 0;
+    background-repeat: repeat-y;
+    transform: scaleX(-1);
+}
+.page > .border-corner {
+    width: 76px;
+    height: 86px;
+    background-image: url("images/page-border-top-right.png");
+    background-repeat: no-repeat;
+}
+.border-top-right {
+    top: 0;
+    right: 0;
+}
+.border-top-left {
+    top: 0;
+    left: 0;
+    transform: scaleX(-1);
+}
+.border-bottom-right {
+    bottom: 0;
+    right: 0;
+    transform: scaleY(-1);
+}
+.border-bottom-left {
+    bottom: 0;
+    left: 0;
+    transform: scale(-1, -1);
+}
+.page-content {
+    position: relative;
+    z-index: 2;
+    font-size: 1.1rem;
+    line-height: 1.6;
 }
 form {
     border: 1px solid #ddd;

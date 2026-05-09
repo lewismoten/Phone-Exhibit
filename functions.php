@@ -175,6 +175,18 @@ function html_header(string $title): void
     echo '<link rel="stylesheet" type="text/css" href="style.css" />';
     echo '</head>';
     echo '<body>';
+    echo '<div class="page">';
+    echo '<div class="border-piece border-top"></div>';
+    echo '<div class="border-piece border-top-center-ornament"></div>';
+    echo '<div class="border-piece border-bottom"></div>';
+    echo '<div class="border-piece border-left"></div>';
+    echo '<div class="border-piece border-right"></div>';
+    echo '<div class="border-piece border-corner border-top-left"></div>';
+    echo '<div class="border-piece border-corner border-top-right"></div>';
+    echo '<div class="border-piece border-corner border-bottom-left"></div>';
+    echo '<div class="border-piece border-corner border-bottom-right"></div>';
+    echo '<div class="page-content">';
+
     echo '<nav>';
     echo '<a href="index.php">Home</a>';
 
@@ -198,7 +210,23 @@ function html_header(string $title): void
 
 function html_footer(): void
 {
-    echo '<hr>Footer</body></html>';
+    echo '<hr>';
+    echo '</div>';// .page.page-content
+    echo '</div>';// .page
+    echo '<div class="footer">';
+    echo '<div class="left">';
+    echo 'Front Royal, Virginia';
+    echo '</div>'; // .footer.left
+    echo '<div class="left">';
+    echo '<div class="center">';
+    echo '-o-';
+    echo '</div>'; // .footer.center
+    echo 'Preserving our Past. Inspiring our future.';
+    echo '</div>'; // .footer.right
+    echo '</div>'; // .footer
+    echo '</body>';
+    echo '</html>';
+
 }
 
 function send_password_reset_email(string $email, string $resetUrl): void
