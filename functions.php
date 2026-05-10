@@ -190,27 +190,51 @@ function html_header(string $title): void
     echo '<div class="title"></div>';
     echo '<div class="right"></div>';
     echo '</div>'; // .page .masthead
-    echo '<div class="page-content">';
 
-    echo '<nav>';
-    echo '<a href="index.php">Home</a>';
-
+    // Top Navigation
+    echo '<nav class="topnav" aria-label="Main navigation">';
+    echo '<div class="topnav-left"></div>';
+    echo '<div class="topnav-main">';
+    echo '<a href="/">Home</a>';
     if (current_user()) {
+        echo '<span class="topnav-separator"></span>';
         echo '<a href="dashboard.php">Dashboard</a>';
         if(is_admin()) {
+            echo '<span class="topnav-separator"></span>';
             echo '<a href="tty-message.php">TTY</a>';
+            echo '<span class="topnav-separator"></span>';
             echo '<a href="qr-code.php">QR</a>';
         }
+        echo '<span class="topnav-separator"></span>';
+        echo '<a href="phone-directory.php">Directory</a>';
+        echo '<span class="topnav-separator"></span>';
+        echo '<a href="legal.php">Legal Notice</a>';
+        echo '<span class="topnav-separator"></span>';
         echo '<a href="change-password.php">Change Password</a>';
-        echo '<a href="logout.php">Logout</a>';
-    } else {
-        echo '<a href="login.php">Login</a>';
-        echo '<a href="register.php">Register</a>';
-    }
-    echo '<a href="phone-directory.php">Directory</a>';
-    echo '<a href="legal.php">Legal Notice</a>';
+        echo '</div>'; // .topnav .topnav-main
 
-    echo '</nav><hr>';
+        echo '<div class="topnav-utility-left"></div>';
+        echo '<div class="topnav-utility">';
+        echo '<a href="logout.php">Logout</a>';
+        echo '<div class="topnav-utility-right"></div>';
+    } else {
+        echo '<span class="topnav-separator"></span>';
+        echo '<a href="register.php">Register</a>';
+        echo '<span class="topnav-separator"></span>';
+        echo '<a href="phone-directory.php">Directory</a>';
+        echo '<span class="topnav-separator"></span>';
+        echo '<a href="legal.php">Legal Notice</a>';
+        echo '</div>'; // .page .topnav .topnav-main
+
+        echo '<div class="topnav-utility-left"></div>';
+        echo '<div class="topnav-utility">';
+        echo '<a href="login.php">Login</a>';
+        echo '</div>'; // .page .topnav .topnav-utility
+        echo '<div class="topnav-utility-right"></div>';
+    }
+    echo '</nav>'; // .page .topnav
+
+    echo '<div class="page-content">';
 }
 
 function html_footer(): void
