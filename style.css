@@ -25,12 +25,6 @@ body {
     overflow: hidden;
     box-shadow: 0 10px 10px rgba(0,0,0,.45);
 }
-.page > .border-piece {
-    position: absolute;
-    z-index: 3;
-    pointer-events: none;
-    background-repeat: repeat;
-  }
 .page > .border-top,
 .page > .border-bottom {
     left: 76px;
@@ -45,6 +39,12 @@ body {
     width: 7px;
     background-image: url("images/page-border-right.png");
 }
+.page > .border-corner {
+    width: 76px;
+    height: 86px;
+    background-image: url("images/page-border-top-right.png");
+    background-repeat: no-repeat;
+}
 .page > .border-top-center-ornament {
     top: -3px;
     left: 50%;
@@ -57,6 +57,12 @@ body {
     z-index: 5;
     pointer-events: none;
 }
+.border-piece {
+    position: absolute;
+    z-index: 3;
+    pointer-events: none;
+    background-repeat: repeat;
+  }
 .border-top {
     top: 0;
     background-repeat: repeat-x;
@@ -74,12 +80,6 @@ body {
     left: 0;
     background-repeat: repeat-y;
     transform: scaleX(-1);
-}
-.page > .border-corner {
-    width: 76px;
-    height: 86px;
-    background-image: url("images/page-border-top-right.png");
-    background-repeat: no-repeat;
 }
 .border-top-right {
     top: 0;
@@ -196,8 +196,8 @@ body {
   height: 52px;
   flex: 0 0 20px;
   background: 
-    url("/images/topnav-left.png") no-repeat center / 20px 52px,
-    url("/images/deep-maroon-leather-seamless-background.jpg") no-repeat center / 20px 52px;
+    url("/images/topnav-left.png") no-repeat center/ 20px 52px,
+    url("/images/deep-maroon-leather-seamless-background.jpg") no-repeat center/ 20px 52px;
 }
 
 /* main link area */
@@ -298,6 +298,44 @@ body {
     min-height: 44px;
     padding: 0 12px;
   }
+}
+/* Primary Card Border */
+.card {
+    position: relative;
+    box-sizing: border-box;
+    width: 100%;
+    margin: 10px 10px;
+    padding: 10px;
+    overflow: auto;
+}
+.card.primary > hr {
+    left: 49px;
+    right: 49px;
+    height: 14px;
+    width: 180px;
+    background: 
+        url("/images/horizontal-rule-decorative.png") no-repeat center / 180px 14px;
+    border: none;
+}
+.card.primary > .border-top,
+.card.primary > .border-bottom {
+    left: 49px;
+    right: 49px;
+    height: 5px;
+    background-image: url("images/card-primary-border-top.png");
+}
+.card.primary > .border-left,
+.card.primary > .border-right {
+    top: 49px;
+    bottom: 49px;
+    width: 7px;
+    background-image: url("images/card-primary-border-right.png");
+}
+.card.primary > .border-corner {
+    width: 49px;
+    height: 49px;
+    background-image: url("images/card-primary-border-top-right.png");
+    background-repeat: no-repeat;
 }
 
 form {

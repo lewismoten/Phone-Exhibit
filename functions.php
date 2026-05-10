@@ -163,6 +163,18 @@ function flash_get(string $key): ?string
     return $message;
 }
 
+function html_border_pieces(): void 
+{
+    echo '<div class="border-piece border-top"></div>';
+    echo '<div class="border-piece border-top-center-ornament"></div>';
+    echo '<div class="border-piece border-bottom"></div>';
+    echo '<div class="border-piece border-left"></div>';
+    echo '<div class="border-piece border-right"></div>';
+    echo '<div class="border-piece border-corner border-top-left"></div>';
+    echo '<div class="border-piece border-corner border-top-right"></div>';
+    echo '<div class="border-piece border-corner border-bottom-left"></div>';
+    echo '<div class="border-piece border-corner border-bottom-right"></div>';
+}
 function html_header(string $title): void
 {
     echo '<!doctype html>';
@@ -176,15 +188,7 @@ function html_header(string $title): void
     echo '</head>';
     echo '<body>';
     echo '<div class="page">';
-    echo '<div class="border-piece border-top"></div>';
-    echo '<div class="border-piece border-top-center-ornament"></div>';
-    echo '<div class="border-piece border-bottom"></div>';
-    echo '<div class="border-piece border-left"></div>';
-    echo '<div class="border-piece border-right"></div>';
-    echo '<div class="border-piece border-corner border-top-left"></div>';
-    echo '<div class="border-piece border-corner border-top-right"></div>';
-    echo '<div class="border-piece border-corner border-bottom-left"></div>';
-    echo '<div class="border-piece border-corner border-bottom-right"></div>';
+    html_border_pieces();
     echo '<div class="masthead">';
     echo '<div class="left"></div>';
     echo '<div class="title"></div>';
@@ -235,6 +239,17 @@ function html_header(string $title): void
     echo '</nav>'; // .page .topnav
 
     echo '<div class="page-content">';
+    
+    echo '<div class="card primary">';
+    html_border_pieces();
+    echo '<h1>Preserve Voices.<br>Share History.</h2>';
+    echo '<hr>';
+    echo '<p>';
+    echo 'Dial in from any exhibit phone to leave a message, ';
+    echo 'listen to stories, and experience the past ';
+    echo 'through the sound of a simpler time.';
+    echo '</p>';
+    echo '</div>'; // page .card.primary
 }
 
 function html_footer(): void
