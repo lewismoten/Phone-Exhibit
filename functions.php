@@ -185,6 +185,11 @@ function html_header(string $title): void
     echo '<div class="border-piece border-corner border-top-right"></div>';
     echo '<div class="border-piece border-corner border-bottom-left"></div>';
     echo '<div class="border-piece border-corner border-bottom-right"></div>';
+    echo '<div class="masthead">';
+    echo '<div class="left"></div>';
+    echo '<div class="title"></div>';
+    echo '<div class="right"></div>';
+    echo '</div>'; // .page .masthead
     echo '<div class="page-content">';
 
     echo '<nav>';

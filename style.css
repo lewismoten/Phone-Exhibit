@@ -106,6 +106,73 @@ body {
     font-size: 1.1rem;
     line-height: 1.6;
 }
+.masthead {
+    position: relative;
+    height: 170px;
+    margin: -25px auto 0;
+    z-index: 10;
+}
+.masthead > .left,
+.masthead > .right,
+.masthead > .title {
+  position: absolute;
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
+  pointer-events: none;
+}
+.masthead > .title {
+  width: 588px;
+  height: 75px;
+  left: 50%;
+  top: 42px;
+  transform: translateX(-50%);
+  background-image: url("images/masthead-restoring-the-signal-an-interactive-telephone-and-audio-exhibit.png");
+  z-index: 4;
+}
+@media (max-width: 750px) {
+    .masthead > .title {
+        width: 90%;
+        max-width: 588px;
+    }
+}
+
+.masthead > .left {
+    width: 202px;
+    height: 139px;
+    left: -10px;
+    top: 22px;
+    background-image: url("images/masthead-rotary-phone.png");
+    z-index: 2;
+    opacity: 0%;
+}
+.masthead > .right {
+    width: 363px;
+    height: 158px;
+    right: -25px;
+    top: 5px;
+    background-image: url("images/masthead-old-house.png");
+    z-index: 3;
+    opacity: 0%;
+}
+@media (min-width: 600px) {
+    .masthead > .left,
+    .masthead > .right {
+        opacity: 25%;
+    }    
+}
+@media (min-width: 1000px) {
+    .masthead > .left,
+    .masthead > .right {
+        opacity: 50%;
+    }
+}
+@media (min-width: 1170px) {
+    .masthead > .left,
+    .masthead > .right {
+        opacity: 90%;
+    }
+}
 form {
     border: 1px solid #ddd;
     padding: 20px;
