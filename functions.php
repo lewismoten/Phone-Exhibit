@@ -242,14 +242,24 @@ function html_header(string $title): void
     
     echo '<div class="card primary">';
     html_border_pieces();
-    echo '<h1>Preserve Voices.<br>Share History.</h2>';
+    echo '<div class="columns">';
+    echo '<div class="center">';
+    echo '<h1>Preserve Voices.</h1><h1>Share History.</h1>';
     echo '<hr>';
     echo '<p>';
-    echo 'Dial in from any exhibit phone to leave a message, ';
-    echo 'listen to stories, and experience the past ';
+    echo 'Dial in from any exhibit phone to leave a message,<br>';
+    echo 'listen to stories, and experience the past<br>';
     echo 'through the sound of a simpler time.';
     echo '</p>';
-    echo '</div>'; // page .card.primary
+    echo '<a class="button primary" href="#">Learn how it works</a>';
+    echo '<a class="button warn" href="#">Learn how it works</a>';
+    echo '<a class="button error" href="#">Learn how it works</a>';
+    echo '</div>'; // .page .card-primary .columns
+    echo '<div>';
+    echo 'feature marquee';
+    echo '</div>';
+    echo '</div>'; // .page .card-primary .columns
+    echo '</div>'; // .page .card.primary
 }
 
 function html_footer(): void

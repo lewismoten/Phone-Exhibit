@@ -1,6 +1,11 @@
+:root {
+    --h1-text: #421112;
+    --body-text: #4a3c2e;
+}
 html, body {
-        margin: 0;
-        min-height: 100%;
+    margin: 0;
+    min-height: 100%;
+    font-size: clamp(15px, 1vw + 12px, 18px);
 }
 body {
     font-family: system-ui, Arial, sans-serif;
@@ -308,7 +313,10 @@ body {
     padding: 10px;
     overflow: auto;
 }
-.card.primary > hr {
+.card.primary {
+    font-family: 'Times Regular', 'Times New Roman', Times, serif;
+}
+.card.primary hr {
     left: 49px;
     right: 49px;
     height: 14px;
@@ -316,6 +324,8 @@ body {
     background: 
         url("/images/horizontal-rule-decorative.png") no-repeat center / 180px 14px;
     border: none;
+    margin-block-start: 0.5rem;
+    margin-block-end: 0;
 }
 .card.primary > .border-top,
 .card.primary > .border-bottom {
@@ -337,7 +347,114 @@ body {
     background-image: url("images/card-primary-border-top-right.png");
     background-repeat: no-repeat;
 }
+.center {
+    text-align: center;
+}
+.card.primary h1 {
+    font-size: 2.25rem;
+    line-height: 2.25rem;
+    font-weight: bold;
+    color: var(--h1-text);
+    margin-block-start: 0;
+    margin-block-end: 0;
+}
+.card.primary h2 {
+    font-size: 2.125rem;
+    line-height: 0.90rem;
+    font-weight: bold;
+    color: var(--h1-text);
+    margin-block-start: 0;
+    margin-block-end: 0;
+}
+.card.primary p {
+    font-size: 1rem;
+    line-height: 1rem;
+    color: var(--body-text);
+    margin-block-start: 0;
+    margin-block-end: 0.5rem;
 
+}
+/* button */
+.button {
+  --button-background: url("/images/golden-brown-fabric-seamless-background.jpg");
+  --button-text: #cca66c;
+  --button-gradient:     linear-gradient(
+      to bottom,
+      rgba(0,0,0,0) 35%,
+      rgba(0,0,0,.28) 90%
+    );
+
+  position: relative;
+  display: inline-flex;
+  align-items: flex-start;
+  justify-content: center;
+
+  min-height: 64px;
+  padding: 24px 8px 0;
+
+  font-size: 1rem;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+
+  box-sizing: border-box;
+  z-index: 1;
+
+  margin-left: 22px;
+  margin-right: 23px;
+
+  color: var(--button-text);
+  background: 
+    url("/images/framed-button-borders.png") repeat-x center top / auto 64px,
+    var(--button-gradient),
+    var(--button-background) repeat;
+}
+.button.primary {
+  --button-background: url("/images/dark-indigo-suede-seamless-background.jpg") repeat;
+}
+.button.error {
+  --button-background: url("/images/deep-maroon-leather-seamless-background.jpg") repeat;
+}
+.button.warn {
+  --button-background: url("/images/golden-brown-fabric-seamless-background.jpg") repeat;
+}
+
+.button::before,
+.button::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  height: 64px;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.button::before {
+  left: -22px;
+  width: 22px;
+  background:
+    url("/images/framed-button-left.png") no-repeat center top,
+    var(--button-gradient),
+    var(--button-background) repeat;
+}
+
+.button::after {
+  right: -23px;
+  width: 23px;
+  background:
+    url("/images/framed-button-right.png") no-repeat center top,
+    var(--button-gradient),
+    var(--button-background) repeat;
+}
+/* Columns */
+.columns {
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+}
+.columns > * {
+    flex: 0 0 var(--col-width, 1fr);
+}
 form {
     border: 1px solid #ddd;
     padding: 20px;
@@ -368,7 +485,7 @@ button {
     margin-top: 16px;
     padding: 10px 14px;
 }
-.error {
+.x-error {
     color: #a00;
     margin: 10px 0;
 }
