@@ -175,6 +175,19 @@ function html_border_pieces(): void
     echo '<div class="border-piece border-corner border-bottom-left"></div>';
     echo '<div class="border-piece border-corner border-bottom-right"></div>';
 }
+function html_a(string $href, string $text, string $icon): void
+{
+    echo '<a href="'.$href.'">';
+    if(!empty($icon)) {
+        html_span("icon $icon");
+    }
+    echo $text.'</a>';
+
+}
+function html_span(string $name): void
+{
+    echo '<span class="'.$name.'"></span>';
+}
 function html_header(string $title): void
 {
     echo '<!doctype html>';
@@ -198,41 +211,41 @@ function html_header(string $title): void
     // Top Navigation
     echo '<nav class="topnav" aria-label="Main navigation">';
     echo '<div class="topnav-left"></div>';
-    echo '<div class="topnav-main">';
-    echo '<a href="/">Home</a>';
+    echo '<div class="main">';
+    html_a('/', 'Home', 'home');
     if (current_user()) {
-        echo '<span class="topnav-separator"></span>';
-        echo '<a href="dashboard.php">Dashboard</a>';
+        html_span('separator');
+        html_a('/dashboard.php', 'Dashboard', 'gauge');
         if(is_admin()) {
-            echo '<span class="topnav-separator"></span>';
-            echo '<a href="tty-message.php">TTY</a>';
-            echo '<span class="topnav-separator"></span>';
-            echo '<a href="qr-code.php">QR</a>';
+            html_span('separator');
+            html_a('/tty-message.php', 'TTY', 'typewriter');
+            html_span('separator');
+            html_a('/qr-code.php', 'QR', 'qr');
         }
-        echo '<span class="topnav-separator"></span>';
-        echo '<a href="phone-directory.php">Directory</a>';
-        echo '<span class="topnav-separator"></span>';
-        echo '<a href="legal.php">Legal Notice</a>';
-        echo '<span class="topnav-separator"></span>';
-        echo '<a href="change-password.php">Change Password</a>';
+        html_span('separator');
+        html_a('/phone-directory.php', 'Directory', 'book');
+        html_span('separator');
+        html_a('/legal.php', 'Legal Notice', 'scales');
+        html_span('separator');
+        html_a('/change-password.php', 'Change Password', 'key');
         echo '</div>'; // .topnav .topnav-main
 
         echo '<div class="topnav-utility-left"></div>';
         echo '<div class="topnav-utility">';
-        echo '<a href="logout.php">Logout</a>';
+        html_a('/logout.php', 'Logout', 'exit');
         echo '<div class="topnav-utility-right"></div>';
     } else {
-        echo '<span class="topnav-separator"></span>';
-        echo '<a href="register.php">Register</a>';
-        echo '<span class="topnav-separator"></span>';
-        echo '<a href="phone-directory.php">Directory</a>';
-        echo '<span class="topnav-separator"></span>';
-        echo '<a href="legal.php">Legal Notice</a>';
+        html_span('separator');
+        html_a('/register.php', 'Register', 'add-person');
+        html_span('separator');
+        html_a('/phone-directory.php', 'Directory', 'book');
+        html_span('separator');
+        html_a('/legal.php', 'Legal Notice', 'scales');
         echo '</div>'; // .page .topnav .topnav-main
 
         echo '<div class="topnav-utility-left"></div>';
         echo '<div class="topnav-utility">';
-        echo '<a href="login.php">Login</a>';
+        html_a('/login.php', 'Login', 'lock');
         echo '</div>'; // .page .topnav .topnav-utility
         echo '<div class="topnav-utility-right"></div>';
     }

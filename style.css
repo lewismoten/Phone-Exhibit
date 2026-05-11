@@ -16,7 +16,36 @@
     --icon-microphone: url("/images/icon-microphone.png");
     --icon-microphone-width: 23px;
     --icon-microphone-height: 38px;
-
+    --icon-home: url("/images/icon-home.png");
+    --icon-home-width: 25px;
+    --icon-home-height: 24px;
+    --icon-book: url("/images/icon-book.png");
+    --icon-book-width: 34px;
+    --icon-book-height: 26px;
+    --icon-scales: url("/images/icon-scales.png");
+    --icon-scales-width: 31px;
+    --icon-scales-height: 27px;
+    --icon-gauge: url("/images/icon-gauge.png");
+    --icon-gauge-width: 28px;
+    --icon-gauge-height: 27px;
+    --icon-typewriter: url("/images/icon-typewriter.png");
+    --icon-typewriter-width: 24px;
+    --icon-typewriter-height: 26px;
+    --icon-qr: url("/images/icon-qr.png");
+    --icon-qr-width: 28px;
+    --icon-qr-height: 28px;
+    --icon-key: url("/images/icon-key.png");
+    --icon-key-width: 25px;
+    --icon-key-height: 26px;
+    --icon-exit: url("/images/icon-exit.png");
+    --icon-exit-width: 19px;
+    --icon-exit-height: 17px;
+    --icon-lock: url("/images/icon-lock.png");
+    --icon-lock-width: 21px;
+    --icon-lock-height: 26px;
+    --icon-add-person: url("/images/icon-add-person.png");
+    --icon-add-person-width: 27px;
+    --icon-add-person-height: 26px;
 }
 html, body {
     margin: 0;
@@ -228,7 +257,7 @@ body {
 }
 
 /* main link area */
-.topnav-main {
+.topnav > .main {
   min-height: 52px;
 
   display: flex;
@@ -249,7 +278,10 @@ body {
   display: inline-flex;
   align-items: center;
   min-height: 52px;
-
+  position: relative;
+  justify-content: center;
+  gap: 5px;
+  
   padding: 0 14px;
 
   color: inherit;
@@ -263,7 +295,7 @@ body {
 }
 
 /* separators between normal links */
-.topnav-separator {
+.topnav .separator {
   width: 6px;
   height: 42px;
   flex: 0 0 6px;
@@ -318,7 +350,7 @@ body {
     display: none;
   }
 
-  .topnav-main,
+  .topnav > .main,
   .topnav-utility {
     width: 100%;
   }
@@ -409,11 +441,10 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 5px;
+  padding: 0 8px;
 
   min-height: 64px;
-  /* padding: 24px 8px 0; */
-  padding: 0 8px;
 
   font-size: 1rem;
   line-height: 1;
@@ -469,7 +500,8 @@ body {
     var(--button-gradient),
     var(--button-background) repeat;
 }
-.button > .icon {
+/*icon*/
+.icon {
   display: inline-block;
   flex: 0 0 auto;
   background-repeat: no-repeat;
@@ -480,6 +512,56 @@ body {
   width: var(--icon-microphone-width);
   height: var(--icon-microphone-height);
   background-image: var(--icon-microphone);
+}
+.icon.home {
+  width: var(--icon-home-width);
+  height: var(--icon-home-height);
+  background-image: var(--icon-home);
+}
+.icon.book {
+  width: var(--icon-book-width);
+  height: var(--icon-book-height);
+  background-image: var(--icon-book);
+}
+.icon.scales {
+  width: var(--icon-scales-width);
+  height: var(--icon-scales-height);
+  background-image: var(--icon-scales);
+}
+.icon.gauge {
+  width: var(--icon-gauge-width);
+  height: var(--icon-gauge-height);
+  background-image: var(--icon-gauge);
+}
+.icon.typewriter {
+  width: var(--icon-typewriter-width);
+  height: var(--icon-typewriter-height);
+  background-image: var(--icon-typewriter);
+}
+.icon.qr {
+  width: var(--icon-qr-width);
+  height: var(--icon-qr-height);
+  background-image: var(--icon-qr);
+}
+.icon.key {
+  width: var(--icon-key-width);
+  height: var(--icon-key-height);
+  background-image: var(--icon-key);
+}
+.icon.exit {
+  width: var(--icon-exit-width);
+  height: var(--icon-exit-height);
+  background-image: var(--icon-exit);
+}
+.icon.lock {
+  width: var(--icon-lock-width);
+  height: var(--icon-lock-height);
+  background-image: var(--icon-lock);
+}
+.icon.add-person {
+  width: var(--icon-add-person-width);
+  height: var(--icon-add-person-height);
+  background-image: var(--icon-add-person);
 }
 /* Columns */
 .columns {
