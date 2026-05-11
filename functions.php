@@ -251,9 +251,9 @@ function html_header(string $title): void
     echo 'listen to stories, and experience the past<br>';
     echo 'through the sound of a simpler time.';
     echo '</p>';
-    echo '<a class="button primary" href="#">Learn how it works</a>';
-    echo '<a class="button warn" href="#">Learn how it works</a>';
-    echo '<a class="button error" href="#">Learn how it works</a>';
+    echo '<a class="button" href="#">';
+    echo '<span class="icon microphone"></span>';
+    echo 'Learn how it works</a>'; // .page .card-primary .columns .button
     echo '</div>'; // .page .card-primary .columns
     echo '<div>';
     echo 'feature marquee';

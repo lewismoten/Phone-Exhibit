@@ -12,6 +12,11 @@
     --warn-background: url("/images/golden-brown-fabric-seamless-background.jpg");
     --error-background: url("/images/deep-maroon-leather-seamless-background.jpg");
     --primary-background: url("/images/dark-indigo-suede-seamless-background.jpg");
+
+    --icon-microphone: url("/images/icon-microphone.png");
+    --icon-microphone-width: 23px;
+    --icon-microphone-height: 38px;
+
 }
 html, body {
     margin: 0;
@@ -402,11 +407,13 @@ body {
 
   position: relative;
   display: inline-flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
+  gap: 10px;
 
   min-height: 64px;
-  padding: 24px 8px 0;
+  /* padding: 24px 8px 0; */
+  padding: 0 8px;
 
   font-size: 1rem;
   line-height: 1;
@@ -461,6 +468,18 @@ body {
     url("/images/framed-button-right.png") no-repeat center top,
     var(--button-gradient),
     var(--button-background) repeat;
+}
+.button > .icon {
+  display: inline-block;
+  flex: 0 0 auto;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+}
+.icon.microphone {
+  width: var(--icon-microphone-width);
+  height: var(--icon-microphone-height);
+  background-image: var(--icon-microphone);
 }
 /* Columns */
 .columns {
