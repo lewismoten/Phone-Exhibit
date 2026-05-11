@@ -1,6 +1,17 @@
 :root {
+    /* --font-family: Georgia, "Times New Roman", serif; */
+    --font-family: 'Times Regular', 'Times New Roman', Times, serif;
     --h1-text: #421112;
     --body-text: #4a3c2e;
+    /* --content-text: #37100e; */
+    --content-text: #2b160d;
+    --warn-text: #cca66c;
+    --error-text: #cca66c;
+    --primary-text: #cca66c;
+    --content-background: url("images/antique-parchment-seamless-background.jpg");
+    --warn-background: url("/images/golden-brown-fabric-seamless-background.jpg");
+    --error-background: url("/images/deep-maroon-leather-seamless-background.jpg");
+    --primary-background: url("/images/dark-indigo-suede-seamless-background.jpg");
 }
 html, body {
     margin: 0;
@@ -8,19 +19,18 @@ html, body {
     font-size: clamp(15px, 1vw + 12px, 18px);
 }
 body {
-    font-family: system-ui, Arial, sans-serif;
     margin: 10px auto;
     padding: 10px;
     line-height: 1.5;
-    background-image: url(images/deep-maroon-leather-seamless-background.jpg);
+    background-image: var(--error-background);
     background-repeat: repeat;
-    font-family: Georgia, "Times New Roman", serif;
-    color: #37100e;
+    font-family: var(--font-family);
+    color: var(--error-text);
 }
 .page {
-    background-image: url(images/antique-parchment-seamless-background.jpg);
+    background-image: var(--content-background);
     background-repeat: repeat;
-    color: #2b160d;
+    color: var(--content-text);
     position: relative;
     min-height: 600px;
     /* margin: 0 auto; */
@@ -181,6 +191,13 @@ body {
 }
 /* Top Navigation */
 .topnav {
+  --topnav-background: var(--warn-background);
+  --topnav-text: var(--warn-text);
+  --topnav-gradient: linear-gradient(
+      to bottom,
+      rgba(0,0,0,0) 35%,
+      rgba(0,0,0,1) 90%
+    );
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -189,7 +206,6 @@ body {
   max-width: 100%;
   margin: 0 auto 24px;
 
-  font-family: Georgia, serif;
   font-size: 1rem;
   line-height: 52px;
   text-align: center;
@@ -202,7 +218,8 @@ body {
   flex: 0 0 20px;
   background: 
     url("/images/topnav-left.png") no-repeat center/ 20px 52px,
-    url("/images/deep-maroon-leather-seamless-background.jpg") no-repeat center/ 20px 52px;
+    var(--topnav-gradient),
+    var(--error-background) no-repeat center/ 20px 52px;
 }
 
 /* main link area */
@@ -216,9 +233,10 @@ body {
 
   background:
     url("/images/topnav-background.png") repeat-x center / auto 52px,
-    url("/images/deep-maroon-leather-seamless-background.jpg") repeat;
+    var(--topnav-gradient),
+    var(--error-background) repeat;
 
-  color: #b88b45;
+  color: var(--error-text);
 }
 
 /* links */
@@ -244,7 +262,6 @@ body {
   width: 6px;
   height: 42px;
   flex: 0 0 6px;
-
   background: url("/images/topnav-separator.png") no-repeat center / 6px 42px;
 }
 
@@ -255,7 +272,8 @@ body {
   flex: 0 0 15px;
   background: 
     url("/images/topnav-utility-left.png") no-repeat center / 15px 52px,
-    url("/images/dark-indigo-suede-seamless-background.jpg") repeat;
+    var(--topnav-gradient),
+    var(--primary-background) repeat;
 }
 
 /* utility/logout section */
@@ -268,9 +286,9 @@ body {
 
   background:
     url("/images/topnav-utility-background.png") repeat-x center / auto 52px,
-    url("/images/dark-indigo-suede-seamless-background.jpg") repeat;
-
-  color: #facd9a;
+    var(--topnav-gradient),
+    var(--primary-background) repeat;
+  color: var(--primary-text);
 }
 
 .topnav-utility a {
@@ -284,7 +302,8 @@ body {
   flex: 0 0 15px;
   background:
     url("/images/topnav-utility-right.png") no-repeat center / 15px 52px,
-    url("/images/dark-indigo-suede-seamless-background.jpg") repeat;
+    var(--topnav-gradient),
+    var(--primary-background) repeat;
 }
 @media (max-width: 560px) {
   .topnav-left,
@@ -312,9 +331,6 @@ body {
     margin: 10px 10px;
     padding: 10px;
     overflow: auto;
-}
-.card.primary {
-    font-family: 'Times Regular', 'Times New Roman', Times, serif;
 }
 .card.primary hr {
     left: 49px;
@@ -376,12 +392,12 @@ body {
 }
 /* button */
 .button {
-  --button-background: url("/images/golden-brown-fabric-seamless-background.jpg");
-  --button-text: #cca66c;
-  --button-gradient:     linear-gradient(
+  --button-background: var(--warn-background);
+  --button-text: var(--warn-text);
+  --button-gradient:linear-gradient(
       to bottom,
       rgba(0,0,0,0) 35%,
-      rgba(0,0,0,.28) 90%
+      rgba(0,0,0,1) 90%
     );
 
   position: relative;
@@ -410,13 +426,13 @@ body {
     var(--button-background) repeat;
 }
 .button.primary {
-  --button-background: url("/images/dark-indigo-suede-seamless-background.jpg") repeat;
+  --button-background: var(--primary-background) repeat;
 }
 .button.error {
-  --button-background: url("/images/deep-maroon-leather-seamless-background.jpg") repeat;
+  --button-background: var(--error-background) repeat;
 }
 .button.warn {
-  --button-background: url("/images/golden-brown-fabric-seamless-background.jpg") repeat;
+  --button-background: var(--warn-background) repeat;
 }
 
 .button::before,
