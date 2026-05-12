@@ -46,6 +46,10 @@
     --icon-add-person: url("/images/icon-add-person.png");
     --icon-add-person-width: 27px;
     --icon-add-person-height: 26px;
+
+    --hero-marquee-1: url('/images/hero-marquee-your-voice-our-history-their-future.jpg');
+    --hero-marquee-1-width: 1006px;
+    --hero-marquee-1-height: 290px;
 }
 html, body {
     margin: 0;
@@ -562,6 +566,16 @@ body {
   width: var(--icon-add-person-width);
   height: var(--icon-add-person-height);
   background-image: var(--icon-add-person);
+}
+.hero-marquee-1 {
+    background: var(--hero-marquee-1) no-repeat;
+    width: var(--hero-marquee-1-width);
+    height: var(--hero-marquee-1-height);
+    display: inline-block;
+    flex: 0 0 auto;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
 }
 /* Columns */
 .columns {

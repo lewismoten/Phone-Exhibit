@@ -255,6 +255,10 @@ function html_header(string $title): void
     
     echo '<div class="card primary">';
     html_border_pieces();
+
+    echo '<section class="hero-marquee">';
+    echo '<div class="panel">';
+
     echo '<div class="columns">';
     echo '<div class="center">';
     echo '<h1>Preserve Voices.</h1><h1>Share History.</h1>';
@@ -266,12 +270,14 @@ function html_header(string $title): void
     echo '</p>';
     echo '<a class="button" href="#">';
     echo '<span class="icon microphone"></span>';
-    echo 'Learn how it works</a>'; // .page .card-primary .columns .button
-    echo '</div>'; // .page .card-primary .columns
-    echo '<div>';
-    echo 'feature marquee';
-    echo '</div>';
-    echo '</div>'; // .page .card-primary .columns
+    echo 'Learn how it works</a>'; // .page .card-primary .hero-marquee .panel .columns .button
+    echo '</div>'; // .page .card-primary .hero-marquee .panel .columns .center
+    echo '<div class="hero-marquee-1"></div>';
+    echo '</div>'; // .page .card-primary .hero-marquee .panel .columns
+
+    echo '</div>'; // .page .card-primary .hero-marquee .panel
+    echo '</section>'; // .page .card-primary .hero-marquee
+
     echo '</div>'; // .page .card.primary
 }
 
