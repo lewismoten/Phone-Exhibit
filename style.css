@@ -689,13 +689,11 @@ ul > li {
   padding-left: 1rem;
   display: block;
 }
-
-/* shared bullet positioning */
 ul > li::before,
 .bullet-item::before {
   content: "";
   position: absolute;
-  top: 0.62em;
+  top: 50%;
   width: 6px;
   height: 6px;
   transform: translateY(-50%);
@@ -708,7 +706,7 @@ ul > li::before {
   left: -1rem;
 }
 .bullet-item::before {
-  left: 0;
+  left: 8px;
 }
 ul > li:nth-child(5n + 2)::before,
 * > .bullet-item:nth-child(5n + 2) {
@@ -725,6 +723,26 @@ ul > li:nth-child(5n + 4)::before,
 ul > li:nth-child(5n)::before,
 * > .bullet-item:nth-child(5n + 5) {
   --bullet-image: url("/images/ul-1e.png");
+}
+/* dot leaders */
+.dot-leader {
+  display: flex;
+  align-items: flex-end;
+  width: 100%;
+  gap: 0.35em;
+}
+.dot-leader::after {
+  content: "";
+  flex: 1 1 auto;
+  height: 2px;
+  background-image: url("/images/dot-leaders.png");
+  background-repeat: repeat-x;
+  background-position: left bottom;
+  background-size: 144px 2px;
+  margin-bottom: 0.15em;
+  position: relative;
+  top: -3px;
+  left: -7px;
 }
 
 /* Columns */
