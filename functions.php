@@ -184,8 +184,12 @@ function html_a(string $href, string $text, string $icon): void
     echo $text.'</a>';
 
 }
-function html_span(string $name, string $content = ''): void
+function html_span(string $name = '', string $content = ''): void
 {
+    if(empty($name)) {
+        echo '<span>'.$content.'</span>';
+        return;
+    }
     echo '<span class="'.$name.'">'.$content.'</span>';
 }
 function html_header(string $title): void
@@ -286,18 +290,20 @@ function html_header(string $title): void
     html_span("icon microphone");
     echo 'Recent Contributions</h1>';
     echo '<hr>';
-    html_span('bullet-item dot-leader', 'item 1');
-    html_span('bullet-item dot-leader', 'item 2');
-    html_span('bullet-item dot-leader', 'item 3');
-    html_span('bullet-item dot-leader', 'item 4');
-    html_span('bullet-item dot-leader', 'item 5');
-    html_span('bullet-item dot-leader', 'item 6');
-    html_span('bullet-item dot-leader', 'item 7');
-    html_span('bullet-item dot-leader', 'item 8');
-    html_span('bullet-item dot-leader', 'item 9');
-    html_span('bullet-item dot-leader', 'item 10');
 
-    echo "Lorem Ipsum";
+    echo '<div class="table-of-contents">';
+    html_span('bullet-item dot-leader', 'Memories of Main Street');
+    html_span('', '2 hours ago');
+    html_span('bullet-item dot-leader', 'My First Telephone');
+    html_span('', '5 hours ago');
+    html_span('bullet-item dot-leader', 'The Royal Visit Experience');
+    html_span('', '1 day ago');
+    html_span('bullet-item dot-leader', 'A Front Royal Story');
+    html_span('', '1 day ago');
+    html_span('bullet-item dot-leader', 'Why This Exhibit Matters');
+    html_span('', '2 days ago');
+    echo '</div>'; // .page. card.secondary .toc
+
     echo '<hr class="split">';
     echo "Lorem Ipsum";
     echo '</div>'; // .page .card.secondary
