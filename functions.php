@@ -291,21 +291,10 @@ function html_header(string $title): void
     echo 'Recent Contributions</h1>';
     echo '<hr>';
 
-    echo '<div class="table-of-contents">';
-    html_span('bullet-item dot-leader', 'Memories of Main Street');
-    html_span('', '2 hours ago');
-    html_span('bullet-item dot-leader', 'My First Telephone');
-    html_span('', '5 hours ago');
-    html_span('bullet-item dot-leader', 'The Royal Visit Experience');
-    html_span('', '1 day ago');
-    html_span('bullet-item dot-leader', 'A Front Royal Story');
-    html_span('', '1 day ago');
-    html_span('bullet-item dot-leader', 'Why This Exhibit Matters');
-    html_span('', '2 days ago');
-    echo '</div>'; // .page. card.secondary .toc
+    echo '<div id="recent_contributions" class="table-of-contents"></div>';
+    echo '<script type="text/JavaScript">show_recent_contributions("recent_contributions");</script>';
 
     echo '<hr class="split">';
-    echo "Lorem Ipsum";
     echo '</div>'; // .page .card.secondary
 
 }
