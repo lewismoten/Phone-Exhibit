@@ -282,7 +282,9 @@ function html_header(string $title): void
 
     echo '<div class="card secondary">';
     html_border_pieces();
-    echo "secondary card";
+    echo '<h1 class="center">';
+    html_span("icon microphone");
+    echo 'Recent Contributions</h1>';
     echo '<hr>';
     echo "Lorem Ipsum";
     echo '<hr class="split">';
