@@ -184,9 +184,9 @@ function html_a(string $href, string $text, string $icon): void
     echo $text.'</a>';
 
 }
-function html_span(string $name): void
+function html_span(string $name, string $content = ''): void
 {
-    echo '<span class="'.$name.'"></span>';
+    echo '<span class="'.$name.'">'.$content.'</span>';
 }
 function html_header(string $title): void
 {
@@ -286,6 +286,28 @@ function html_header(string $title): void
     html_span("icon microphone");
     echo 'Recent Contributions</h1>';
     echo '<hr>';
+    html_span('bullet-item', 'item 1');
+    html_span('bullet-item', 'item 2');
+    html_span('bullet-item', 'item 3');
+    html_span('bullet-item', 'item 4');
+    html_span('bullet-item', 'item 5');
+    html_span('bullet-item', 'item 6');
+    html_span('bullet-item', 'item 7');
+    html_span('bullet-item', 'item 8');
+    html_span('bullet-item', 'item 9');
+    html_span('bullet-item', 'item 10');
+    echo '<ul>';
+    echo '<li>item 1</li>';
+    echo '<li>item 2</li>';
+    echo '<li>item 3</li>';
+    echo '<li>item 4</li>';
+    echo '<li>item 5</li>';
+    echo '<li>item 6</li>';
+    echo '<li>item 7</li>';
+    echo '<li>item 8</li>';
+    echo '<li>item 9</li>';
+    echo '<li>item 10</li>';
+    echo '</ul>';
     echo "Lorem Ipsum";
     echo '<hr class="split">';
     echo "Lorem Ipsum";

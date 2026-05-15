@@ -671,6 +671,62 @@ body {
     background-position: center;
     background-size: contain;
 }
+/* ul */
+ul {
+  list-style: none;
+  padding-left: 1.4rem;
+  margin: 0;
+}
+ul > li,
+.bullet-item {
+  position: relative;
+  --bullet-image: url("/images/ul-1a.png");
+}
+ul > li {
+  margin-bottom: 0.35rem;
+}
+.bullet-item {
+  padding-left: 1rem;
+  display: block;
+}
+
+/* shared bullet positioning */
+ul > li::before,
+.bullet-item::before {
+  content: "";
+  position: absolute;
+  top: 0.62em;
+  width: 6px;
+  height: 6px;
+  transform: translateY(-50%);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  background-image: var(--bullet-image);
+}
+ul > li::before {
+  left: -1rem;
+}
+.bullet-item::before {
+  left: 0;
+}
+ul > li:nth-child(5n + 2)::before,
+* > .bullet-item:nth-child(5n + 2) {
+  --bullet-image: url("/images/ul-1b.png");
+}
+ul > li:nth-child(5n + 3)::before,
+* > .bullet-item:nth-child(5n + 3) {
+  --bullet-image: url("/images/ul-1c.png");
+}
+ul > li:nth-child(5n + 4)::before,
+* > .bullet-item:nth-child(5n + 4) {
+  --bullet-image: url("/images/ul-1d.png");
+}
+ul > li:nth-child(5n)::before,
+* > .bullet-item:nth-child(5n + 5) {
+  --bullet-image: url("/images/ul-1e.png");
+}
+
 /* Columns */
 .columns {
     display: flex;
