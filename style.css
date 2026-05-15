@@ -404,6 +404,73 @@ body {
     background-image: url("images/card-primary-border-top-right.png");
     background-repeat: no-repeat;
 }
+/* .card.secondary */
+.card.secondary hr {
+    left: 26px;
+    right: 26px;
+    height: 8px;
+    width: 129px;
+    background: 
+        url("/images/horizontal-rule-decorative-small.png") no-repeat center / 129px 8px;
+    border: none;
+    margin-block-start: 0.5rem;
+    margin-block-end: 0;
+}
+.card.secondary > .border-top,
+.card.secondary > .border-bottom {
+    left: 26px;
+    right: 26px;
+    height: 5px;
+    background-image: url("images/card-secondary-border-top.png");
+}
+.card.secondary > .border-left,
+.card.secondary > .border-right {
+    top: 26px;
+    bottom: 26px;
+    width: 5px;
+    background-image: url("images/card-secondary-border-right.png");
+}
+.card.secondary > .border-corner {
+    width: 26px;
+    height: 26px;
+    background-image: url("images/card-secondary-border-top-right.png");
+    background-repeat: no-repeat;
+}
+.card.secondary > hr.split::before, 
+.card.secondary > hr.split::after {
+    background-image: url("images/card-secondary-border-middle-right.png");
+    width: 17px;
+    height: 23px;
+    content: "";
+    position: absolute;
+    /* z-index: -1; */
+    right: -1px;
+    top: 0;
+    background-position: center;
+    background-size: contain;
+    display: block;
+}
+.card.secondary > hr.split::before {
+    left: 0px;
+    position:relative;
+    z-index: -2;
+    transform: scaleX(-1);
+    right: unset;
+}
+.card.secondary hr.split {
+    height: 23px;
+    background-image: url("images/card-secondary-border-middle.png");
+    background-repeat: repeat-x;
+    background-position-y: 10px;
+    background-size: auto;
+    left: -10px;
+    right: 10px;
+    width: calc(100% + 20px);
+    position: relative;
+    border: none;
+    margin-block-start: 0.5rem;
+    margin-block-end: 0;
+}
 .center {
     text-align: center;
 }

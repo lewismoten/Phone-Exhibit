@@ -279,6 +279,16 @@ function html_header(string $title): void
     echo '</section>'; // .page .card-primary .hero-marquee
 
     echo '</div>'; // .page .card.primary
+
+    echo '<div class="card secondary">';
+    html_border_pieces();
+    echo "secondary card";
+    echo '<hr>';
+    echo "Lorem Ipsum";
+    echo '<hr class="split">';
+    echo "Lorem Ipsum";
+    echo '</div>'; // .page .card.secondary
+
 }
 
 function html_footer(): void
@@ -295,6 +305,7 @@ function html_footer(): void
     echo '-o-';
     echo '</div>'; // .footer.center
     echo 'Preserving our Past. Inspiring our future.';
+    echo '<a href="/Restoring The Signal Info.pdf">Info Flyer</a>';
     echo '</div>'; // .footer.right
     echo '</div>'; // .footer
     echo '</body>';
