@@ -878,3 +878,40 @@ button {
 .status-draft::before {
     content: '📝';
 }
+.compact-player {
+    position: relative;
+    width: 42px;
+    height: 42px;
+}
+
+.progress-ring {
+    width: 42px;
+    height: 42px;
+    transform: rotate(-90deg);
+}
+
+.progress-ring-bg {
+    fill: none;
+    stroke: #ddd;
+    stroke-width: 4;
+}
+
+.progress-ring-fill {
+    fill: none;
+    stroke: #333;
+    stroke-width: 4;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.15s linear;
+}
+
+.compact-player-button {
+    position: absolute;
+    inset: 0;
+    width: 42px;
+    height: 42px;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+}

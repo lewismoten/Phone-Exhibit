@@ -6,7 +6,7 @@ async function api(path, options = {}) {
     headers = {},
   } = options;
 
-  const url = `/api/${String(path).replace(/^\/+/, "")}.php`;
+  let url = `/api/${String(path).replace(/^\/+/, "")}.php`;
 
   const fetchOptions = {
     method,
@@ -16,7 +16,17 @@ async function api(path, options = {}) {
     },
   };
 
-  if (data || files) {
+  if ((data || files) && method.toUpperCase() === 'GET') {
+    const params = new URLSearchParams();
+
+    if (data) {
+      for (const [key, value] of Object.entries(data)) {
+        params.append(key, value);
+      }
+    }
+
+    url += (url.includes('?') ? '&' : '?') + params.toString();
+  } else if (data || files) {
     const formData = new FormData();
 
     if (data) {
@@ -195,3 +205,138 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
+
+function format_phone_number(value) {
+
+    if (!value) {
+        return '—';
+    }
+
+    const digits = String(value).replace(/\D/g, '');
+
+    if (digits.length === 7) {
+        return `${digits.slice(0,3)}-${digits.slice(3)}`;
+    }
+
+    if (digits.length === 10) {
+        return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
+    }
+
+    return value;
+}
+
+function compact_audio_player(row) {
+
+    const id = `audio-${row.id}`;
+
+    return `
+        <div class="compact-player">
+
+            <svg class="progress-ring" viewBox="0 0 48 48">
+                <circle
+                    class="progress-ring-bg"
+                    cx="24"
+                    cy="24"
+                    r="20"
+                ></circle>
+
+                <circle
+                    id="${id}-progress"
+                    class="progress-ring-fill"
+                    cx="24"
+                    cy="24"
+                    r="20"
+                    stroke-dasharray="126"
+                    stroke-dashoffset="126"
+                ></circle>
+            </svg>
+
+            <button
+                type="button"
+                class="compact-player-button"
+                onclick="toggle_audio_player('${id}')"
+                id="${id}-button"
+            >
+                ▶
+            </button>
+
+            <audio
+                id="${id}"
+                preload="none"
+                ontimeupdate="update_audio_progress('${id}')"
+                onended="reset_audio_player('${id}')"
+            >
+                <source
+                    src="${escape_html(row.playback_url)}"
+                    type="${escape_html(row.playback_mime_type || 'audio/wav')}"
+                >
+            </audio>
+
+        </div>
+    `;
+}
+function toggle_audio_player(id) {
+
+    const audio = document.getElementById(id);
+    const button = document.getElementById(`${id}-button`);
+
+    if (!audio || !button) {
+        return;
+    }
+
+    if (audio.paused) {
+
+        document
+            .querySelectorAll('.compact-player audio')
+            .forEach(other => {
+
+                if (other !== audio) {
+                    other.pause();
+
+                    const otherButton = document.getElementById(`${other.id}-button`);
+
+                    if (otherButton) {
+                        otherButton.textContent = '▶';
+                    }
+                }
+            });
+
+        audio.play();
+        button.textContent = '❚❚';
+
+    } else {
+
+        audio.pause();
+        button.textContent = '▶';
+    }
+}
+
+function update_audio_progress(id) {
+
+    const audio = document.getElementById(id);
+    const progress = document.getElementById(`${id}-progress`);
+
+    if (!audio || !progress || !audio.duration) {
+        return;
+    }
+
+    const percent = audio.currentTime / audio.duration;
+    const circumference = 126;
+
+    progress.style.strokeDashoffset =
+        circumference - (circumference * percent);
+}
+
+function reset_audio_player(id) {
+
+    const button = document.getElementById(`${id}-button`);
+    const progress = document.getElementById(`${id}-progress`);
+
+    if (button) {
+        button.textContent = '▶';
+    }
+
+    if (progress) {
+        progress.style.strokeDashoffset = 126;
+    }
+}
