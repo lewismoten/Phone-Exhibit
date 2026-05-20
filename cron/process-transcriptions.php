@@ -16,6 +16,7 @@ function reset_stale_transcription_jobs(): void
             transcription_started_at = NULL,
             transcription_completed_at = NULL
         WHERE is_deleted = 0
+          AND ai_transcription_opt_in = 1
           AND transcription_status = 'processing'
           AND transcription_started_at < (NOW() - INTERVAL ? MINUTE)
     ";
@@ -35,6 +36,7 @@ function claim_pending_audio_transcription_batch(int $limit): array
         SELECT id
         FROM audio_files
         WHERE is_deleted = 0
+          AND ai_transcription_opt_in = 1
           AND transcription_status = 'pending'
         ORDER BY created_at ASC, id ASC
         LIMIT ?
@@ -61,6 +63,7 @@ function claim_pending_audio_transcription_batch(int $limit): array
             transcription_completed_at = NULL,
             transcription_attempts = transcription_attempts + 1
         WHERE id IN ($placeholders)
+          AND ai_transcription_opt_in = 1
     ";
 
     $update = $pdo->prepare($updateSql);
@@ -70,6 +73,7 @@ function claim_pending_audio_transcription_batch(int $limit): array
         SELECT *
         FROM audio_files
         WHERE id IN ($placeholders)
+          AND ai_transcription_opt_in = 1
         ORDER BY created_at ASC, id ASC
     ");
     $fetch->execute($ids);
