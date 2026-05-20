@@ -257,51 +257,11 @@ function html_header(string $title): void
 
     echo '<div class="page-content">';
     
-    echo '<div class="card primary">';
-    html_border_pieces();
-
-    echo '<section class="hero-marquee">';
-    echo '<div class="panel">';
-
-    echo '<div class="columns">';
-    echo '<div class="center">';
-    echo '<h1>Preserve Voices.</h1><h1>Share History.</h1>';
-    echo '<hr>';
-    echo '<p>';
-    echo 'Dial in from any exhibit phone to leave a message,<br>';
-    echo 'listen to stories, and experience the past<br>';
-    echo 'through the sound of a simpler time.';
-    echo '</p>';
-    echo '<a class="button" href="#">';
-    echo '<span class="icon microphone"></span>';
-    echo 'Learn how it works</a>'; // .page .card-primary .hero-marquee .panel .columns .button
-    echo '</div>'; // .page .card-primary .hero-marquee .panel .columns .center
-    echo '<div class="hero-marquee-1"></div>';
-    echo '</div>'; // .page .card-primary .hero-marquee .panel .columns
-
-    echo '</div>'; // .page .card-primary .hero-marquee .panel
-    echo '</section>'; // .page .card-primary .hero-marquee
-
-    echo '</div>'; // .page .card.primary
-
-    echo '<div class="card secondary">';
-    html_border_pieces();
-    echo '<h1 class="center">';
-    html_span("icon microphone");
-    echo 'Recent Contributions</h1>';
-    echo '<hr>';
-
-    echo '<div id="recent_contributions" class="table-of-contents"></div>';
-    echo '<script type="text/JavaScript">show_recent_contributions("recent_contributions");</script>';
-
-    echo '<hr class="split">';
-    echo '</div>'; // .page .card.secondary
 
 }
 
 function html_footer(): void
 {
-    echo '<hr>';
     echo '</div>';// .page.page-content
     echo '</div>';// .page
     echo '<div class="footer">';
