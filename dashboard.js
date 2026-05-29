@@ -14,6 +14,7 @@ let recordIsActive = false;
 
 onReady(() => {
     init_audio_capture_panel();
+    maybe_show_audio_deleted_toast();
 
     document
         .getElementById('audio-upload-form')
@@ -45,6 +46,18 @@ onReady(() => {
 
     load_audio_files();
 });
+
+function maybe_show_audio_deleted_toast() {
+    const url = new URL(window.location.href);
+
+    if (url.searchParams.get('audio_deleted') !== '1') {
+        return;
+    }
+
+    show_toast('Audio file deleted.');
+    url.searchParams.delete('audio_deleted');
+    window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
+}
 
 function init_audio_capture_panel() {
     const uploadReveal = document.getElementById('audio-upload-reveal');

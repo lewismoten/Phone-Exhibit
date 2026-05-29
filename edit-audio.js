@@ -10,11 +10,33 @@ onReady(() => {
 
     document
         .getElementById('delete-audio-button')
+        .addEventListener('click', open_delete_audio_modal);
+
+    document
+        .getElementById('delete-audio-cancel')
+        .addEventListener('click', close_delete_audio_modal);
+
+    document
+        .getElementById('delete-audio-confirm')
         .addEventListener('click', delete_audio_file);
 
     document
         .getElementById('tty_transcription_text')
         .addEventListener('input', normalize_tty_transcription_field);
+
+    document
+        .getElementById('delete-audio-modal')
+        .addEventListener('click', event => {
+            if (event.target.id === 'delete-audio-modal') {
+                close_delete_audio_modal();
+            }
+        });
+
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape') {
+            close_delete_audio_modal();
+        }
+    });
 });
 
 async function load_audio_file() {
@@ -85,17 +107,44 @@ async function save_audio_file(event) {
     status.innerHTML = '<div class="success">Changes saved.</div>';
 }
 
-async function delete_audio_file() {
-    if (!window.confirm('Delete this audio file? This cannot be undone.')) {
+function open_delete_audio_modal() {
+    const modal = document.getElementById('delete-audio-modal');
+    const confirmButton = document.getElementById('delete-audio-confirm');
+
+    if (!modal || !confirmButton) {
         return;
     }
 
+    modal.hidden = false;
+    confirmButton.focus();
+}
+
+function close_delete_audio_modal() {
+    const modal = document.getElementById('delete-audio-modal');
+    const deleteButton = document.getElementById('delete-audio-button');
+
+    if (!modal || modal.hidden) {
+        return;
+    }
+
+    modal.hidden = true;
+
+    if (deleteButton) {
+        deleteButton.focus();
+    }
+}
+
+async function delete_audio_file() {
     const status = document.getElementById('edit-audio-status');
     const form = document.getElementById('edit-audio-form');
     const button = document.getElementById('delete-audio-button');
+    const confirmButton = document.getElementById('delete-audio-confirm');
+    const cancelButton = document.getElementById('delete-audio-cancel');
 
     status.innerHTML = '<p>Deleting…</p>';
     button.disabled = true;
+    confirmButton.disabled = true;
+    cancelButton.disabled = true;
 
     const result = await api('delete-audio', {
         method: 'POST',
@@ -108,11 +157,14 @@ async function delete_audio_file() {
     if (!result.success) {
         status.innerHTML = `<div class="error">${escape_html(result.error || 'Unable to delete audio file.')}</div>`;
         button.disabled = false;
+        confirmButton.disabled = false;
+        cancelButton.disabled = false;
         return;
     }
 
     status.innerHTML = `<div class="success">${escape_html(result.message || 'Audio file deleted.')}</div>`;
-    window.location.href = result.redirect_url || '/audio-files.php';
+    close_delete_audio_modal();
+    window.location.href = result.redirect_url || '/dashboard.php?audio_deleted=1';
 }
 
 function normalize_tty_transcription_field() {

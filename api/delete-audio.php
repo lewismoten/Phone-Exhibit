@@ -105,6 +105,6 @@ function delete_audio_file(array $user): void
     echo json_encode([
         'success' => true,
         'message' => 'Audio file deleted.',
-        'redirect_url' => '/audio-files.php',
+        'redirect_url' => '/dashboard.php?audio_deleted=1',
     ], JSON_THROW_ON_ERROR);
 }

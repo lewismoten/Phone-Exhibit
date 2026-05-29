@@ -94,6 +94,17 @@ html_header('Edit Audio File');
     </p>
 </form>
 
+<div id="delete-audio-modal" class="modal-backdrop" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="delete-audio-title">
+        <h2 id="delete-audio-title">Delete audio?</h2>
+        <p>This will permanently remove this audio file from your list. This action cannot be undone.</p>
+        <div class="modal-actions">
+            <button type="button" id="delete-audio-cancel">Cancel</button>
+            <button type="button" id="delete-audio-confirm">Delete audio</button>
+        </div>
+    </div>
+</div>
+
 <script src="/common.js"></script>
 <script defer src="/edit-audio.js"></script>
 
