@@ -41,15 +41,30 @@ html_header('Edit Audio File');
     <fieldset>
         <legend>Rolodex card</legend>
 
-        <p>
-            <label for="rolodex_title">Title to appear on Rolodex card</label><br>
-            <input id="rolodex_title" name="rolodex_title" maxlength="150" style="width:100%;">
-        </p>
+        <div class="rolodex-editor">
+            <div class="rolodex-fields">
+                <p>
+                    <label for="rolodex_title">Title to appear on Rolodex card</label><br>
+                    <input id="rolodex_title" name="rolodex_title" maxlength="40" class="rolodex-input">
+                    <small class="muted">Line 1 only, up to 40 characters.</small>
+                </p>
 
-        <p>
-            <label for="rolodex_details">Additional details for Rolodex card</label><br>
-            <textarea id="rolodex_details" name="rolodex_details" rows="6" style="width:100%;"></textarea>
-        </p>
+                <p>
+                    <label for="rolodex_details">Additional details for Rolodex card</label><br>
+                    <textarea id="rolodex_details" name="rolodex_details" rows="5" maxlength="204" class="rolodex-textarea"></textarea>
+                    <small class="muted">Lines 3-7 only, up to 5 lines and 40 characters wide.</small>
+                    <small class="muted">
+                        Available keys from your Remington sample: A-Z, a-z, 0, 2-9, and these symbols:
+                        - &amp; ' ( ) ; : @ , . ? ¢ £ ½ ¼
+                    </small>
+                </p>
+            </div>
+
+            <div class="rolodex-preview-wrap">
+                <label>Rolodex preview</label>
+                <div id="rolodex-preview" class="rolodex-preview">Loading preview…</div>
+            </div>
+        </div>
     </fieldset>
 
     <fieldset>

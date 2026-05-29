@@ -91,8 +91,8 @@ function save_audio_file(array $user): void
 
     $directoryTitle = clean_nullable_text($_POST['directory_title'] ?? null, 150);
     $requestedPhoneNumber = clean_nullable_text($_POST['requested_phone_number'] ?? null, 32);
-    $rolodexTitle = clean_nullable_text($_POST['rolodex_title'] ?? null, 150);
-    $rolodexDetails = clean_nullable_text($_POST['rolodex_details'] ?? null, 5000);
+    $rolodexTitle = clean_rolodex_title_text($_POST['rolodex_title'] ?? null);
+    $rolodexDetails = clean_rolodex_details_text($_POST['rolodex_details'] ?? null);
     $ttyTranscriptionText = clean_tty_transcription_text($_POST['tty_transcription_text'] ?? null, 20000);
     $aiTranscriptionOptIn = !empty($_POST['ai_transcription_opt_in']) ? 1 : 0;
 
@@ -189,6 +189,8 @@ function audio_file_payload(array $row): array
         'short_name' => (string)($row['short_name'] ?? ''),
         'directory_title' => (string)($row['directory_title'] ?? ''),
         'requested_phone_number' => (string)($row['requested_phone_number'] ?? ''),
+        'exhibit_phone_number' => (string)($row['exhibit_phone_number'] ?? ''),
+        'tty_phone_number' => (string)($row['tty_phone_number'] ?? ''),
         'rolodex_title' => (string)($row['rolodex_title'] ?? ''),
         'rolodex_details' => (string)($row['rolodex_details'] ?? ''),
         'transcription_text' => (string)($row['transcription_text'] ?? ''),
@@ -230,4 +232,98 @@ function clean_tty_transcription_text(mixed $value, int $maxLength): ?string
     }
 
     return $text;
+}
+
+function clean_rolodex_title_text(mixed $value): ?string
+{
+    $text = normalize_rolodex_text((string)$value);
+    $text = preg_replace('/\s+/', ' ', str_replace("\n", ' ', $text));
+    $text = trim((string)$text);
+
+    if ($text === '') {
+        return null;
+    }
+
+    return mb_substr($text, 0, 40);
+}
+
+function clean_rolodex_details_text(mixed $value): ?string
+{
+    $text = normalize_rolodex_text((string)$value);
+    $wrappedLines = [];
+
+    foreach (explode("\n", $text) as $line) {
+        $wrappedLines = array_merge($wrappedLines, wrap_rolodex_line($line, 40));
+    }
+
+    $wrappedLines = array_slice($wrappedLines, 0, 5);
+    $wrappedLines = array_map(
+        static fn (string $line): string => rtrim($line),
+        $wrappedLines
+    );
+
+    while (!empty($wrappedLines) && end($wrappedLines) === '') {
+        array_pop($wrappedLines);
+    }
+
+    $normalized = trim(implode("\n", $wrappedLines));
+
+    return $normalized === '' ? null : $normalized;
+}
+
+function normalize_rolodex_text(string $value): string
+{
+    $text = str_replace(["\r\n", "\r"], "\n", $value);
+    $text = str_replace("\t", ' ', $text);
+    $text = str_replace(['1/2', '1/4'], ['½', '¼'], $text);
+    $text = preg_replace('/[^A-Za-z023456789 \n,\.\?:;\'&\-()@¢£½¼]/u', '', $text);
+    $text = preg_replace("/\n{3,}/", "\n\n", (string)$text);
+
+    return (string)$text;
+}
+
+function wrap_rolodex_line(string $line, int $width): array
+{
+    $trimmed = ltrim(rtrim($line), ' ');
+
+    if ($trimmed === '') {
+        return [''];
+    }
+
+    $words = preg_split('/ +/', $trimmed) ?: [];
+    $wrapped = [];
+    $current = '';
+
+    foreach ($words as $word) {
+        if ($word === '') {
+            continue;
+        }
+
+        if (mb_strlen($word) > $width) {
+            if ($current !== '') {
+                $wrapped[] = $current;
+                $current = '';
+            }
+
+            for ($i = 0; $i < mb_strlen($word); $i += $width) {
+                $wrapped[] = mb_substr($word, $i, $width);
+            }
+            continue;
+        }
+
+        $candidate = $current === '' ? $word : $current . ' ' . $word;
+        if (mb_strlen($candidate) <= $width) {
+            $current = $candidate;
+            continue;
+        }
+
+        $wrapped[] = $current;
+        $current = $word;
+    }
+
+    if ($current !== '') {
+        $wrapped[] = $current;
+    }
+
+    return $wrapped === [] ? [''] : $wrapped;
 }
