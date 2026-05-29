@@ -13,7 +13,7 @@ let recordAnalyser = null;
 let recordIsActive = false;
 
 onReady(() => {
-    init_audio_record_panel();
+    init_audio_capture_panel();
 
     document
         .getElementById('audio-upload-form')
@@ -46,21 +46,37 @@ onReady(() => {
     load_audio_files();
 });
 
-function init_audio_record_panel() {
+function init_audio_capture_panel() {
+    const uploadReveal = document.getElementById('audio-upload-reveal');
+    const uploadClose = document.getElementById('audio-upload-close');
     const reveal = document.getElementById('audio-record-reveal');
+    const recordClose = document.getElementById('audio-record-close');
     const toggle = document.getElementById('audio-record-toggle');
     const upload = document.getElementById('audio-record-upload');
 
-    if (!reveal || !toggle || !upload) {
+    if (!uploadReveal || !uploadClose || !reveal || !recordClose || !toggle || !upload) {
         return;
     }
 
+    uploadReveal.addEventListener('click', event => {
+        event.preventDefault();
+        show_audio_capture_panel('upload');
+    });
+
+    uploadClose.addEventListener('click', event => {
+        event.preventDefault();
+        collapse_upload_panel();
+    });
+
     reveal.addEventListener('click', async event => {
         event.preventDefault();
-
-        document.getElementById('audio-record-intro').hidden = true;
-        document.getElementById('audio-record-panel').hidden = false;
+        show_audio_capture_panel('record');
         await load_record_devices();
+    });
+
+    recordClose.addEventListener('click', event => {
+        event.preventDefault();
+        collapse_record_panel();
     });
 
     toggle.addEventListener('click', async event => {
@@ -91,6 +107,24 @@ function init_audio_record_panel() {
     set_anchor_enabled(toggle, true);
     set_anchor_enabled(upload, false);
     render_recording_preview(null, null);
+}
+
+function show_audio_capture_panel(mode) {
+    const home = document.getElementById('audio-capture-home');
+    const uploadPanel = document.getElementById('audio-upload-panel');
+    const recordPanel = document.getElementById('audio-record-panel');
+
+    if (home) {
+        home.hidden = true;
+    }
+
+    if (uploadPanel) {
+        uploadPanel.hidden = mode !== 'upload';
+    }
+
+    if (recordPanel) {
+        recordPanel.hidden = mode !== 'record';
+    }
 }
 
 async function upload_audio_from_panel() {
@@ -137,6 +171,7 @@ async function upload_audio_from_panel() {
     show_toast(result.message || 'Audio uploaded successfully.');
     form.reset();
     set_anchor_enabled(submit, true);
+    collapse_upload_panel();
     load_audio_files(1);
 }
 
@@ -491,7 +526,7 @@ function update_record_toggle_button() {
 }
 
 function collapse_record_panel() {
-    const intro = document.getElementById('audio-record-intro');
+    const home = document.getElementById('audio-capture-home');
     const panel = document.getElementById('audio-record-panel');
     const status = document.getElementById('audio-record-status');
     const device = document.getElementById('audio-record-device');
@@ -508,8 +543,8 @@ function collapse_record_panel() {
         recordAudioCtx.close();
     }
 
-    if (intro) {
-        intro.hidden = false;
+    if (home) {
+        home.hidden = false;
     }
 
     if (panel) {
@@ -543,6 +578,32 @@ function collapse_record_panel() {
     if (status) {
         status.innerHTML = '';
     }
+}
+
+function collapse_upload_panel() {
+    const home = document.getElementById('audio-capture-home');
+    const panel = document.getElementById('audio-upload-panel');
+    const form = document.getElementById('audio-upload-form');
+    const status = document.getElementById('audio-upload-status');
+    const submit = document.getElementById('audio-upload-submit');
+
+    if (home) {
+        home.hidden = false;
+    }
+
+    if (panel) {
+        panel.hidden = true;
+    }
+
+    if (form) {
+        form.reset();
+    }
+
+    if (status) {
+        status.innerHTML = '';
+    }
+
+    set_anchor_enabled(submit, true);
 }
 
 function fmt_seconds(sec) {

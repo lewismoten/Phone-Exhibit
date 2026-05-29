@@ -1103,7 +1103,7 @@ button {
 
 .audio-action-panels {
     display: grid;
-    grid-template-columns: repeat(3, minmax(200px, 1fr));
+    grid-template-columns: repeat(2, minmax(260px, 1fr));
     gap: 1rem;
     align-items: stretch;
 }
@@ -1120,7 +1120,7 @@ button {
     gap: 0.75rem;
 }
 
-.audio-record-card .audio-action-card-body {
+.audio-capture-card .audio-action-card-body {
     justify-content: flex-start;
 }
 
@@ -1146,6 +1146,58 @@ button {
 
 .audio-upload-form p {
     margin: 0;
+}
+
+.audio-capture-home {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+    width: 100%;
+}
+
+.audio-capture-home[hidden] {
+    display: none;
+}
+
+.audio-capture-home p {
+    margin: 0;
+    text-align: center;
+}
+
+.audio-capture-home .button {
+    display: inline-flex;
+}
+
+.audio-mode-dialog {
+    position: relative;
+    width: 100%;
+    text-align: left;
+}
+
+.audio-mode-dialog[hidden] {
+    display: none;
+}
+
+.audio-dialog-close {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    font-size: 0.85rem;
+    line-height: 1;
+    text-decoration: none;
+    color: var(--content-text);
+    border: 1px solid rgba(74, 60, 46, 0.25);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.72);
+}
+
+.audio-dialog-close:hover {
+    background: rgba(255, 255, 255, 0.92);
 }
 
 .upload-progress {
@@ -1178,19 +1230,32 @@ button {
 }
 
 .audio-record-panel {
-    text-align: left;
     display: flex;
     flex-direction: column;
     gap: 0.45rem;
-    margin-top: -0.1rem;
-}
-
-.audio-record-panel[hidden] {
-    display: none;
+    padding-top: 0.15rem;
 }
 
 .audio-record-panel > :first-child {
     margin-top: 0;
+}
+
+.audio-upload-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    padding-top: 0.15rem;
+}
+
+.audio-upload-panel .audio-upload-form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.audio-upload-panel .audio-upload-form input[type="file"] {
+    margin: 0;
 }
 
 .audio-record-panel label {

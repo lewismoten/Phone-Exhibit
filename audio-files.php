@@ -11,34 +11,30 @@ html_header('My Audio Files');
 <h1>My audio files</h1>
 
 <div class="audio-action-panels">
-    <div class="card secondary audio-action-card">
+    <div class="card secondary audio-action-card audio-capture-card">
         <?php html_border_pieces(); ?>
-        <h1 class="center">Upload</h1>
+        <h1 class="center">Add Audio</h1>
         <hr>
 
         <div class="audio-action-card-body center">
-            <div id="audio-upload-status"></div>
-            <form id="audio-upload-form" class="audio-upload-form" enctype="multipart/form-data">
-                <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
-                <input id="audio_upload_file" name="audio_file" type="file" accept="audio/*" required>
-                <p><a id="audio-upload-submit" class="button" href="#">Upload audio file</a></p>
-            </form>
-        </div>
-    </div>
-
-    <div class="card secondary audio-action-card audio-record-card">
-        <?php html_border_pieces(); ?>
-        <h1 class="center">Record</h1>
-        <hr>
-
-        <div class="audio-action-card-body center">
-            <div id="audio-record-status"></div>
-
-            <div id="audio-record-intro">
-                <p><a id="audio-record-reveal" class="button" href="#">Record Audio</a></p>
+            <div id="audio-capture-home" class="audio-capture-home">
+                <p><a id="audio-record-reveal" class="button error" href="#">Record Audio</a></p>
+                <p><a id="audio-upload-reveal" class="button" href="#">Upload Audio</a></p>
             </div>
 
-            <div id="audio-record-panel" class="audio-record-panel" hidden>
+            <div id="audio-upload-panel" class="audio-mode-dialog audio-upload-panel" hidden>
+                <a id="audio-upload-close" class="audio-dialog-close" href="#" aria-label="Close upload dialog">X</a>
+                <div id="audio-upload-status"></div>
+                <form id="audio-upload-form" class="audio-upload-form" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                    <input id="audio_upload_file" name="audio_file" type="file" accept="audio/*" required>
+                    <p><a id="audio-upload-submit" class="button" href="#">Upload audio file</a></p>
+                </form>
+            </div>
+
+            <div id="audio-record-panel" class="audio-mode-dialog audio-record-panel" hidden>
+                <a id="audio-record-close" class="audio-dialog-close" href="#" aria-label="Close record dialog">X</a>
+                <div id="audio-record-status"></div>
                 <select id="audio-record-device"></select>
 
                 <div class="audio-record-bars">
