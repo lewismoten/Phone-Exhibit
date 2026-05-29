@@ -126,7 +126,6 @@ html_header('Edit Audio File');
     </div>
 </div>
 
-<script src="/common.js"></script>
 <script defer src="/edit-audio.js"></script>
 
 </script>
