@@ -2,7 +2,7 @@ const getAudioId = () => parseInt(document.getElementById('edit-audio-id').value
 const TTY_LINE_WIDTH = 32;
 const ROLODEX_LINE_WIDTH = 40;
 const ROLODEX_DETAIL_LINES = 5;
-const ROLODEX_ALLOWED_CHARS_REGEX = /[^A-Za-z023456789 \n,.\?:;'&\-()@¢£½¼]/gu;
+const ROLODEX_ALLOWED_CHARS_REGEX = /[^A-Za-z0123456789 \n,.\?!:;'&\-()@¢£½¼]/gu;
 let currentAudioRow = null;
 let currentRolodexTargetId = 'rolodex_details';
 

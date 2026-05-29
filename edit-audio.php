@@ -60,8 +60,8 @@ html_header('Edit Audio File');
                     </span>
                     <small class="muted">Lines 3-7 only, up to 5 lines and 40 characters wide.</small>
                     <small class="muted">
-                        Available keys from your Remington sample: A-Z, a-z, 0, 2-9, and these symbols:
-                        - &amp; ' ( ) ; : @ , . ? ¢ £ ½ ¼
+                        Available keys from your Remington sample: A-Z, a-z, 0-9, and these symbols:
+                        - ! &amp; ' ( ) ; : @ , . ? ¢ £ ½ ¼
                     </small>
                 </p>
             </div>

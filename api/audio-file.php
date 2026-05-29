@@ -307,7 +307,7 @@ function normalize_rolodex_text(string $value): string
     $text = str_replace(["\r\n", "\r"], "\n", $value);
     $text = str_replace("\t", ' ', $text);
     $text = str_replace(['1/2', '1/4'], ['½', '¼'], $text);
-    $text = preg_replace('/[^A-Za-z023456789 \n,\.\?:;\'&\-()@¢£½¼]/u', '', $text);
+    $text = preg_replace('/[^A-Za-z0123456789 \n,\.\?!:;\'&\-()@¢£½¼]/u', '', $text);
     $text = preg_replace("/\n{3,}/", "\n\n", (string)$text);
 
     return (string)$text;
