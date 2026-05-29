@@ -93,7 +93,7 @@ function audio_file_row(row) {
             <td>${escape_html(type)}</td>
 
             <td class="muted audio-file-date">
-                ${escape_html(row.created_at)}
+                ${escape_html(format_local_datetime(row.created_at))}
             </td>
         </tr>
     `;

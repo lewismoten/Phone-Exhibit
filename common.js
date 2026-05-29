@@ -216,6 +216,22 @@ function parse_api_date(dateString) {
   return direct;
 }
 
+function format_local_datetime(dateString) {
+
+  const date = parse_api_date(dateString);
+  if (!date) {
+    return String(dateString || '');
+  }
+
+  return new Intl.DateTimeFormat(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit'
+  }).format(date);
+}
+
 function escape_html(value) {
 
   return String(value)
