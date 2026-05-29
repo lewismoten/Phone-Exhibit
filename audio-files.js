@@ -297,6 +297,7 @@ async function upload_recording_from_panel() {
 
     status.innerHTML = `<div class="success">${escape_html(result.message || 'Audio uploaded successfully.')}</div>`;
     state.textContent = 'Uploaded';
+    collapse_record_panel();
     load_audio_files(1);
 }
 
@@ -443,6 +444,61 @@ function update_record_toggle_button() {
     }
 
     toggle.textContent = recordIsActive ? 'Stop' : 'Record';
+}
+
+function collapse_record_panel() {
+    const intro = document.getElementById('audio-record-intro');
+    const panel = document.getElementById('audio-record-panel');
+    const status = document.getElementById('audio-record-status');
+    const device = document.getElementById('audio-record-device');
+
+    if (recordRecorder && recordRecorder.state !== 'inactive') {
+        recordRecorder.stop();
+    }
+
+    if (recordStream) {
+        recordStream.getTracks().forEach(track => track.stop());
+    }
+
+    if (recordAudioCtx) {
+        recordAudioCtx.close();
+    }
+
+    if (intro) {
+        intro.hidden = false;
+    }
+
+    if (panel) {
+        panel.hidden = true;
+    }
+
+    if (device) {
+        device.innerHTML = '';
+    }
+
+    if (recordObjectUrl) {
+        URL.revokeObjectURL(recordObjectUrl);
+        recordObjectUrl = null;
+    }
+
+    recordStream = null;
+    recordRecorder = null;
+    recordChunks = [];
+    recordBlob = null;
+    recordStartTime = null;
+    recordAudioCtx = null;
+    recordAnalyser = null;
+    clearInterval(recordTimer);
+    recordTimer = null;
+    recordIsActive = false;
+    update_record_toggle_button();
+    reset_recording_visual();
+    render_recording_preview(null, null);
+    set_anchor_enabled(document.getElementById('audio-record-upload'), false);
+
+    if (status) {
+        status.innerHTML = '';
+    }
 }
 
 function fmt_seconds(sec) {
