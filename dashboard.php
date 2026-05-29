@@ -11,9 +11,6 @@ html_header('My Audio Files');
 <div class="audio-action-panels">
     <div class="card secondary audio-action-card audio-capture-card">
         <?php html_border_pieces(); ?>
-        <h1 class="center">Add Audio</h1>
-        <hr>
-
         <div class="audio-action-card-body center">
             <div id="audio-capture-home" class="audio-capture-home">
                 <p><a id="audio-record-reveal" class="button error" href="#">Record Audio</a></p>
@@ -90,9 +87,6 @@ html_header('My Audio Files');
 
     <div class="card secondary audio-search-card">
         <?php html_border_pieces(); ?>
-        <h1 class="center">Search</h1>
-        <hr>
-
         <form id="audio-search-form" class="audio-search-form">
             <div class="audio-search-form-row">
                 <input id="q" name="q" placeholder="Search filename, title, phone number, or transcript">
