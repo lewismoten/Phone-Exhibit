@@ -85,6 +85,8 @@ $useSsl = !empty($secretConfig['ssl']);
 $passiveMode = !array_key_exists('passive', $secretConfig) || (bool) $secretConfig['passive'];
 $dryRun = !empty($config['dryRun']);
 $remoteRoot = normalizeRemotePath((string) $config['remotePath']);
+$manifestPath = normalizeManifestPath((string) ($config['manifestPath'] ?? '.ftp-deploy-manifest.json'));
+$remoteManifestPath = joinRemotePath($remoteRoot, $manifestPath);
 
 $connection = $useSsl ? @ftp_ssl_connect($config['host'], $port, $timeout) : @ftp_connect($config['host'], $port, $timeout);
 if ($connection === false) {
@@ -101,21 +103,29 @@ if (@ftp_login($connection, $config['username'], $config['password']) === false)
 ftp_pasv($connection, $passiveMode);
 
 $paths = collectProjectPaths($projectRoot, $excludePatterns);
-[$directories, $files] = splitPaths($paths);
+$files = collectFiles($projectRoot, $paths);
+$remoteManifest = loadRemoteManifest($connection, $remoteManifestPath);
+$remoteManifestFiles = isset($remoteManifest['files']) && is_array($remoteManifest['files']) ? $remoteManifest['files'] : [];
+$nextManifestFiles = [];
+$filesToUpload = [];
 
-echo $dryRun ? "Dry run only. No files will be uploaded.\n" : "Uploading files to {$config['host']}...\n";
+echo $dryRun ? "Dry run only. No files will be uploaded.\n" : "Deploying files to {$config['host']}...\n";
 
-foreach ($directories as $relativePath) {
-    $remoteDirectory = joinRemotePath($remoteRoot, $relativePath);
-    if ($dryRun) {
-        echo "MKDIR {$remoteDirectory}\n";
+foreach ($files as $relativePath) {
+    $localPath = $projectRoot . DIRECTORY_SEPARATOR . $relativePath;
+    $localManifestEntry = buildManifestEntry($localPath);
+    $nextManifestFiles[$relativePath] = $localManifestEntry;
+    $remoteManifestEntry = $remoteManifestFiles[$relativePath] ?? null;
+
+    if (manifestEntriesMatch($localManifestEntry, $remoteManifestEntry)) {
+        echo "Skipped {$relativePath}\n";
         continue;
     }
 
-    ensureRemoteDirectory($connection, $remoteDirectory);
+    $filesToUpload[] = $relativePath;
 }
 
-foreach ($files as $relativePath) {
+foreach ($filesToUpload as $relativePath) {
     $localPath = $projectRoot . DIRECTORY_SEPARATOR . $relativePath;
     $remotePath = joinRemotePath($remoteRoot, $relativePath);
 
@@ -133,6 +143,31 @@ foreach ($files as $relativePath) {
     }
 
     echo "Uploaded {$relativePath}\n";
+}
+
+$manifestPayload = json_encode([
+    'generatedAt' => gmdate(DATE_ATOM),
+    'files' => $nextManifestFiles,
+], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+
+if ($manifestPayload === false) {
+    ftp_close($connection);
+    fwrite(STDERR, "Unable to encode deployment manifest.\n");
+    exit(1);
+}
+
+$shouldUploadManifest = !isset($remoteManifest['files']) || $remoteManifest['files'] !== $nextManifestFiles || count($filesToUpload) > 0;
+
+if ($shouldUploadManifest) {
+    if ($dryRun) {
+        echo "PUT manifest -> {$remoteManifestPath}\n";
+    } else {
+        ensureRemoteDirectory($connection, dirname($remoteManifestPath));
+        uploadManifest($connection, $remoteManifestPath, $manifestPayload);
+        echo "Updated manifest {$remoteManifestPath}\n";
+    }
+} else {
+    echo "Manifest unchanged\n";
 }
 
 ftp_close($connection);
@@ -221,21 +256,17 @@ function shouldExclude(string $relativePath, array $excludePatterns): bool
     return false;
 }
 
-function splitPaths(array $paths): array
+function collectFiles(string $projectRoot, array $paths): array
 {
-    $directories = [];
     $files = [];
 
     foreach ($paths as $relativePath) {
-        if (is_dir(dirname(__DIR__) . DIRECTORY_SEPARATOR . $relativePath)) {
-            $directories[] = $relativePath;
-            continue;
+        if (is_file($projectRoot . DIRECTORY_SEPARATOR . $relativePath)) {
+            $files[] = $relativePath;
         }
-
-        $files[] = $relativePath;
     }
 
-    return [$directories, $files];
+    return $files;
 }
 
 function ensureRemoteDirectory($connection, string $remoteDirectory): void
@@ -252,5 +283,95 @@ function ensureRemoteDirectory($connection, string $remoteDirectory): void
     foreach ($segments as $segment) {
         $current .= '/' . $segment;
         @ftp_mkdir($connection, $current);
+    }
+}
+
+function normalizeManifestPath(string $path): string
+{
+    $path = trim(str_replace('\\', '/', $path));
+    $path = ltrim($path, '/');
+
+    return $path === '' ? '.ftp-deploy-manifest.json' : $path;
+}
+
+function loadRemoteManifest($connection, string $remoteManifestPath): array
+{
+    $tempFile = tempnam(sys_get_temp_dir(), 'ftp-manifest-');
+    if ($tempFile === false) {
+        return [];
+    }
+
+    try {
+        if (!@ftp_get($connection, $tempFile, $remoteManifestPath, FTP_BINARY)) {
+            return [];
+        }
+
+        $manifestJson = file_get_contents($tempFile);
+        if ($manifestJson === false || trim($manifestJson) === '') {
+            return [];
+        }
+
+        $manifest = json_decode($manifestJson, true);
+        if (!is_array($manifest)) {
+            fwrite(STDERR, "Remote manifest is invalid JSON. Rebuilding {$remoteManifestPath}.\n");
+            return [];
+        }
+
+        return $manifest;
+    } finally {
+        @unlink($tempFile);
+    }
+}
+
+function buildManifestEntry(string $localPath): array
+{
+    $hash = sha1_file($localPath);
+    if ($hash === false) {
+        fwrite(STDERR, "Unable to hash file: {$localPath}\n");
+        exit(1);
+    }
+
+    $size = filesize($localPath);
+    if ($size === false) {
+        fwrite(STDERR, "Unable to read file size: {$localPath}\n");
+        exit(1);
+    }
+
+    return [
+        'sha1' => $hash,
+        'size' => $size,
+    ];
+}
+
+function manifestEntriesMatch(array $localEntry, $remoteEntry): bool
+{
+    if (!is_array($remoteEntry)) {
+        return false;
+    }
+
+    return ($remoteEntry['sha1'] ?? null) === $localEntry['sha1']
+        && (int) ($remoteEntry['size'] ?? -1) === $localEntry['size'];
+}
+
+function uploadManifest($connection, string $remoteManifestPath, string $manifestPayload): void
+{
+    $tempFile = tempnam(sys_get_temp_dir(), 'ftp-manifest-');
+    if ($tempFile === false) {
+        fwrite(STDERR, "Unable to create a temporary manifest file.\n");
+        exit(1);
+    }
+
+    try {
+        if (file_put_contents($tempFile, $manifestPayload) === false) {
+            fwrite(STDERR, "Unable to write temporary manifest file.\n");
+            exit(1);
+        }
+
+        if (!ftp_put($connection, $remoteManifestPath, $tempFile, FTP_BINARY)) {
+            fwrite(STDERR, "Upload failed: {$remoteManifestPath}\n");
+            exit(1);
+        }
+    } finally {
+        @unlink($tempFile);
     }
 }

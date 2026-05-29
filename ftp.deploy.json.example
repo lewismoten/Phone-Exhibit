@@ -1,5 +1,6 @@
 {
   "remotePath": "/",
+  "manifestPath": ".ftp-deploy-manifest.json",
   "dryRun": false,
   "exclude": [
     "uploads",

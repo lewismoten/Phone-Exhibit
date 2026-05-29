@@ -19,7 +19,13 @@ This repo includes a deploy script at `scripts/deploy-ftp.php` that reads secret
 2. Fill in your FTP host, port, username, password, passive mode, SSL choice, and timeout in the home-directory copy.
 3. Copy `ftp.deploy.json.example` to `ftp.deploy.json`.
 4. Set `remotePath` in `ftp.deploy.json` to the destination folder on the server.
-5. Run `php scripts/deploy-ftp.php`.
+5. Optionally change `manifestPath` in `ftp.deploy.json` if you want the remote manifest stored somewhere other than `.ftp-deploy-manifest.json`.
+6. Run `php scripts/deploy-ftp.php`.
+
+Deploy behavior:
+* If a remote manifest already exists, the script downloads it first.
+* Only files whose hash or size changed are uploaded.
+* The remote manifest is added or updated after the deploy finishes.
 
 You can also pass a custom config path:
 `php scripts/deploy-ftp.php ~/some-other-config.json`
