@@ -103,6 +103,27 @@ const toc_item = (title, value = '-') => `
         ${escape_html(value)}
     </span>
 `;
+
+const recent_contribution_item = (entry) => {
+    const button = entry.playback_url
+        ? compact_audio_player({
+            id: `recent-${entry.id}`,
+            playback_url: entry.playback_url,
+            playback_mime_type: entry.playback_mime_type || 'audio/wav',
+        })
+        : '';
+
+    return `
+        <span class="bullet-item dot-leader recent-contribution-item">
+            <span class="recent-contribution-title">${escape_html(entry.title)}</span>
+            ${button}
+        </span>
+        <span>
+            ${escape_html(time_ago(entry.date))}
+        </span>
+    `;
+};
+
 const show_recent_contributions = (id) => {
     const container = document.getElementById(id);
     if(container) {
@@ -133,9 +154,7 @@ const show_recent_contributions = (id) => {
             return;
         }
 
-        container.innerHTML = entries.map(
-            entry => toc_item(entry.title, time_ago(entry.date))
-        ).join("");
+        container.innerHTML = entries.map(recent_contribution_item).join("");
 
     });
 }

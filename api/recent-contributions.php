@@ -10,11 +10,15 @@ try {
         "SELECT
             id,
             coalesce(
-                short_name,
                 nullif(directory_title, ''),
                 nullif(rolodex_title, ''),
                 original_filename
             ) AS title,
+            relative_path,
+            mime_type,
+            converted_relative_path,
+            converted_mime_type,
+            conversion_status,
             created_at AS date
          FROM audio_files
          WHERE is_deleted = 0
@@ -24,10 +28,36 @@ try {
 
     $stmt->execute([]);
     $rows = $stmt->fetchAll();
+    $entries = [];
+
+    foreach ($rows as $row) {
+        $hasConverted =
+            !empty($row['converted_relative_path'])
+            && (string)($row['conversion_status'] ?? '') === 'complete';
+
+        if ($hasConverted) {
+            $playbackUrl = converted_audio_playback_url($row);
+            $playbackMimeType = $row['converted_mime_type'] ?: 'audio/wav';
+        } elseif (!empty($row['relative_path'])) {
+            $playbackUrl = original_audio_playback_url($row);
+            $playbackMimeType = $row['mime_type'] ?: 'audio/mpeg';
+        } else {
+            $playbackUrl = null;
+            $playbackMimeType = null;
+        }
+
+        $entries[] = [
+            'id' => (int)$row['id'],
+            'title' => (string)$row['title'],
+            'date' => (string)$row['date'],
+            'playback_url' => $playbackUrl,
+            'playback_mime_type' => $playbackMimeType,
+        ];
+    }
 
     echo json_encode([
         'success' => true,
-        'entries' => $rows,
+        'entries' => $entries,
     ], JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
 
 } catch (Throwable $e) {
