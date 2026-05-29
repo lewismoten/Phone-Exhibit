@@ -442,7 +442,7 @@ function update_record_toggle_button() {
         return;
     }
 
-    toggle.textContent = recordIsActive ? 'Stop' : 'Start';
+    toggle.textContent = recordIsActive ? 'Stop' : 'Record';
 }
 
 function fmt_seconds(sec) {

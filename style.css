@@ -1088,6 +1088,10 @@ button {
     gap: 0.75rem;
 }
 
+.audio-record-card .audio-action-card-body {
+    justify-content: flex-start;
+}
+
 .audio-action-card-body p {
     margin: 0;
 }
@@ -1124,9 +1128,14 @@ button {
     display: none;
 }
 
+.audio-record-panel > :first-child {
+    margin-top: 0;
+}
+
 .audio-record-panel label {
     margin-top: 0;
     font-size: 0.88rem;
+    line-height: 1.1;
 }
 
 .audio-record-panel select,

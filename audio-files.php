@@ -39,7 +39,6 @@ html_header('My Audio Files');
             </div>
 
             <div id="audio-record-panel" class="audio-record-panel" hidden>
-                <label for="audio-record-device">Microphone</label>
                 <select id="audio-record-device"></select>
 
                 <div class="audio-record-bars">
@@ -88,8 +87,8 @@ html_header('My Audio Files');
                 </div>
 
                 <div class="audio-record-controls audio-record-controls-bottom">
-                    <a id="audio-record-toggle" class="button" href="#">Start</a>
                     <a id="audio-record-upload" class="button is-disabled" href="#" aria-disabled="true">Upload</a>
+                    <a id="audio-record-toggle" class="button error" href="#">Record</a>
                 </div>
             </div>
         </div>
