@@ -30,11 +30,41 @@ html_header('Record Audio');
 
     <p>
         <strong>Status:</strong> <span id="status">Idle</span><br>
-        <strong>Duration:</strong> <span id="duration">0:00</span>
+        <strong>Duration:</strong> <span id="duration">0:00</span><br>
+        <strong>Remaining:</strong> <span id="remaining">3:00</span>
     </p>
 
+    <div style="display:flex;align-items:center;gap:16px;margin:12px 0 8px;">
+        <svg id="hourglass" viewBox="0 0 64 96" width="54" height="81" aria-hidden="true">
+            <defs>
+                <clipPath id="hourglass-top-clip">
+                    <rect id="hourglass-top-clip-rect" x="20" y="14" width="24" height="19"></rect>
+                </clipPath>
+                <clipPath id="hourglass-bottom-clip">
+                    <rect id="hourglass-bottom-clip-rect" x="20" y="63" width="24" height="19"></rect>
+                </clipPath>
+            </defs>
+            <path d="M14 6h36v8c0 12-8 21-18 28c10 7 18 16 18 28v20H14V70c0-12 8-21 18-28C22 35 14 26 14 14V6z" fill="none" stroke="#4a3c2e" stroke-width="4" stroke-linejoin="round"/>
+            <path d="M20 14h24c0 8-5 14-12 19c-7-5-12-11-12-19z" fill="#d8c08b"/>
+            <path id="hourglass-top-sand" d="M20 14h24c0 8-5 14-12 19c-7-5-12-11-12-19z" fill="#c49b52" clip-path="url(#hourglass-top-clip)"/>
+            <path d="M20 82h24c0-8-5-14-12-19c-7 5-12 11-12 19z" fill="#d8c08b"/>
+            <path id="hourglass-bottom-sand" d="M20 82h24c0-8-5-14-12-19c-7 5-12 11-12 19z" fill="#c49b52" opacity="0.25" clip-path="url(#hourglass-bottom-clip)"/>
+            <g id="hourglass-stream" opacity="0">
+                <circle id="hourglass-stream-dot-1" cx="32" cy="40" r="1.2" fill="#d8c08b"></circle>
+                <circle id="hourglass-stream-dot-2" cx="31" cy="46" r="1" fill="#c49b52"></circle>
+                <circle id="hourglass-stream-dot-3" cx="33" cy="52" r="1.1" fill="#e6cf97"></circle>
+                <circle id="hourglass-stream-dot-4" cx="32" cy="58" r="0.9" fill="#c49b52"></circle>
+            </g>
+        </svg>
+        <div id="recording-progress-text" class="muted">3 minutes maximum</div>
+    </div>
+
     <div style="background:#eee;height:12px;border-radius:10px;">
-        <div id="level" style="height:12px;width:0;background:#444;"></div>
+        <div id="recording-progress" style="height:12px;width:0;background:#b78a42;border-radius:10px;"></div>
+    </div>
+
+    <div style="background:#eee;height:12px;border-radius:10px;margin-top:8px;">
+        <div id="level" style="height:12px;width:0;background:#444;border-radius:10px;"></div>
     </div>
 
     <audio id="playback" controls style="margin-top:15px;display:none;"></audio>
@@ -50,10 +80,22 @@ html_header('Record Audio');
     const playback = document.getElementById('playback');
     const status = document.getElementById('status');
     const duration = document.getElementById('duration');
+    const remaining = document.getElementById('remaining');
     const level = document.getElementById('level');
+    const recordingProgress = document.getElementById('recording-progress');
+    const recordingProgressText = document.getElementById('recording-progress-text');
+    const hourglassTopClipRect = document.getElementById('hourglass-top-clip-rect');
+    const hourglassBottomClipRect = document.getElementById('hourglass-bottom-clip-rect');
+    const hourglassBottomSand = document.getElementById('hourglass-bottom-sand');
+    const hourglassStream = document.getElementById('hourglass-stream');
+    const hourglassStreamDot1 = document.getElementById('hourglass-stream-dot-1');
+    const hourglassStreamDot2 = document.getElementById('hourglass-stream-dot-2');
+    const hourglassStreamDot3 = document.getElementById('hourglass-stream-dot-3');
+    const hourglassStreamDot4 = document.getElementById('hourglass-stream-dot-4');
     const filename = document.getElementById('filename');
     const errorEl = document.getElementById('error');
     const successEl = document.getElementById('success');
+    const MAX_RECORDING_SECONDS = 180;
 
     let stream, recorder, chunks = [], blob;
     let startTime, timer, audioCtx, analyser;
@@ -82,7 +124,81 @@ html_header('Record Audio');
 
     function updateTime() {
         if (!startTime) return;
-        duration.textContent = fmt((Date.now()-startTime)/1000);
+        const elapsedSeconds = (Date.now() - startTime) / 1000;
+        duration.textContent = fmt(Math.min(elapsedSeconds, MAX_RECORDING_SECONDS));
+        remaining.textContent = fmt(Math.max(0, MAX_RECORDING_SECONDS - elapsedSeconds));
+        updateRecordingVisual(Math.min(elapsedSeconds, MAX_RECORDING_SECONDS));
+
+        if (elapsedSeconds >= MAX_RECORDING_SECONDS) {
+            stopRecording(true);
+        }
+    }
+
+    function updateRecordingVisual(elapsedSeconds) {
+        const clamped = Math.max(0, Math.min(elapsedSeconds, MAX_RECORDING_SECONDS));
+        const progress = clamped / MAX_RECORDING_SECONDS;
+        const remainingProgress = 1 - progress;
+
+        recordingProgress.style.width = `${progress * 100}%`;
+        recordingProgressText.textContent = `${fmt(MAX_RECORDING_SECONDS - clamped)} remaining`;
+
+        const topMaxHeight = 19;
+        const bottomMaxHeight = 19;
+        const topHeight = Math.max(0, topMaxHeight * remainingProgress);
+        const bottomHeight = Math.max(0, bottomMaxHeight * progress);
+        const tick = Math.floor(clamped * 8);
+
+        hourglassTopClipRect.setAttribute('y', String(14 + (topMaxHeight - topHeight)));
+        hourglassTopClipRect.setAttribute('height', String(topHeight));
+
+        hourglassBottomClipRect.setAttribute('y', String(82 - bottomHeight));
+        hourglassBottomClipRect.setAttribute('height', String(bottomHeight));
+
+        hourglassBottomSand.style.opacity = String(Math.max(0.25, progress));
+        hourglassStream.style.opacity = progress > 0 && progress < 1 ? '1' : '0';
+
+        // Offset the falling grains so the stream sparkles instead of reading as a rigid line.
+        hourglassStreamDot1.setAttribute('cx', String(31.4 + (tick % 2) * 0.7));
+        hourglassStreamDot1.setAttribute('cy', String(39 + (tick % 6)));
+        hourglassStreamDot2.setAttribute('cx', String(32.6 - (tick % 2) * 0.8));
+        hourglassStreamDot2.setAttribute('cy', String(44 + ((tick + 2) % 6)));
+        hourglassStreamDot3.setAttribute('cx', String(31.2 + ((tick + 1) % 3) * 0.5));
+        hourglassStreamDot3.setAttribute('cy', String(49 + ((tick + 4) % 6)));
+        hourglassStreamDot4.setAttribute('cx', String(32.8 - ((tick + 1) % 3) * 0.4));
+        hourglassStreamDot4.setAttribute('cy', String(54 + ((tick + 3) % 6)));
+    }
+
+    function resetRecordingVisual() {
+        duration.textContent = '0:00';
+        remaining.textContent = fmt(MAX_RECORDING_SECONDS);
+        recordingProgress.style.width = '0%';
+        recordingProgressText.textContent = '3 minutes maximum';
+        updateRecordingVisual(0);
+    }
+
+    function stopRecording(reachedLimit = false) {
+        const elapsedSeconds = startTime ? Math.min((Date.now() - startTime) / 1000, MAX_RECORDING_SECONDS) : 0;
+
+        if (recorder && recorder.state !== 'inactive') {
+            recorder.stop();
+        }
+
+        if (stream) {
+            stream.getTracks().forEach(t => t.stop());
+        }
+
+        clearInterval(timer);
+        timer = null;
+        startTime = null;
+        start.disabled = false;
+        stop.disabled = true;
+        duration.textContent = fmt(elapsedSeconds);
+        remaining.textContent = fmt(Math.max(0, MAX_RECORDING_SECONDS - elapsedSeconds));
+        updateRecordingVisual(elapsedSeconds);
+
+        if (reachedLimit) {
+            status.textContent = 'Recorded (3 minute limit reached)';
+        }
     }
 
     async function loadDevices() {
@@ -115,6 +231,9 @@ html_header('Record Audio');
         const data = new Uint8Array(analyser.fftSize);
 
         function tick() {
+            if (!stream || !analyser) {
+                return;
+            }
             analyser.getByteTimeDomainData(data);
             let peak=0;
             for (let v of data) {
@@ -131,6 +250,10 @@ html_header('Record Audio');
         clearMsg();
         chunks = [];
         blob = null;
+        playback.style.display = 'none';
+        playback.removeAttribute('src');
+        upload.disabled = true;
+        resetRecordingVisual();
 
         try {
             stream = await navigator.mediaDevices.getUserMedia({
@@ -145,13 +268,17 @@ html_header('Record Audio');
                 playback.src = URL.createObjectURL(blob);
                 playback.style.display = 'block';
                 upload.disabled = false;
-                status.textContent = 'Recorded';
+
+                if (status.textContent === 'Recording') {
+                    status.textContent = 'Recorded';
+                }
             };
 
             recorder.start();
             startTime = Date.now();
             timer = setInterval(updateTime, 200);
             meter(stream);
+            updateRecordingVisual(0);
 
             status.textContent = 'Recording';
             start.disabled = true;
@@ -163,12 +290,7 @@ html_header('Record Audio');
     };
 
     stop.onclick = () => {
-        recorder.stop();
-        stream.getTracks().forEach(t=>t.stop());
-        clearInterval(timer);
-        startTime = null;
-        start.disabled = false;
-        stop.disabled = true;
+        stopRecording(false);
     };
 
     upload.onclick = async () => {
@@ -235,6 +357,7 @@ html_header('Record Audio');
 
     refresh.onclick = loadDevices;
 
+    resetRecordingVisual();
     loadDevices();
 })();
 </script>
