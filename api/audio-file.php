@@ -90,7 +90,7 @@ function save_audio_file(array $user): void
     }
 
     $directoryTitle = clean_nullable_text($_POST['directory_title'] ?? null, 150);
-    $requestedPhoneNumber = clean_nullable_text($_POST['requested_phone_number'] ?? null, 32);
+    $requestedPhoneNumber = clean_requested_phone_number($_POST['requested_phone_number'] ?? null);
     $rolodexTitle = clean_rolodex_title_text($_POST['rolodex_title'] ?? null);
     $rolodexDetails = clean_rolodex_details_text($_POST['rolodex_details'] ?? null);
     $ttyTranscriptionText = clean_tty_transcription_text($_POST['tty_transcription_text'] ?? null, 20000);
@@ -217,6 +217,37 @@ function clean_nullable_text(mixed $value, int $maxLength): ?string
     }
 
     return $text;
+}
+
+function clean_requested_phone_number(mixed $value): ?string
+{
+    $text = strtoupper((string)$value);
+    $map = [
+        'A' => '2', 'B' => '2', 'C' => '2',
+        'D' => '3', 'E' => '3', 'F' => '3',
+        'G' => '4', 'H' => '4', 'I' => '4',
+        'J' => '5', 'K' => '5', 'L' => '5',
+        'M' => '6', 'N' => '6', 'O' => '6',
+        'P' => '7', 'Q' => '7', 'R' => '7', 'S' => '7',
+        'T' => '8', 'U' => '8', 'V' => '8',
+        'W' => '9', 'X' => '9', 'Y' => '9', 'Z' => '9',
+    ];
+
+    $digits = '';
+    foreach (mb_str_split($text) as $char) {
+        if ($char >= '0' && $char <= '9') {
+            $digits .= $char;
+            continue;
+        }
+
+        if (isset($map[$char])) {
+            $digits .= $map[$char];
+        }
+    }
+
+    $digits = substr($digits, 0, 20);
+
+    return $digits === '' ? null : $digits;
 }
 
 function clean_tty_transcription_text(mixed $value, int $maxLength): ?string

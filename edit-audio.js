@@ -57,7 +57,7 @@ onReady(() => {
 
     document
         .getElementById('requested_phone_number')
-        .addEventListener('input', render_rolodex_preview);
+        .addEventListener('input', normalize_requested_phone_number_field);
 
     document
         .getElementById('delete-audio-modal')
@@ -100,6 +100,7 @@ async function load_audio_file() {
     document.getElementById('transcription_text').value = row.transcription_text || '';
     document.getElementById('transcription_tty_preview').value = row.transcription_tty_preview || '';
     document.getElementById('tty_transcription_text').value = row.tty_transcription_text || '';
+    normalize_requested_phone_number_field();
     normalize_rolodex_title_field();
     normalize_rolodex_details_field();
     normalize_tty_transcription_field();
@@ -122,6 +123,7 @@ async function save_audio_file(event) {
     const form = document.getElementById('edit-audio-form');
 
     status.innerHTML = '<p>Saving…</p>';
+    normalize_requested_phone_number_field();
     normalize_rolodex_title_field();
     normalize_rolodex_details_field();
     normalize_tty_transcription_field();
@@ -218,6 +220,48 @@ function normalize_tty_transcription_field() {
     }
 
     field.value = normalize_tty_text(field.value, true);
+}
+
+function normalize_requested_phone_number_field() {
+    const field = document.getElementById('requested_phone_number');
+
+    if (!field) {
+        return;
+    }
+
+    update_field_value_preserving_selection(
+        field,
+        normalize_requested_phone_number_text(field.value)
+    );
+    render_rolodex_preview();
+}
+
+function normalize_requested_phone_number_text(value) {
+    const keypadMap = {
+        A: '2', B: '2', C: '2',
+        D: '3', E: '3', F: '3',
+        G: '4', H: '4', I: '4',
+        J: '5', K: '5', L: '5',
+        M: '6', N: '6', O: '6',
+        P: '7', Q: '7', R: '7', S: '7',
+        T: '8', U: '8', V: '8',
+        W: '9', X: '9', Y: '9', Z: '9',
+    };
+
+    let normalized = '';
+
+    for (const char of String(value || '').toUpperCase()) {
+        if (char >= '0' && char <= '9') {
+            normalized += char;
+            continue;
+        }
+
+        if (keypadMap[char]) {
+            normalized += keypadMap[char];
+        }
+    }
+
+    return normalized.slice(0, 20);
 }
 
 function normalize_rolodex_title_field() {
