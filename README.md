@@ -25,8 +25,9 @@ This repo includes a deploy script at `scripts/deploy-ftp.php` that reads secret
 Deploy behavior:
 * If a remote manifest already exists, the script downloads it first.
 * Only files whose hash or size changed are uploaded.
+* Files that failed in a prior run are listed separately in the manifest and retried after all other changed files.
 * During upload, the remote manifest is checkpointed about every 10 seconds.
-* If an upload fails, the script still tries to save a partial manifest for files already uploaded successfully.
+* If an upload fails, the script still tries to save a partial manifest for files already uploaded successfully and records the failed file separately for deferred retry next time.
 * The remote manifest is added or updated after the deploy finishes.
 
 You can also pass a custom config path:

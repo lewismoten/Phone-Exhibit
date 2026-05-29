@@ -106,8 +106,11 @@ $paths = collectProjectPaths($projectRoot, $excludePatterns);
 $files = collectFiles($projectRoot, $paths);
 $remoteManifest = loadRemoteManifest($connection, $remoteManifestPath);
 $remoteManifestFiles = isset($remoteManifest['files']) && is_array($remoteManifest['files']) ? $remoteManifest['files'] : [];
+$remoteFailedFiles = isset($remoteManifest['failedFiles']) && is_array($remoteManifest['failedFiles']) ? $remoteManifest['failedFiles'] : [];
 $nextManifestFiles = [];
+$nextFailedFiles = [];
 $filesToUpload = [];
+$deferredFailedUploads = [];
 $uploadedManifestFiles = [];
 $manifestFlushInterval = 10;
 $lastManifestFlushAt = time();
@@ -126,10 +129,17 @@ foreach ($files as $relativePath) {
         continue;
     }
 
+    if (shouldDeferFailedFile($relativePath, $localManifestEntry, $remoteFailedFiles)) {
+        $deferredFailedUploads[] = $relativePath;
+        $nextFailedFiles[$relativePath] = $localManifestEntry;
+        echo "Deferred {$relativePath}\n";
+        continue;
+    }
+
     $filesToUpload[] = $relativePath;
 }
 
-foreach ($filesToUpload as $relativePath) {
+foreach (array_merge($filesToUpload, $deferredFailedUploads) as $relativePath) {
     $localPath = $projectRoot . DIRECTORY_SEPARATOR . $relativePath;
     $remotePath = joinRemotePath($remoteRoot, $relativePath);
     $localManifestEntry = $nextManifestFiles[$relativePath];
@@ -142,10 +152,12 @@ foreach ($filesToUpload as $relativePath) {
     ensureRemoteDirectory($connection, dirname($remotePath));
 
     if (!ftp_put($connection, $remotePath, $localPath, FTP_BINARY)) {
+        $nextFailedFiles[$relativePath] = $localManifestEntry;
         $manifestSaved = flushManifestSnapshot(
             $connection,
             $remoteManifestPath,
             $uploadedManifestFiles,
+            $nextFailedFiles,
             true
         );
         ftp_close($connection);
@@ -159,10 +171,11 @@ foreach ($filesToUpload as $relativePath) {
     }
 
     $uploadedManifestFiles[$relativePath] = $localManifestEntry;
+    unset($nextFailedFiles[$relativePath]);
     echo "Uploaded {$relativePath}\n";
 
     if (time() - $lastManifestFlushAt >= $manifestFlushInterval) {
-        if (flushManifestSnapshot($connection, $remoteManifestPath, $uploadedManifestFiles, true)) {
+        if (flushManifestSnapshot($connection, $remoteManifestPath, $uploadedManifestFiles, $nextFailedFiles, true)) {
             echo "Checkpointed manifest {$remoteManifestPath}\n";
             $lastManifestFlushAt = time();
         } else {
@@ -171,14 +184,18 @@ foreach ($filesToUpload as $relativePath) {
     }
 }
 
-$shouldUploadManifest = !isset($remoteManifest['files']) || $remoteManifest['files'] !== $nextManifestFiles || count($filesToUpload) > 0;
+$shouldUploadManifest = !isset($remoteManifest['files'])
+    || $remoteManifest['files'] !== $nextManifestFiles
+    || $remoteFailedFiles !== $nextFailedFiles
+    || count($filesToUpload) > 0
+    || count($deferredFailedUploads) > 0;
 
 if ($shouldUploadManifest) {
     if ($dryRun) {
         echo "PUT manifest -> {$remoteManifestPath}\n";
     } else {
         ensureRemoteDirectory($connection, dirname($remoteManifestPath));
-        if (!flushManifestSnapshot($connection, $remoteManifestPath, $nextManifestFiles, false)) {
+        if (!flushManifestSnapshot($connection, $remoteManifestPath, $nextManifestFiles, $nextFailedFiles, false)) {
             ftp_close($connection);
             fwrite(STDERR, "Unable to update manifest {$remoteManifestPath}\n");
             exit(1);
@@ -372,35 +389,22 @@ function manifestEntriesMatch(array $localEntry, $remoteEntry): bool
         && (int) ($remoteEntry['size'] ?? -1) === $localEntry['size'];
 }
 
-function uploadManifest($connection, string $remoteManifestPath, string $manifestPayload): void
+function shouldDeferFailedFile(string $relativePath, array $localManifestEntry, array $remoteFailedFiles): bool
 {
-    $tempFile = tempnam(sys_get_temp_dir(), 'ftp-manifest-');
-    if ($tempFile === false) {
-        fwrite(STDERR, "Unable to create a temporary manifest file.\n");
-        exit(1);
+    if (!isset($remoteFailedFiles[$relativePath]) || !is_array($remoteFailedFiles[$relativePath])) {
+        return false;
     }
 
-    try {
-        if (file_put_contents($tempFile, $manifestPayload) === false) {
-            fwrite(STDERR, "Unable to write temporary manifest file.\n");
-            exit(1);
-        }
-
-        if (!ftp_put($connection, $remoteManifestPath, $tempFile, FTP_BINARY)) {
-            fwrite(STDERR, "Upload failed: {$remoteManifestPath}\n");
-            exit(1);
-        }
-    } finally {
-        @unlink($tempFile);
-    }
+    return manifestEntriesMatch($localManifestEntry, $remoteFailedFiles[$relativePath]);
 }
 
-function flushManifestSnapshot($connection, string $remoteManifestPath, array $manifestFiles, bool $partial): bool
+function flushManifestSnapshot($connection, string $remoteManifestPath, array $manifestFiles, array $failedFiles, bool $partial): bool
 {
     $manifestPayload = json_encode([
         'generatedAt' => gmdate(DATE_ATOM),
         'isPartial' => $partial,
         'files' => $manifestFiles,
+        'failedFiles' => $failedFiles,
     ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 
     if ($manifestPayload === false) {
