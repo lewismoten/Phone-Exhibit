@@ -10,19 +10,30 @@ html_header('My Audio Files');
 
 <h1>My audio files</h1>
 
-<p><a href="upload-audio.php">Upload another file</a></p>
+<div class="audio-action-panels">
+    <div class="card secondary audio-action-card">
+        <?php html_border_pieces(); ?>
+        <h1 class="center">Upload</h1>
+        <hr>
 
-<div class="card secondary audio-search-card">
-    <?php html_border_pieces(); ?>
-    <h1 class="center">Search</h1>
-    <hr>
-
-    <form id="audio-search-form" class="audio-search-form">
-        <div class="audio-search-form-row">
-            <input id="q" name="q" placeholder="Search filename, title, phone number, or transcript">
-            <a id="audio-search-submit" class="button" href="#">Search</a>
+        <div class="audio-action-card-body center">
+            <p>Record a new contribution or add another file to your collection.</p>
+            <p><a class="button" href="upload-audio.php">Upload audio file</a></p>
         </div>
-    </form>
+    </div>
+
+    <div class="card secondary audio-search-card">
+        <?php html_border_pieces(); ?>
+        <h1 class="center">Search</h1>
+        <hr>
+
+        <form id="audio-search-form" class="audio-search-form">
+            <div class="audio-search-form-row">
+                <input id="q" name="q" placeholder="Search filename, title, phone number, or transcript">
+                <a id="audio-search-submit" class="button" href="#">Search</a>
+            </div>
+        </form>
+    </div>
 </div>
 
 <div id="audio-results">Loading…</div>
