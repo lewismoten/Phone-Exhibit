@@ -1345,12 +1345,22 @@ button {
 .audio-upload-panel .audio-upload-form {
     width: 100%;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
     gap: 0.65rem;
 }
 
 .audio-upload-panel .audio-upload-form input[type="file"] {
     margin: 0;
+}
+
+.audio-upload-preview {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.2rem;
 }
 
 .audio-record-panel label {

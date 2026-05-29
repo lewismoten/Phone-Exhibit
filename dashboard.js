@@ -11,10 +11,22 @@ let recordTimer = null;
 let recordAudioCtx = null;
 let recordAnalyser = null;
 let recordIsActive = false;
+let uploadPreviewObjectUrl = null;
 
 onReady(() => {
     init_audio_capture_panel();
     maybe_show_audio_deleted_toast();
+
+    document
+        .getElementById('audio-upload-choose')
+        .addEventListener('click', event => {
+            event.preventDefault();
+            document.getElementById('audio_upload_file').click();
+        });
+
+    document
+        .getElementById('audio_upload_file')
+        .addEventListener('change', update_upload_filename_label);
 
     document
         .getElementById('audio-upload-form')
@@ -66,8 +78,9 @@ function init_audio_capture_panel() {
     const recordClose = document.getElementById('audio-record-close');
     const toggle = document.getElementById('audio-record-toggle');
     const upload = document.getElementById('audio-record-upload');
+    const uploadSubmit = document.getElementById('audio-upload-submit');
 
-    if (!uploadReveal || !uploadClose || !reveal || !recordClose || !toggle || !upload) {
+    if (!uploadReveal || !uploadClose || !reveal || !recordClose || !toggle || !upload || !uploadSubmit) {
         return;
     }
 
@@ -119,7 +132,9 @@ function init_audio_capture_panel() {
     reset_recording_visual();
     set_anchor_enabled(toggle, true);
     set_anchor_enabled(upload, false);
+    set_anchor_enabled(uploadSubmit, false);
     render_recording_preview(null, null);
+    render_upload_preview(null, null);
 }
 
 function show_audio_capture_panel(mode) {
@@ -183,9 +198,84 @@ async function upload_audio_from_panel() {
     status.innerHTML = `<div class="success">${escape_html(result.message || 'Audio uploaded successfully.')}</div>`;
     show_toast(result.message || 'Audio uploaded successfully.');
     form.reset();
+    update_upload_filename_label();
     set_anchor_enabled(submit, true);
     collapse_upload_panel();
     load_audio_files(1);
+}
+
+function update_upload_filename_label() {
+    const fileInput = document.getElementById('audio_upload_file');
+    const submit = document.getElementById('audio-upload-submit');
+
+    if (!fileInput || !submit) {
+        return;
+    }
+
+    const hasFile = !!(fileInput.files && fileInput.files.length);
+
+    submit.classList.toggle('warn', !hasFile);
+    submit.classList.toggle('primary', hasFile);
+    set_anchor_enabled(submit, hasFile);
+
+    if (uploadPreviewObjectUrl) {
+        URL.revokeObjectURL(uploadPreviewObjectUrl);
+        uploadPreviewObjectUrl = null;
+    }
+
+    if (hasFile) {
+        uploadPreviewObjectUrl = URL.createObjectURL(fileInput.files[0]);
+        render_upload_preview(
+            uploadPreviewObjectUrl,
+            fileInput.files[0].type || 'audio/mpeg',
+            fileInput.files[0].name || ''
+        );
+        return;
+    }
+
+    render_upload_preview(null, null, '');
+}
+
+function render_upload_preview(url, mimeType, fileName = '') {
+    const preview = document.getElementById('audio-upload-preview');
+
+    if (!preview) {
+        return;
+    }
+
+    preview.title = fileName || '';
+
+    if (!url) {
+        preview.className = 'audio-upload-preview audio-record-preview audio-record-preview-disabled';
+        preview.innerHTML = `
+            <div class="audio-record-preview-row">
+                <span class="compact-player compact-player-disabled" aria-hidden="true">
+                    <svg class="progress-ring" viewBox="0 0 48 48">
+                        <circle class="progress-ring-bg" cx="24" cy="24" r="20"></circle>
+                    </svg>
+                    <span class="compact-player-button">
+                        <span class="compact-player-icon">
+                            <svg viewBox="0 0 16 16" class="compact-player-icon-svg">
+                                <polygon class="compact-player-play-shape" points="3.5,2 13.5,8 3.5,14"></polygon>
+                            </svg>
+                        </span>
+                    </span>
+                </span>
+            </div>
+        `;
+        return;
+    }
+
+    preview.className = 'audio-upload-preview audio-record-preview';
+    preview.innerHTML = `
+        <div class="audio-record-preview-row">
+            ${compact_audio_player({
+                id: 'upload-panel-preview',
+                playback_url: url,
+                playback_mime_type: mimeType || 'audio/mpeg'
+            })}
+        </div>
+    `;
 }
 
 async function load_record_devices() {
@@ -611,6 +701,13 @@ function collapse_upload_panel() {
     if (form) {
         form.reset();
     }
+
+    if (uploadPreviewObjectUrl) {
+        URL.revokeObjectURL(uploadPreviewObjectUrl);
+        uploadPreviewObjectUrl = null;
+    }
+
+    update_upload_filename_label();
 
     if (status) {
         status.innerHTML = '';
