@@ -9,7 +9,12 @@ try {
     $stmt = db()->prepare(
         "SELECT
             id,
-            coalesce(short_name, original_filename) AS title,
+            coalesce(
+                short_name,
+                nullif(directory_title, ''),
+                nullif(rolodex_title, ''),
+                original_filename
+            ) AS title,
             created_at AS date
          FROM audio_files
          WHERE is_deleted = 0
