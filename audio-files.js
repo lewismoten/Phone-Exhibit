@@ -8,6 +8,13 @@ onReady(() => {
             load_audio_files(1);
         });
 
+    document
+        .getElementById('audio-search-submit')
+        .addEventListener('click', event => {
+            event.preventDefault();
+            load_audio_files(1);
+        });
+
     load_audio_files();
 });
 
@@ -113,13 +120,13 @@ function render_audio_pagination(page, totalPages) {
     let html = '';
 
     if (page > 1) {
-        html += `<button type="button" onclick="load_audio_files(${page - 1})">« Previous</button> `;
+        html += `<a class="button" href="#" onclick="load_audio_files(${page - 1}); return false;">« Previous</a> `;
     }
 
-    html += `<span> Page ${page} of ${totalPages} </span>`;
+    html += `<span class="audio-pagination-status">Page ${page} of ${totalPages}</span>`;
 
     if (page < totalPages) {
-        html += ` <button type="button" onclick="load_audio_files(${page + 1})">Next »</button>`;
+        html += ` <a class="button" href="#" onclick="load_audio_files(${page + 1}); return false;">Next »</a>`;
     }
 
     pagination.innerHTML = html;

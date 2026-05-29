@@ -1054,6 +1054,17 @@ button {
     box-sizing: border-box;
 }
 
+#audio-pagination {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.audio-pagination-status {
+    white-space: nowrap;
+}
+
 @media (max-width: 760px) {
     .audio-file-table {
         min-width: 640px;

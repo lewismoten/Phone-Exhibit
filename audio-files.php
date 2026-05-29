@@ -15,7 +15,9 @@ html_header('My Audio Files');
 <form id="audio-search-form" style="margin-bottom:16px;">
     <label for="q">Search</label>
     <input id="q" name="q" placeholder="Search filename, title, phone number, or transcript">
-    <button type="submit">Search</button>
+    <p>
+        <a id="audio-search-submit" class="button" href="#">Search</a>
+    </p>
 </form>
 
 <div id="audio-results">Loading…</div>
