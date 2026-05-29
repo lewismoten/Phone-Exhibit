@@ -18,8 +18,6 @@ html_header('Edit Audio File');
 
 <h1>Edit audio file</h1>
 
-<p><a href="my-audio-files.php">&laquo; Back to my audio files</a></p>
-
 <div id="edit-audio-status"></div>
 
 <form id="edit-audio-form" style="max-width:760px;">
