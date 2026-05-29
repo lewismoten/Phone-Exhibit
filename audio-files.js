@@ -36,15 +36,21 @@ async function load_audio_files(page = 1) {
     }
 
     results.innerHTML = `
-        <div class="audio-file-grid">
-            <div class="audio-file-grid-header">
-                <span>Title</span>
-                <span>Phone</span>
-                <span>Audio</span>
-                <span>Type</span>
-                <span>Date</span>
-            </div>
-            ${rows.map(audio_file_row).join('')}
+        <div class="audio-file-table-wrap">
+            <table class="audio-file-table">
+                <thead>
+                    <tr>
+                        <th scope="col">Title</th>
+                        <th scope="col">Phone</th>
+                        <th scope="col">Audio</th>
+                        <th scope="col">Type</th>
+                        <th scope="col">Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rows.map(audio_file_row).join('')}
+                </tbody>
+            </table>
         </div>
     `;
 
@@ -64,23 +70,23 @@ function audio_file_row(row) {
         : `<span class="muted">Unavailable</span>`;
 
     return `
-        <div class="audio-file-grid-row">
-            <span class="audio-file-title">
+        <tr>
+            <td class="audio-file-title">
                 <a href="edit-audio.php?id=${encodeURIComponent(row.id)}">
                     ${escape_html(row.title)}
                 </a>
-            </span>
+            </td>
 
-            <span>${escape_html(phone)}</span>
+            <td>${escape_html(phone)}</td>
 
-            <span>${player}</span>
+            <td class="audio-file-audio">${player}</td>
 
-            <span>${escape_html(type)}</span>
+            <td>${escape_html(type)}</td>
 
-            <span class="muted">
+            <td class="muted audio-file-date">
                 ${escape_html(row.created_at)}
-            </span>
-        </div>
+            </td>
+        </tr>
     `;
 }
 
