@@ -8,8 +8,6 @@ require_current_terms_acceptance();
 html_header('My Audio Files');
 ?>
 
-<h1>My audio files</h1>
-
 <div class="audio-action-panels">
     <div class="card secondary audio-action-card audio-capture-card">
         <?php html_border_pieces(); ?>
