@@ -306,7 +306,15 @@ function compact_audio_player(row) {
                 id="${id}-button"
                 aria-label="Play audio"
             >
-                <span class="compact-player-icon" aria-hidden="true">▶</span>
+                <span class="compact-player-icon" aria-hidden="true">
+                    <svg viewBox="0 0 16 16" class="compact-player-icon-svg">
+                        <polygon class="compact-player-play-shape" points="3.5,2 13.5,8 3.5,14"></polygon>
+                        <g class="compact-player-pause-shape">
+                            <rect x="3.5" y="2.25" width="3.25" height="11.5" rx="0.8"></rect>
+                            <rect x="9.25" y="2.25" width="3.25" height="11.5" rx="0.8"></rect>
+                        </g>
+                    </svg>
+                </span>
             </button>
 
             <audio
@@ -394,6 +402,6 @@ function set_audio_button_state(id, isPlaying) {
         return;
     }
 
-    icon.textContent = isPlaying ? '❚❚' : '▶';
+    button.classList.toggle('is-playing', isPlaying);
     button.setAttribute('aria-label', isPlaying ? 'Pause audio' : 'Play audio');
 }
