@@ -1065,6 +1065,20 @@ button {
     white-space: nowrap;
 }
 
+.audio-search-card {
+    margin: 0 10px 16px;
+}
+
+.audio-search-form {
+    border: none;
+    padding: 0;
+    margin: 0;
+}
+
+.audio-search-form p {
+    margin-bottom: 0;
+}
+
 @media (max-width: 760px) {
     .audio-file-table {
         min-width: 640px;
