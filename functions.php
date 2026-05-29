@@ -53,6 +53,7 @@ function current_user(): ?array
           id,
           username,
           email,
+          role,
           is_active,
           created_at,
           agreed_terms_version,
@@ -264,6 +265,30 @@ function html_footer(): void
 {
     echo '</div>';// .page.page-content
     echo '</div>';// .page
+    if (current_user() === null) {
+        echo '<div id="login-modal" class="modal-backdrop" hidden>';
+        echo '<div class="modal-card login-modal-card" role="dialog" aria-modal="true" aria-labelledby="login-modal-title">';
+        echo '<button type="button" id="login-modal-close" class="login-modal-close" aria-label="Close login dialog">X</button>';
+        echo '<h2 id="login-modal-title">Login</h2>';
+        echo '<div id="login-modal-status">';
+        if ($msg = flash_get('success')) {
+            echo '<div class="success">' . e($msg) . '</div>';
+        }
+        echo '</div>';
+        echo '<form id="login-modal-form">';
+        echo '<input type="hidden" name="csrf_token" value="' . e(csrf_token()) . '">';
+        echo '<label for="login-modal-identity">Username or Email</label>';
+        echo '<input id="login-modal-identity" name="identity" autocomplete="username" required>';
+        echo '<label for="login-modal-password">Password</label>';
+        echo '<input id="login-modal-password" name="password" type="password" autocomplete="current-password" required>';
+        echo '<div class="login-modal-actions">';
+        echo '<button type="submit">Login</button>';
+        echo '</div>';
+        echo '</form>';
+        echo '<p class="login-modal-links"><a href="/forgot-password.php">Forgot password?</a> <span>|</span> <a href="/register.php">Register</a></p>';
+        echo '</div>';
+        echo '</div>';
+    }
     echo '<div class="footer">';
     echo '<div class="left">';
     echo 'Front Royal, Virginia';

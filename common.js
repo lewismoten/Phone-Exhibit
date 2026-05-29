@@ -83,6 +83,23 @@ async function api(path, options = {}) {
   }
 }
 
+let currentSessionPromise = null;
+
+async function get_current_session(force = false) {
+  if (!force && currentSessionPromise) {
+    return currentSessionPromise;
+  }
+
+  currentSessionPromise = api("session");
+  const result = await currentSessionPromise;
+
+  if (!result.success) {
+    currentSessionPromise = null;
+  }
+
+  return result;
+}
+
 function api_upload(path, options = {}) {
   const {
     method = "POST",
@@ -173,6 +190,111 @@ function onReady(callback) {
     document.addEventListener("DOMContentLoaded", callback, {
       once: true,
     });
+  }
+}
+
+function open_login_modal() {
+  const modal = document.getElementById("login-modal");
+  const identity = document.getElementById("login-modal-identity");
+
+  if (!modal) {
+    window.location.href = "/login.php";
+    return;
+  }
+
+  modal.hidden = false;
+  if (identity) {
+    identity.focus();
+  }
+}
+
+function close_login_modal() {
+  const modal = document.getElementById("login-modal");
+  if (!modal || modal.hidden) {
+    return;
+  }
+
+  modal.hidden = true;
+
+  const pathname = window.location.pathname.replace(/\/+$/, "");
+  if (pathname === "/login.php" || pathname === "login.php") {
+    window.location.href = "/";
+  }
+}
+
+async function submit_login_modal(event) {
+  event.preventDefault();
+
+  const form = document.getElementById("login-modal-form");
+  const status = document.getElementById("login-modal-status");
+
+  if (!form || !status) {
+    return;
+  }
+
+  status.innerHTML = "<p>Logging in…</p>";
+
+  const result = await api("login", {
+    method: "POST",
+    data: {
+      csrf_token: form.csrf_token.value,
+      identity: form.identity.value,
+      password: form.password.value,
+    },
+  });
+
+  if (!result.success) {
+    status.innerHTML = `<div class="error">${escape_html(result.error || "Unable to log in.")}</div>`;
+    return;
+  }
+
+  currentSessionPromise = Promise.resolve({
+    success: true,
+    logged_in: true,
+    user: result.user || null,
+  });
+
+  window.location.href = result.redirect_url || "/dashboard.php";
+}
+
+function init_login_modal() {
+  const modal = document.getElementById("login-modal");
+  const form = document.getElementById("login-modal-form");
+  const close = document.getElementById("login-modal-close");
+
+  if (!modal || !form || !close) {
+    return;
+  }
+
+  document.querySelectorAll('a[href="/login.php"]').forEach((link) => {
+    link.addEventListener("click", (event) => {
+      event.preventDefault();
+      open_login_modal();
+    });
+  });
+
+  form.addEventListener("submit", submit_login_modal);
+
+  close.addEventListener("click", () => {
+    close_login_modal();
+  });
+
+  modal.addEventListener("click", (event) => {
+    if (event.target === modal) {
+      close_login_modal();
+    }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !modal.hidden) {
+      close_login_modal();
+    }
+  });
+
+  const pathname = window.location.pathname.replace(/\/+$/, "");
+  const url = new URL(window.location.href);
+  if (pathname === "/login.php" || pathname === "login.php" || url.searchParams.get("login") === "1") {
+    open_login_modal();
   }
 }
 
@@ -364,6 +486,8 @@ function escape_html(value) {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
+    init_login_modal();
+
     const times = document.querySelectorAll('.local-datetime');
 
     times.forEach((el) => {
