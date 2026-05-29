@@ -29,6 +29,7 @@ Deploy behavior:
 * During upload, the remote manifest is checkpointed about every 10 seconds.
 * If an upload fails, the script still tries to save a partial manifest for files already uploaded successfully and records the failed file separately for deferred retry next time.
 * The manifest also records `startedAt`, `lastCheckpointAt`, `completedAt`, and an `errors` list for the current deploy attempt.
+* Files matching `.gitignore` are excluded by default, except content under `lib/` remains deployable.
 * The remote manifest is added or updated after the deploy finishes.
 
 You can also pass a custom config path:
@@ -40,15 +41,13 @@ Server details:
 * Port: `21`
 
 Recommended upload excludes:
-* `.git/`
-* `.vscode/`
+* Anything matched by `.gitignore`, except `lib/`
 * `README.md`
-* `Archive.zip`
-* `error_log`
-* `logs/`
-* `.DS_Store`
-* `ftp.deploy.json.example`
-* `ftp.regaldragondanceparty.com.json.example`
+* `.gitignore`
+* `schema.sql`
+* `*.example`
+* `ftp.deploy.json`
+* `scripts/`
 
 ## Cron Jobs
 

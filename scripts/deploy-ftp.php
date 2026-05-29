@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 $projectRoot = dirname(__DIR__);
 $projectConfigPath = $projectRoot . DIRECTORY_SEPARATOR . 'ftp.deploy.json';
+$gitignorePath = $projectRoot . DIRECTORY_SEPARATOR . '.gitignore';
 $secretConfigPath = $argv[1] ?? '~/ftp.regaldragondanceparty.com.json';
 $secretConfigPath = expandHomePath($secretConfigPath);
 
@@ -65,19 +66,26 @@ $defaultExclude = [
     '.vscode',
     '.vscode/**',
     'README.md',
+    '.gitignore',
     'Archive.zip',
     'error_log',
+    'schema.sql',
+    'scripts',
+    'scripts/**',
     'logs',
     'logs/**',
     '.DS_Store',
+    '*.example',
     'ftp.regaldragondanceparty.com.json.example',
     'ftp.deploy.json.example',
+    'ftp.deploy.json',
 ];
 
-$excludePatterns = array_values(array_unique(array_merge(
+$explicitExcludePatterns = array_values(array_unique(array_merge(
     $defaultExclude,
     isset($config['exclude']) && is_array($config['exclude']) ? $config['exclude'] : []
 )));
+$gitignoreExcludePatterns = loadGitignoreExcludePatterns($gitignorePath);
 
 $port = isset($secretConfig['port']) ? (int) $secretConfig['port'] : 21;
 $timeout = isset($secretConfig['timeout']) ? (int) $secretConfig['timeout'] : 90;
@@ -102,7 +110,7 @@ if (@ftp_login($connection, $config['username'], $config['password']) === false)
 
 ftp_pasv($connection, $passiveMode);
 
-$paths = collectProjectPaths($projectRoot, $excludePatterns);
+$paths = collectProjectPaths($projectRoot, $explicitExcludePatterns, $gitignoreExcludePatterns);
 $files = collectFiles($projectRoot, $paths);
 $remoteManifest = loadRemoteManifest($connection, $remoteManifestPath);
 $remoteManifestFiles = isset($remoteManifest['files']) && is_array($remoteManifest['files']) ? $remoteManifest['files'] : [];
@@ -270,7 +278,7 @@ function joinRemotePath(string $base, string $relativePath): string
     return $base . '/' . ltrim($relativePath, '/');
 }
 
-function collectProjectPaths(string $projectRoot, array $excludePatterns): array
+function collectProjectPaths(string $projectRoot, array $explicitExcludePatterns, array $gitignoreExcludePatterns): array
 {
     $paths = [];
     $iterator = new RecursiveIteratorIterator(
@@ -283,7 +291,7 @@ function collectProjectPaths(string $projectRoot, array $excludePatterns): array
         $relativePath = str_replace($projectRoot . DIRECTORY_SEPARATOR, '', $fullPath);
         $relativePath = str_replace(DIRECTORY_SEPARATOR, '/', $relativePath);
 
-        if (shouldExclude($relativePath, $excludePatterns)) {
+        if (shouldExclude($relativePath, $explicitExcludePatterns, $gitignoreExcludePatterns)) {
             continue;
         }
 
@@ -294,29 +302,92 @@ function collectProjectPaths(string $projectRoot, array $excludePatterns): array
     return $paths;
 }
 
-function shouldExclude(string $relativePath, array $excludePatterns): bool
+function shouldExclude(string $relativePath, array $explicitExcludePatterns, array $gitignoreExcludePatterns): bool
 {
-    foreach ($excludePatterns as $pattern) {
-        $normalized = trim(str_replace('\\', '/', $pattern));
+    if (matchesAnyPattern($relativePath, $explicitExcludePatterns)) {
+        return true;
+    }
 
-        if ($normalized === '') {
-            continue;
-        }
+    if ($relativePath === 'lib' || str_starts_with($relativePath, 'lib/')) {
+        return false;
+    }
 
-        if (str_ends_with($normalized, '/**')) {
-            $prefix = substr($normalized, 0, -3);
-            if ($relativePath === $prefix || str_starts_with($relativePath, $prefix . '/')) {
-                return true;
-            }
-            continue;
-        }
+    return matchesAnyPattern($relativePath, $gitignoreExcludePatterns);
+}
 
-        if ($relativePath === rtrim($normalized, '/')) {
+function matchesAnyPattern(string $relativePath, array $patterns): bool
+{
+    foreach ($patterns as $pattern) {
+        if (matchesPattern($relativePath, $pattern)) {
             return true;
         }
     }
 
     return false;
+}
+
+function matchesPattern(string $relativePath, string $pattern): bool
+{
+    $normalized = trim(str_replace('\\', '/', $pattern));
+    if ($normalized === '') {
+        return false;
+    }
+
+    $anchored = str_starts_with($normalized, '/');
+    $normalized = ltrim($normalized, '/');
+
+    if (str_ends_with($normalized, '/')) {
+        $normalized = rtrim($normalized, '/');
+        return $relativePath === $normalized || str_starts_with($relativePath, $normalized . '/');
+    }
+
+    if (str_ends_with($normalized, '/**')) {
+        $prefix = substr($normalized, 0, -3);
+        return $relativePath === $prefix || str_starts_with($relativePath, $prefix . '/');
+    }
+
+    if (str_contains($normalized, '*') || str_contains($normalized, '?')) {
+        if (fnmatch($normalized, $relativePath, FNM_PATHNAME)) {
+            return true;
+        }
+
+        return !$anchored && fnmatch('*/' . $normalized, $relativePath, FNM_PATHNAME);
+    }
+
+    if ($relativePath === $normalized) {
+        return true;
+    }
+
+    return !$anchored && str_ends_with($relativePath, '/' . $normalized);
+}
+
+function loadGitignoreExcludePatterns(string $gitignorePath): array
+{
+    if (!is_file($gitignorePath)) {
+        return [];
+    }
+
+    $lines = file($gitignorePath, FILE_IGNORE_NEW_LINES);
+    if ($lines === false) {
+        return [];
+    }
+
+    $patterns = [];
+    foreach ($lines as $line) {
+        $line = trim($line);
+        if ($line === '' || str_starts_with($line, '#') || str_starts_with($line, '!')) {
+            continue;
+        }
+
+        $normalized = str_replace('\\', '/', $line);
+        if ($normalized === '/lib' || $normalized === '/lib/' || $normalized === 'lib' || $normalized === 'lib/') {
+            continue;
+        }
+
+        $patterns[] = $normalized;
+    }
+
+    return $patterns;
 }
 
 function collectFiles(string $projectRoot, array $paths): array
