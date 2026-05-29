@@ -267,7 +267,9 @@ function html_footer(): void
     echo '</div>';// .page
     if (current_user() === null) {
         echo '<div id="login-modal" class="modal-backdrop" hidden>';
-        echo '<div class="modal-card login-modal-card" role="dialog" aria-modal="true" aria-labelledby="login-modal-title">';
+        echo '<div class="modal-card login-modal-shell" role="dialog" aria-modal="true" aria-labelledby="login-modal-title">';
+        echo '<div class="card secondary login-modal-card">';
+        html_border_pieces();
         echo '<button type="button" id="login-modal-close" class="login-modal-close" aria-label="Close login dialog">X</button>';
         echo '<h2 id="login-modal-title">Login</h2>';
         echo '<div id="login-modal-status">';
@@ -282,10 +284,14 @@ function html_footer(): void
         echo '<label for="login-modal-password">Password</label>';
         echo '<input id="login-modal-password" name="password" type="password" autocomplete="current-password" required>';
         echo '<div class="login-modal-actions">';
-        echo '<button type="submit">Login</button>';
+        echo '<button type="submit" class="button primary">Login</button>';
         echo '</div>';
         echo '</form>';
-        echo '<p class="login-modal-links"><a href="/forgot-password.php">Forgot password?</a> <span>|</span> <a href="/register.php">Register</a></p>';
+        echo '<hr>';
+        echo '<div class="login-modal-links">';
+        echo '<a class="button" href="/forgot-password.php">Forgot Password</a>';
+        echo '<a class="button" href="/register.php">Register</a>';
+        echo '</div>';
         echo '</div>';
         echo '</div>';
     }
