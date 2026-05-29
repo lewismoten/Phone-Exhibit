@@ -125,6 +125,7 @@ async function upload_audio_from_panel() {
     }
 
     status.innerHTML = `<div class="success">${escape_html(result.message || 'Audio uploaded successfully.')}</div>`;
+    show_toast(result.message || 'Audio uploaded successfully.');
     form.reset();
     load_audio_files(1);
 }
@@ -297,6 +298,7 @@ async function upload_recording_from_panel() {
 
     status.innerHTML = `<div class="success">${escape_html(result.message || 'Audio uploaded successfully.')}</div>`;
     state.textContent = 'Uploaded';
+    show_toast(result.message || 'Audio uploaded successfully.');
     collapse_record_panel();
     load_audio_files(1);
 }

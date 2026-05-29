@@ -822,6 +822,38 @@ button {
     color: #0a0;
     margin: 10px 0;
 }
+.toast-stack {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+    pointer-events: none;
+}
+.toast {
+    max-width: min(420px, calc(100vw - 32px));
+    padding: 10px 14px;
+    border: 1px solid rgba(43, 22, 13, 0.22);
+    border-radius: 12px;
+    background: rgba(250, 243, 230, 0.98);
+    color: var(--content-text);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.22s ease, transform 0.22s ease;
+}
+.toast.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+.toast-success {
+    border-color: rgba(25, 95, 49, 0.28);
+    background: rgba(236, 247, 239, 0.98);
+    color: #1f5f31;
+}
 /* nav a {
     margin-right: 12px;
 } */

@@ -232,6 +232,46 @@ function format_local_datetime(dateString) {
   }).format(date);
 }
 
+function show_toast(message, type = 'success', duration = 4000) {
+
+  const text = String(message || '').trim();
+  if (!text) {
+    return;
+  }
+
+  let stack = document.getElementById('toast-stack');
+
+  if (!stack) {
+    stack = document.createElement('div');
+    stack.id = 'toast-stack';
+    stack.className = 'toast-stack';
+    document.body.appendChild(stack);
+  }
+
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.setAttribute('role', 'status');
+  toast.setAttribute('aria-live', 'polite');
+  toast.textContent = text;
+  stack.appendChild(toast);
+
+  requestAnimationFrame(() => {
+    toast.classList.add('is-visible');
+  });
+
+  const dismiss = () => {
+    toast.classList.remove('is-visible');
+    window.setTimeout(() => {
+      toast.remove();
+      if (!stack.childElementCount) {
+        stack.remove();
+      }
+    }, 220);
+  };
+
+  window.setTimeout(dismiss, duration);
+}
+
 function escape_html(value) {
 
   return String(value)
