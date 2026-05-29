@@ -304,8 +304,9 @@ function compact_audio_player(row) {
                 class="compact-player-button"
                 onclick="toggle_audio_player('${id}')"
                 id="${id}-button"
+                aria-label="Play audio"
             >
-                ▶
+                <span class="compact-player-icon" aria-hidden="true">▶</span>
             </button>
 
             <audio
@@ -340,22 +341,17 @@ function toggle_audio_player(id) {
 
                 if (other !== audio) {
                     other.pause();
-
-                    const otherButton = document.getElementById(`${other.id}-button`);
-
-                    if (otherButton) {
-                        otherButton.textContent = '▶';
-                    }
+                    set_audio_button_state(other.id, false);
                 }
             });
 
         audio.play();
-        button.textContent = '❚❚';
+        set_audio_button_state(id, true);
 
     } else {
 
         audio.pause();
-        button.textContent = '▶';
+        set_audio_button_state(id, false);
     }
 }
 
@@ -377,14 +373,27 @@ function update_audio_progress(id) {
 
 function reset_audio_player(id) {
 
-    const button = document.getElementById(`${id}-button`);
     const progress = document.getElementById(`${id}-progress`);
 
-    if (button) {
-        button.textContent = '▶';
-    }
+    set_audio_button_state(id, false);
 
     if (progress) {
         progress.style.strokeDashoffset = 126;
     }
+}
+
+function set_audio_button_state(id, isPlaying) {
+
+    const button = document.getElementById(`${id}-button`);
+    if (!button) {
+        return;
+    }
+
+    const icon = button.querySelector('.compact-player-icon');
+    if (!icon) {
+        return;
+    }
+
+    icon.textContent = isPlaying ? '❚❚' : '▶';
+    button.setAttribute('aria-label', isPlaying ? 'Pause audio' : 'Play audio');
 }
