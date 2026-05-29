@@ -1075,8 +1075,19 @@ button {
     margin: 0;
 }
 
-.audio-search-form p {
-    margin-bottom: 0;
+.audio-search-form-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.audio-search-form-row input {
+    flex: 1 1 320px;
+}
+
+.audio-search-form-row .button {
+    flex: 0 0 auto;
 }
 
 @media (max-width: 760px) {

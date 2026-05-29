@@ -18,11 +18,10 @@ html_header('My Audio Files');
     <hr>
 
     <form id="audio-search-form" class="audio-search-form">
-        <label for="q">Search</label>
-        <input id="q" name="q" placeholder="Search filename, title, phone number, or transcript">
-        <p>
+        <div class="audio-search-form-row">
+            <input id="q" name="q" placeholder="Search filename, title, phone number, or transcript">
             <a id="audio-search-submit" class="button" href="#">Search</a>
-        </p>
+        </div>
     </form>
 </div>
 
