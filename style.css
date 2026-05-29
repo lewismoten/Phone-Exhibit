@@ -910,6 +910,20 @@ button {
     resize: vertical;
     line-height: 1.35;
 }
+.rolodex-key-buttons {
+    display: flex;
+    gap: 0.35rem;
+    margin: 0.45rem 0 0.35rem;
+    flex-wrap: wrap;
+}
+.rolodex-key-button {
+    margin: 0;
+    padding: 0.2rem 0.45rem;
+    min-width: 2rem;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 0.9rem;
+    line-height: 1.1;
+}
 .rolodex-preview-wrap {
     min-width: 0;
 }

@@ -52,6 +52,12 @@ html_header('Edit Audio File');
                 <p>
                     <label for="rolodex_details">Additional details for Rolodex card</label><br>
                     <textarea id="rolodex_details" name="rolodex_details" rows="5" maxlength="204" class="rolodex-textarea"></textarea>
+                    <span class="rolodex-key-buttons" aria-label="Special typewriter keys">
+                        <button type="button" class="rolodex-key-button" data-insert="¼">¼</button>
+                        <button type="button" class="rolodex-key-button" data-insert="½">½</button>
+                        <button type="button" class="rolodex-key-button" data-insert="¢">¢</button>
+                        <button type="button" class="rolodex-key-button" data-insert="£">£</button>
+                    </span>
                     <small class="muted">Lines 3-7 only, up to 5 lines and 40 characters wide.</small>
                     <small class="muted">
                         Available keys from your Remington sample: A-Z, a-z, 0, 2-9, and these symbols:
