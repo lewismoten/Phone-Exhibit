@@ -115,8 +115,10 @@ const recent_contribution_item = (entry) => {
 
     return `
         <span class="bullet-item dot-leader recent-contribution-item">
-            <span class="recent-contribution-title">${escape_html(entry.title)}</span>
-            ${button}
+            <span class="recent-contribution-label">
+                <span class="recent-contribution-title">${escape_html(entry.title)}</span>
+                ${button}
+            </span>
         </span>
         <span>
             ${escape_html(time_ago(entry.date))}

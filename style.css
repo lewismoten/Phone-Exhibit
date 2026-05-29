@@ -748,6 +748,12 @@ ul > li:nth-child(5n)::before,
   top: -3px;
   left: -7px;
 }
+
+.recent-contribution-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+}
 /* table of contents */
 .table-of-contents {
   display: grid;
@@ -885,7 +891,7 @@ button {
     width: 0.95em;
     height: 0.95em;
     margin-left: 0.25em;
-    vertical-align: 0.02em;
+    vertical-align: 0.18em;
 }
 
 .progress-ring {
