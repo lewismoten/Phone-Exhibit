@@ -114,6 +114,10 @@ $deferredFailedUploads = [];
 $uploadedManifestFiles = [];
 $manifestFlushInterval = 10;
 $lastManifestFlushAt = time();
+$deployStartedAt = gmdate(DATE_ATOM);
+$lastCheckpointAt = null;
+$deployCompletedAt = null;
+$manifestErrors = [];
 
 echo $dryRun ? "Dry run only. No files will be uploaded.\n" : "Deploying files to {$config['host']}...\n";
 
@@ -152,13 +156,15 @@ foreach (array_merge($filesToUpload, $deferredFailedUploads) as $relativePath) {
     ensureRemoteDirectory($connection, dirname($remotePath));
 
     if (!ftp_put($connection, $remotePath, $localPath, FTP_BINARY)) {
+        $manifestErrors[] = buildManifestError('upload_failed', "Upload failed: {$relativePath}", $relativePath);
         $nextFailedFiles[$relativePath] = $localManifestEntry;
         $manifestSaved = flushManifestSnapshot(
             $connection,
             $remoteManifestPath,
             $uploadedManifestFiles,
             $nextFailedFiles,
-            true
+            true,
+            buildManifestMeta($deployStartedAt, gmdate(DATE_ATOM), null, $manifestErrors)
         );
         ftp_close($connection);
         if ($manifestSaved) {
@@ -175,10 +181,23 @@ foreach (array_merge($filesToUpload, $deferredFailedUploads) as $relativePath) {
     echo "Uploaded {$relativePath}\n";
 
     if (time() - $lastManifestFlushAt >= $manifestFlushInterval) {
-        if (flushManifestSnapshot($connection, $remoteManifestPath, $uploadedManifestFiles, $nextFailedFiles, true)) {
+        $lastCheckpointAt = gmdate(DATE_ATOM);
+        if (flushManifestSnapshot(
+            $connection,
+            $remoteManifestPath,
+            $uploadedManifestFiles,
+            $nextFailedFiles,
+            true,
+            buildManifestMeta($deployStartedAt, $lastCheckpointAt, null, $manifestErrors)
+        )) {
             echo "Checkpointed manifest {$remoteManifestPath}\n";
             $lastManifestFlushAt = time();
         } else {
+            $manifestErrors[] = buildManifestError(
+                'manifest_checkpoint_failed',
+                "Unable to checkpoint manifest during deploy.",
+                $remoteManifestPath
+            );
             fwrite(STDERR, "Warning: unable to checkpoint manifest during deploy.\n");
         }
     }
@@ -195,7 +214,15 @@ if ($shouldUploadManifest) {
         echo "PUT manifest -> {$remoteManifestPath}\n";
     } else {
         ensureRemoteDirectory($connection, dirname($remoteManifestPath));
-        if (!flushManifestSnapshot($connection, $remoteManifestPath, $nextManifestFiles, $nextFailedFiles, false)) {
+        $deployCompletedAt = gmdate(DATE_ATOM);
+        if (!flushManifestSnapshot(
+            $connection,
+            $remoteManifestPath,
+            $nextManifestFiles,
+            $nextFailedFiles,
+            false,
+            buildManifestMeta($deployStartedAt, $lastCheckpointAt, $deployCompletedAt, $manifestErrors)
+        )) {
             ftp_close($connection);
             fwrite(STDERR, "Unable to update manifest {$remoteManifestPath}\n");
             exit(1);
@@ -398,11 +425,22 @@ function shouldDeferFailedFile(string $relativePath, array $localManifestEntry, 
     return manifestEntriesMatch($localManifestEntry, $remoteFailedFiles[$relativePath]);
 }
 
-function flushManifestSnapshot($connection, string $remoteManifestPath, array $manifestFiles, array $failedFiles, bool $partial): bool
+function flushManifestSnapshot(
+    $connection,
+    string $remoteManifestPath,
+    array $manifestFiles,
+    array $failedFiles,
+    bool $partial,
+    array $meta
+): bool
 {
     $manifestPayload = json_encode([
         'generatedAt' => gmdate(DATE_ATOM),
+        'startedAt' => $meta['startedAt'],
+        'lastCheckpointAt' => $meta['lastCheckpointAt'],
+        'completedAt' => $meta['completedAt'],
         'isPartial' => $partial,
+        'errors' => $meta['errors'],
         'files' => $manifestFiles,
         'failedFiles' => $failedFiles,
     ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
@@ -425,4 +463,24 @@ function flushManifestSnapshot($connection, string $remoteManifestPath, array $m
     } finally {
         @unlink($tempFile);
     }
+}
+
+function buildManifestMeta(string $startedAt, ?string $lastCheckpointAt, ?string $completedAt, array $errors): array
+{
+    return [
+        'startedAt' => $startedAt,
+        'lastCheckpointAt' => $lastCheckpointAt,
+        'completedAt' => $completedAt,
+        'errors' => array_values($errors),
+    ];
+}
+
+function buildManifestError(string $code, string $message, string $path): array
+{
+    return [
+        'code' => $code,
+        'message' => $message,
+        'path' => $path,
+        'timestamp' => gmdate(DATE_ATOM),
+    ];
 }

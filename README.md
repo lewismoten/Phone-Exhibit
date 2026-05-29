@@ -28,6 +28,7 @@ Deploy behavior:
 * Files that failed in a prior run are listed separately in the manifest and retried after all other changed files.
 * During upload, the remote manifest is checkpointed about every 10 seconds.
 * If an upload fails, the script still tries to save a partial manifest for files already uploaded successfully and records the failed file separately for deferred retry next time.
+* The manifest also records `startedAt`, `lastCheckpointAt`, `completedAt`, and an `errors` list for the current deploy attempt.
 * The remote manifest is added or updated after the deploy finishes.
 
 You can also pass a custom config path:
