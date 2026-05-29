@@ -61,9 +61,9 @@ function audio_file_row(row) {
 
     const phone = format_phone_number(row.phone_number);
     const phoneStatus = row.phone_status || 'unassigned';
-    const phoneStatusLabel = phoneStatus === 'assigned'
-        ? 'Assigned'
-        : (phoneStatus === 'requested' ? 'Requested' : 'Not assigned');
+    const phoneAssignedIndicator = phoneStatus === 'assigned'
+        ? `<span class="audio-file-phone-indicator" title="Assigned phone number" aria-label="Assigned phone number">☎</span>`
+        : '';
 
     const type = row.using_converted_audio
         ? 'Converted'
@@ -82,10 +82,10 @@ function audio_file_row(row) {
             </td>
 
             <td class="audio-file-phone">
-                <div>${escape_html(phone)}</div>
-                <div class="audio-file-phone-status audio-file-phone-status-${phoneStatus}">
-                    ${escape_html(phoneStatusLabel)}
-                </div>
+                <span class="audio-file-phone-inline">
+                    ${phoneAssignedIndicator}
+                    <span>${escape_html(phone)}</span>
+                </span>
             </td>
 
             <td class="audio-file-audio">${player}</td>
