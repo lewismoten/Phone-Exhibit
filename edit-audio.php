@@ -92,6 +92,7 @@ html_header('Edit Audio File');
 
     <p>
         <button type="submit">Save changes</button>
+        <button type="button" id="delete-audio-button">Delete audio</button>
     </p>
 </form>
 

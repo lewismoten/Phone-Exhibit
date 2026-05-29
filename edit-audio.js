@@ -9,6 +9,10 @@ onReady(() => {
         .addEventListener('submit', save_audio_file);
 
     document
+        .getElementById('delete-audio-button')
+        .addEventListener('click', delete_audio_file);
+
+    document
         .getElementById('tty_transcription_text')
         .addEventListener('input', normalize_tty_transcription_field);
 });
@@ -79,6 +83,36 @@ async function save_audio_file(event) {
     }
 
     status.innerHTML = '<div class="success">Changes saved.</div>';
+}
+
+async function delete_audio_file() {
+    if (!window.confirm('Delete this audio file? This cannot be undone.')) {
+        return;
+    }
+
+    const status = document.getElementById('edit-audio-status');
+    const form = document.getElementById('edit-audio-form');
+    const button = document.getElementById('delete-audio-button');
+
+    status.innerHTML = '<p>Deleting…</p>';
+    button.disabled = true;
+
+    const result = await api('delete-audio', {
+        method: 'POST',
+        data: {
+            id: getAudioId(),
+            csrf_token: form.csrf_token.value,
+        }
+    });
+
+    if (!result.success) {
+        status.innerHTML = `<div class="error">${escape_html(result.error || 'Unable to delete audio file.')}</div>`;
+        button.disabled = false;
+        return;
+    }
+
+    status.innerHTML = `<div class="success">${escape_html(result.message || 'Audio file deleted.')}</div>`;
+    window.location.href = result.redirect_url || '/audio-files.php';
 }
 
 function normalize_tty_transcription_field() {
