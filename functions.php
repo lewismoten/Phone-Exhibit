@@ -609,7 +609,8 @@ function tty_format_text(string $text, bool $raw = false): string
     $text = preg_replace('/[^\x09\x0A\x0D\x20-\x7E]/', ' ', $text) ?? '';
 
     if (!$raw) {
-        $text = trim(preg_replace('/[^A-Z0-9]+/', ' ', strtoupper($text)) ?? '');
+        $text = trim(preg_replace('/[^A-Z0-9 \n\.\,\?\!\:\;\-\(\)\/\"]+/', ' ', strtoupper($text)) ?? '');
+        $text = preg_replace("/[ \t]+/", ' ', $text) ?? '';
     }
 
     $text = tty_wrap($text);

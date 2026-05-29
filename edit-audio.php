@@ -71,12 +71,12 @@ html_header('Edit Audio File');
 
         <p id="ai-transcription-tty-wrap" style="display:none;">
             <label for="transcription_tty_preview">TTY format of AI transcription</label><br>
-            <textarea id="transcription_tty_preview" rows="8" style="width:100%;" readonly></textarea>
+            <textarea id="transcription_tty_preview" class="tty-textarea" rows="8" readonly></textarea>
         </p>
 
         <p>
             <label for="tty_transcription_text">Separate TTY transcription</label><br>
-            <textarea id="tty_transcription_text" name="tty_transcription_text" rows="8" style="width:100%;"></textarea>
+            <textarea id="tty_transcription_text" name="tty_transcription_text" class="tty-textarea" rows="8"></textarea>
             <small class="muted">
                 TTY text allows A-Z, 0-9, spaces, and these symbols: . , ? ! : ; - ( ) / "
                 Lower-case becomes uppercase, & becomes AND, % becomes PERCENT, and apostrophes are removed.

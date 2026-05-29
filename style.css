@@ -1047,6 +1047,13 @@ button {
     white-space: nowrap;
 }
 
+.tty-textarea {
+    width: 36ch;
+    max-width: 100%;
+    font-family: "Courier New", Courier, monospace;
+    box-sizing: border-box;
+}
+
 @media (max-width: 760px) {
     .audio-file-table {
         min-width: 640px;
