@@ -93,7 +93,7 @@ function save_audio_file(array $user): void
     $requestedPhoneNumber = clean_nullable_text($_POST['requested_phone_number'] ?? null, 32);
     $rolodexTitle = clean_nullable_text($_POST['rolodex_title'] ?? null, 150);
     $rolodexDetails = clean_nullable_text($_POST['rolodex_details'] ?? null, 5000);
-    $ttyTranscriptionText = clean_nullable_text($_POST['tty_transcription_text'] ?? null, 20000);
+    $ttyTranscriptionText = clean_tty_transcription_text($_POST['tty_transcription_text'] ?? null, 20000);
     $aiTranscriptionOptIn = !empty($_POST['ai_transcription_opt_in']) ? 1 : 0;
 
     $stmt = db()->prepare(
@@ -205,6 +205,21 @@ function audio_file_payload(array $row): array
 function clean_nullable_text(mixed $value, int $maxLength): ?string
 {
     $text = trim((string)$value);
+
+    if ($text === '') {
+        return null;
+    }
+
+    if (mb_strlen($text) > $maxLength) {
+        $text = mb_substr($text, 0, $maxLength);
+    }
+
+    return $text;
+}
+
+function clean_tty_transcription_text(mixed $value, int $maxLength): ?string
+{
+    $text = tty_format_manual_text(trim((string)$value));
 
     if ($text === '') {
         return null;

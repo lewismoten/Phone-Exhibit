@@ -542,10 +542,60 @@ function tty_wrap(string $text, int $width = 32): string
     $wrapped = [];
 
     foreach ($lines as $line) {
-        $wrapped[] = wordwrap($line, $width, "\n", true);
+        $wrapped = array_merge($wrapped, tty_wrap_line($line, $width));
     }
 
     return implode("\n", $wrapped);
+}
+
+function tty_wrap_line(string $line, int $width = 32): array
+{
+    $line = trim($line);
+
+    if ($line === '') {
+        return [''];
+    }
+
+    $words = preg_split('/ +/', $line) ?: [];
+    $wrapped = [];
+    $current = '';
+
+    foreach ($words as $word) {
+        if ($word === '') {
+            continue;
+        }
+
+        if (strlen($word) > $width) {
+            if ($current !== '') {
+                $wrapped[] = $current;
+                $current = '';
+            }
+
+            $segments = str_split($word, $width);
+            foreach ($segments as $segment) {
+                $wrapped[] = $segment;
+            }
+            continue;
+        }
+
+        $candidate = $current === '' ? $word : $current . ' ' . $word;
+        if (strlen($candidate) <= $width) {
+            $current = $candidate;
+            continue;
+        }
+
+        if ($current !== '') {
+            $wrapped[] = $current;
+        }
+
+        $current = $word;
+    }
+
+    if ($current !== '') {
+        $wrapped[] = $current;
+    }
+
+    return $wrapped;
 }
 
 function tty_format_text(string $text, bool $raw = false): string
@@ -566,6 +616,36 @@ function tty_format_text(string $text, bool $raw = false): string
     $text = str_replace(["\r\n", "\r"], "\n", $text);
 
     return rtrim($text);
+}
+
+function tty_format_manual_text(string $text): string
+{
+    $text = str_replace(
+        ['&', '%', "'"],
+        [' AND ', ' PERCENT ', ''],
+        $text
+    );
+
+    $text = strtoupper($text);
+    $text = str_replace(["\r\n", "\r"], "\n", $text);
+    $text = preg_replace('/[^A-Z0-9 \n\.\,\?\!\:\;\-\(\)\/\"]+/', ' ', $text) ?? '';
+    $text = preg_replace("/[ \t]+/", ' ', $text) ?? '';
+
+    $lines = explode("\n", $text);
+    $wrapped = [];
+
+    foreach ($lines as $line) {
+        $line = trim($line);
+
+        if ($line === '') {
+            $wrapped[] = '';
+            continue;
+        }
+
+        $wrapped = array_merge($wrapped, tty_wrap_line($line, 32));
+    }
+
+    return trim(implode("\n", $wrapped));
 }
 
 function convert_text_for_tty(string $text, string $outputPath, bool $raw = false): array

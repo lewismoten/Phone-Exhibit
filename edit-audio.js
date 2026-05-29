@@ -1,4 +1,5 @@
 const getAudioId = () => parseInt(document.getElementById('edit-audio-id').value);
+const TTY_LINE_WIDTH = 32;
 
 onReady(() => {
     load_audio_file();
@@ -6,6 +7,10 @@ onReady(() => {
     document
         .getElementById('edit-audio-form')
         .addEventListener('submit', save_audio_file);
+
+    document
+        .getElementById('tty_transcription_text')
+        .addEventListener('input', normalize_tty_transcription_field);
 });
 
 async function load_audio_file() {
@@ -33,6 +38,7 @@ async function load_audio_file() {
     document.getElementById('transcription_text').value = row.transcription_text || '';
     document.getElementById('transcription_tty_preview').value = row.transcription_tty_preview || '';
     document.getElementById('tty_transcription_text').value = row.tty_transcription_text || '';
+    normalize_tty_transcription_field();
     document.getElementById('ai_transcription_opt_in').checked = row.ai_transcription_opt_in === 1;
     document.getElementById('ai-transcription-wrap').style.display =
         row.transcription_text ? 'block' : 'none';
@@ -51,6 +57,7 @@ async function save_audio_file(event) {
     const form = document.getElementById('edit-audio-form');
 
     status.innerHTML = '<p>Saving…</p>';
+    normalize_tty_transcription_field();
 
     const result = await api('audio-file', {
         method: 'POST',
@@ -72,6 +79,95 @@ async function save_audio_file(event) {
     }
 
     status.innerHTML = '<div class="success">Changes saved.</div>';
+}
+
+function normalize_tty_transcription_field() {
+    const field = document.getElementById('tty_transcription_text');
+
+    if (!field) {
+        return;
+    }
+
+    field.value = normalize_tty_text(field.value, true);
+}
+
+function normalize_tty_text(value, preserveTrailingSpaces = false) {
+    let text = String(value || '');
+    const hadTrailingSpace = preserveTrailingSpaces && /[ \t]$/.test(text);
+
+    text = text
+        .replace(/&/g, ' AND ')
+        .replace(/%/g, ' PERCENT ')
+        .replace(/'/g, '')
+        .toUpperCase()
+        .replace(/\r\n?/g, '\n')
+        .replace(/[^A-Z0-9 \n\.,?!:;\-()/"]+/g, ' ')
+        .replace(/[ \t]+/g, ' ');
+
+    const wrappedLines = [];
+
+    for (const rawLine of text.split('\n')) {
+        const line = preserveTrailingSpaces
+            ? rawLine.replace(/^[ \t]+/, '')
+            : rawLine.trim();
+
+        if (!line) {
+            wrappedLines.push('');
+            continue;
+        }
+
+        wrappedLines.push(...wrap_tty_line(line, TTY_LINE_WIDTH));
+    }
+
+    const normalized = preserveTrailingSpaces
+        ? wrappedLines.join('\n')
+        : wrappedLines.join('\n').trim();
+
+    return hadTrailingSpace ? `${normalized} ` : normalized;
+}
+
+function wrap_tty_line(line, width) {
+    const trimmed = String(line || '').trim();
+
+    if (!trimmed) {
+        return [''];
+    }
+
+    const words = trimmed.split(/ +/).filter(Boolean);
+    const wrapped = [];
+    let current = '';
+
+    for (const word of words) {
+        if (word.length > width) {
+            if (current) {
+                wrapped.push(current);
+                current = '';
+            }
+
+            for (let i = 0; i < word.length; i += width) {
+                wrapped.push(word.slice(i, i + width));
+            }
+            continue;
+        }
+
+        const candidate = current ? `${current} ${word}` : word;
+        if (candidate.length <= width) {
+            current = candidate;
+            continue;
+        }
+
+        if (current) {
+            wrapped.push(current);
+        }
+
+        current = word;
+    }
+
+    if (current) {
+        wrapped.push(current);
+    }
+
+    return wrapped;
 }
 
 function render_audio_playback(row) {

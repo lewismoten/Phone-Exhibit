@@ -77,6 +77,10 @@ html_header('Edit Audio File');
         <p>
             <label for="tty_transcription_text">Separate TTY transcription</label><br>
             <textarea id="tty_transcription_text" name="tty_transcription_text" rows="8" style="width:100%;"></textarea>
+            <small class="muted">
+                TTY text allows A-Z, 0-9, spaces, and these symbols: . , ? ! : ; - ( ) / "
+                Lower-case becomes uppercase, & becomes AND, % becomes PERCENT, and apostrophes are removed.
+            </small>
         </p>
     </fieldset>
 
