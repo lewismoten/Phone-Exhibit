@@ -1479,12 +1479,13 @@ button {
 .audio-search-form-row {
     display: flex;
     align-items: flex-end;
+    justify-content: center;
     gap: 0.75rem;
     flex-wrap: wrap;
 }
 
 .audio-search-form-row input {
-    flex: 1 1 320px;
+    flex: 0 1 220px;
 }
 
 .audio-search-form-row .button {
