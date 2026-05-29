@@ -415,9 +415,15 @@ function format_phone_number(value) {
 function compact_audio_player(row) {
 
     const id = `audio-${row.id}`;
+    const tooltip = escape_html(
+        row.file_tooltip
+        || row.original_filename
+        || row.title
+        || ''
+    );
 
     return `
-        <div class="compact-player">
+        <div class="compact-player" title="${tooltip}">
 
             <svg class="progress-ring" viewBox="0 0 48 48">
                 <circle
@@ -444,6 +450,7 @@ function compact_audio_player(row) {
                 onclick="toggle_audio_player('${id}')"
                 id="${id}-button"
                 aria-label="Play audio"
+                title="${tooltip}"
             >
                 <span class="compact-player-icon" aria-hidden="true">
                     <svg viewBox="0 0 16 16" class="compact-player-icon-svg">

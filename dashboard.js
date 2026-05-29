@@ -272,7 +272,8 @@ function render_upload_preview(url, mimeType, fileName = '') {
             ${compact_audio_player({
                 id: 'upload-panel-preview',
                 playback_url: url,
-                playback_mime_type: mimeType || 'audio/mpeg'
+                playback_mime_type: mimeType || 'audio/mpeg',
+                file_tooltip: fileName || ''
             })}
         </div>
     `;
@@ -517,7 +518,8 @@ function render_recording_preview(url, mimeType) {
             ${compact_audio_player({
                 id: 'record-panel-preview',
                 playback_url: url,
-                playback_mime_type: mimeType || 'audio/webm'
+                playback_mime_type: mimeType || 'audio/webm',
+                file_tooltip: 'recording'
             })}
         </div>
     `;

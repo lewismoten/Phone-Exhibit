@@ -110,6 +110,7 @@ foreach ($rows as $row) {
     $out[] = [
         'id' => (int)$row['id'],
         'title' => (string)$title,
+        'original_filename' => (string)($row['original_filename'] ?? ''),
         'phone_number' => $phoneNumber,
         'phone_status' => $phoneStatus,
         'conversion_status' => (string)($row['conversion_status'] ?? 'pending'),
