@@ -42,16 +42,19 @@ html_header('My Audio Files');
                 <label for="audio-record-device">Microphone</label>
                 <select id="audio-record-device"></select>
 
-                <label for="audio-record-filename">File name</label>
-                <input id="audio-record-filename" value="recording">
-
-                <div class="audio-record-controls">
-                    <a id="audio-record-refresh" class="button" href="#">Refresh</a>
-                    <a id="audio-record-start" class="button" href="#">Start</a>
-                    <a id="audio-record-stop" class="button is-disabled" href="#" aria-disabled="true">Stop</a>
+                <div class="audio-record-bars">
+                    <div class="audio-record-progress-track">
+                        <div id="audio-record-progress" class="audio-record-progress-fill"></div>
+                    </div>
                 </div>
 
-                <div class="audio-record-timer">
+                <div class="audio-record-timer-row">
+                    <div class="audio-record-level-column">
+                        <div class="audio-record-level-track">
+                            <div id="audio-record-level" class="audio-record-level-fill"></div>
+                        </div>
+                    </div>
+
                     <svg id="audio-record-hourglass" viewBox="0 0 64 96" width="34" height="52" aria-hidden="true">
                         <defs>
                             <clipPath id="audio-record-hourglass-top-clip">
@@ -74,25 +77,20 @@ html_header('My Audio Files');
                         </g>
                     </svg>
 
-                    <div class="audio-record-timer-copy">
-                        <div><strong>Status:</strong> <span id="audio-record-state">Idle</span></div>
-                        <div><strong>Duration:</strong> <span id="audio-record-duration">0:00</span></div>
-                        <div><strong>Remaining:</strong> <span id="audio-record-remaining">3:00</span></div>
+                    <div class="audio-record-timer">
+                        <div class="audio-record-timer-copy">
+                            <div><strong>Status:</strong> <span id="audio-record-state">Idle</span></div>
+                            <div><strong>Duration:</strong> <span id="audio-record-duration">0:00</span></div>
+                            <div><strong>Remaining:</strong> <span id="audio-record-remaining">3:00</span></div>
+                        </div>
+                        <div id="audio-record-preview" class="audio-record-preview audio-record-preview-disabled" aria-label="Recording preview unavailable"></div>
                     </div>
                 </div>
 
-                <div class="audio-record-bars">
-                    <div class="audio-record-progress-track">
-                        <div id="audio-record-progress" class="audio-record-progress-fill"></div>
-                    </div>
-                    <div class="audio-record-progress-track">
-                        <div id="audio-record-level" class="audio-record-level-fill"></div>
-                    </div>
+                <div class="audio-record-controls audio-record-controls-bottom">
+                    <a id="audio-record-toggle" class="button" href="#">Start</a>
+                    <a id="audio-record-upload" class="button is-disabled" href="#" aria-disabled="true">Upload</a>
                 </div>
-
-                <div id="audio-record-preview" class="audio-record-preview muted">No recording yet.</div>
-
-                <p><a id="audio-record-upload" class="button is-disabled" href="#" aria-disabled="true">Upload</a></p>
             </div>
         </div>
     </div>

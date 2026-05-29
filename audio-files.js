@@ -10,6 +10,7 @@ let recordStartTime = null;
 let recordTimer = null;
 let recordAudioCtx = null;
 let recordAnalyser = null;
+let recordIsActive = false;
 
 onReady(() => {
     init_audio_record_panel();
@@ -47,12 +48,10 @@ onReady(() => {
 
 function init_audio_record_panel() {
     const reveal = document.getElementById('audio-record-reveal');
-    const refresh = document.getElementById('audio-record-refresh');
-    const start = document.getElementById('audio-record-start');
-    const stop = document.getElementById('audio-record-stop');
+    const toggle = document.getElementById('audio-record-toggle');
     const upload = document.getElementById('audio-record-upload');
 
-    if (!reveal || !refresh || !start || !stop || !upload) {
+    if (!reveal || !toggle || !upload) {
         return;
     }
 
@@ -64,29 +63,18 @@ function init_audio_record_panel() {
         await load_record_devices();
     });
 
-    refresh.addEventListener('click', async event => {
-        event.preventDefault();
-        await load_record_devices();
-    });
-
-    start.addEventListener('click', async event => {
+    toggle.addEventListener('click', async event => {
         event.preventDefault();
 
-        if (is_anchor_disabled(start)) {
+        if (is_anchor_disabled(toggle)) {
             return;
         }
 
-        await start_recording_from_panel();
-    });
-
-    stop.addEventListener('click', event => {
-        event.preventDefault();
-
-        if (is_anchor_disabled(stop)) {
-            return;
+        if (recordIsActive) {
+            stop_recording_from_panel(false);
+        } else {
+            await start_recording_from_panel();
         }
-
-        stop_recording_from_panel(false);
     });
 
     upload.addEventListener('click', async event => {
@@ -100,9 +88,9 @@ function init_audio_record_panel() {
     });
 
     reset_recording_visual();
-    set_anchor_enabled(start, true);
-    set_anchor_enabled(stop, false);
+    set_anchor_enabled(toggle, true);
     set_anchor_enabled(upload, false);
+    render_recording_preview(null, null);
 }
 
 async function upload_audio_from_panel() {
@@ -176,13 +164,11 @@ async function load_record_devices() {
 async function start_recording_from_panel() {
     const device = document.getElementById('audio-record-device');
     const state = document.getElementById('audio-record-state');
-    const preview = document.getElementById('audio-record-preview');
     const status = document.getElementById('audio-record-status');
-    const start = document.getElementById('audio-record-start');
-    const stop = document.getElementById('audio-record-stop');
+    const toggle = document.getElementById('audio-record-toggle');
     const upload = document.getElementById('audio-record-upload');
 
-    if (!device || !state || !preview || !status || !start || !stop || !upload) {
+    if (!device || !state || !status || !toggle || !upload) {
         return;
     }
 
@@ -195,7 +181,7 @@ async function start_recording_from_panel() {
         recordObjectUrl = null;
     }
 
-    preview.innerHTML = 'No recording yet.';
+    render_recording_preview(null, null);
     reset_recording_visual();
     set_anchor_enabled(upload, false);
 
@@ -208,35 +194,37 @@ async function start_recording_from_panel() {
 
         recordRecorder = new MediaRecorder(recordStream);
         recordRecorder.ondataavailable = event => recordChunks.push(event.data);
-        recordRecorder.onstop = () => {
-            recordBlob = new Blob(recordChunks, { type: recordRecorder.mimeType });
-            recordObjectUrl = URL.createObjectURL(recordBlob);
-            render_recording_preview(recordObjectUrl, recordRecorder.mimeType);
-            set_anchor_enabled(upload, true);
+            recordRecorder.onstop = () => {
+                recordBlob = new Blob(recordChunks, { type: recordRecorder.mimeType });
+                recordObjectUrl = URL.createObjectURL(recordBlob);
+                render_recording_preview(recordObjectUrl, recordRecorder.mimeType);
+                set_anchor_enabled(upload, true);
+                recordIsActive = false;
+                update_record_toggle_button();
 
-            if (state.textContent === 'Recording') {
-                state.textContent = 'Recorded';
-            }
-        };
+                if (state.textContent === 'Recording') {
+                    state.textContent = 'Recorded';
+                }
+            };
 
         recordRecorder.start();
         recordStartTime = Date.now();
         recordTimer = setInterval(update_recording_timer, 200);
         begin_recording_meter(recordStream);
         update_recording_visual(0);
+        recordIsActive = true;
+        update_record_toggle_button();
 
         state.textContent = 'Recording';
-        set_anchor_enabled(start, false);
-        set_anchor_enabled(stop, true);
     } catch (error) {
         status.innerHTML = '<div class="error">Recording failed.</div>';
+        recordIsActive = false;
+        update_record_toggle_button();
     }
 }
 
 function stop_recording_from_panel(reachedLimit) {
     const state = document.getElementById('audio-record-state');
-    const start = document.getElementById('audio-record-start');
-    const stop = document.getElementById('audio-record-stop');
     const elapsedSeconds = recordStartTime
         ? Math.min((Date.now() - recordStartTime) / 1000, RECORD_MAX_SECONDS)
         : 0;
@@ -253,8 +241,8 @@ function stop_recording_from_panel(reachedLimit) {
     clearInterval(recordTimer);
     recordTimer = null;
     recordStartTime = null;
-    set_anchor_enabled(start, true);
-    set_anchor_enabled(stop, false);
+    recordIsActive = false;
+    update_record_toggle_button();
 
     document.getElementById('audio-record-duration').textContent = fmt_seconds(elapsedSeconds);
     document.getElementById('audio-record-remaining').textContent = fmt_seconds(Math.max(0, RECORD_MAX_SECONDS - elapsedSeconds));
@@ -267,16 +255,15 @@ function stop_recording_from_panel(reachedLimit) {
 
 async function upload_recording_from_panel() {
     const form = document.getElementById('audio-upload-form');
-    const filename = document.getElementById('audio-record-filename');
     const status = document.getElementById('audio-record-status');
     const upload = document.getElementById('audio-record-upload');
     const state = document.getElementById('audio-record-state');
 
-    if (!form || !filename || !status || !upload || !state || !recordBlob) {
+    if (!form || !status || !upload || !state || !recordBlob) {
         return;
     }
 
-    const name = (filename.value || 'recording').trim() || 'recording';
+    const name = 'recording';
     let extension = 'webm';
 
     if ((recordBlob.type || '').includes('ogg')) {
@@ -320,6 +307,28 @@ function render_recording_preview(url, mimeType) {
         return;
     }
 
+    if (!url) {
+        preview.className = 'audio-record-preview audio-record-preview-disabled';
+        preview.innerHTML = `
+            <div class="audio-record-preview-row">
+                <span class="compact-player compact-player-disabled" aria-hidden="true">
+                    <svg class="progress-ring" viewBox="0 0 48 48">
+                        <circle class="progress-ring-bg" cx="24" cy="24" r="20"></circle>
+                    </svg>
+                    <span class="compact-player-button">
+                        <span class="compact-player-icon">
+                            <svg viewBox="0 0 16 16" class="compact-player-icon-svg">
+                                <polygon class="compact-player-play-shape" points="3.5,2 13.5,8 3.5,14"></polygon>
+                            </svg>
+                        </span>
+                    </span>
+                </span>
+            </div>
+        `;
+        return;
+    }
+
+    preview.className = 'audio-record-preview';
     preview.innerHTML = `
         <div class="audio-record-preview-row">
             ${compact_audio_player({
@@ -327,7 +336,6 @@ function render_recording_preview(url, mimeType) {
                 playback_url: url,
                 playback_mime_type: mimeType || 'audio/webm'
             })}
-            <span>Preview ready</span>
         </div>
     `;
 }
@@ -379,7 +387,7 @@ function reset_recording_visual() {
     document.getElementById('audio-record-duration').textContent = '0:00';
     document.getElementById('audio-record-remaining').textContent = fmt_seconds(RECORD_MAX_SECONDS);
     document.getElementById('audio-record-progress').style.width = '0%';
-    document.getElementById('audio-record-level').style.width = '0%';
+    document.getElementById('audio-record-level').style.height = '0%';
     update_recording_visual(0);
 }
 
@@ -406,7 +414,7 @@ function begin_recording_meter(stream) {
             }
         }
 
-        document.getElementById('audio-record-level').style.width = `${Math.min(100, peak * 140)}%`;
+        document.getElementById('audio-record-level').style.height = `${Math.min(100, peak * 140)}%`;
         requestAnimationFrame(tick);
     }
 
@@ -425,6 +433,16 @@ function set_anchor_enabled(element, enabled) {
 
 function is_anchor_disabled(element) {
     return !element || element.classList.contains('is-disabled') || element.getAttribute('aria-disabled') === 'true';
+}
+
+function update_record_toggle_button() {
+    const toggle = document.getElementById('audio-record-toggle');
+
+    if (!toggle) {
+        return;
+    }
+
+    toggle.textContent = recordIsActive ? 'Stop' : 'Start';
 }
 
 function fmt_seconds(sec) {

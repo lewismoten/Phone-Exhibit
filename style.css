@@ -1114,10 +1114,19 @@ button {
 
 .audio-record-panel {
     text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    margin-top: -0.1rem;
+}
+
+.audio-record-panel[hidden] {
+    display: none;
 }
 
 .audio-record-panel label {
-    margin-top: 0.6rem;
+    margin-top: 0;
+    font-size: 0.88rem;
 }
 
 .audio-record-panel select,
@@ -1125,12 +1134,33 @@ button {
     font-size: 0.95rem;
 }
 
+.audio-record-timer-row {
+    display: flex;
+    align-items: stretch;
+    gap: 0.7rem;
+}
+
+.audio-record-level-column {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.audio-record-level-track {
+    width: 10px;
+    height: 78px;
+    background: #eee;
+    border-radius: 999px;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+}
+
 .audio-record-controls {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
     align-items: center;
-    margin-top: 0.75rem;
 }
 
 .audio-record-controls .button,
@@ -1138,22 +1168,33 @@ button {
     margin: 0;
 }
 
+.audio-record-controls-bottom {
+    margin-top: auto;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
+    justify-content: center;
+}
+
+.audio-record-controls-bottom .button {
+    justify-self: center;
+}
+
 .audio-record-timer {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    margin-top: 0.85rem;
+    min-width: 0;
 }
 
 .audio-record-timer-copy {
     font-size: 0.9rem;
     line-height: 1.35;
+    min-width: 0;
 }
 
 .audio-record-bars {
-    display: grid;
-    gap: 0.45rem;
-    margin-top: 0.75rem;
+    margin-top: 0;
 }
 
 .audio-record-progress-track {
@@ -1171,21 +1212,32 @@ button {
 }
 
 .audio-record-level-fill {
-    height: 100%;
-    width: 0;
+    height: 0;
+    width: 100%;
     background: #444;
     border-radius: 999px;
 }
 
 .audio-record-preview {
-    margin-top: 0.8rem;
+    min-width: 1.2rem;
     min-height: 1.2rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .audio-record-preview-row {
     display: inline-flex;
     align-items: center;
-    gap: 0.45rem;
+    gap: 0.3rem;
+}
+
+.audio-record-preview-disabled {
+    opacity: 0.45;
+}
+
+.compact-player-disabled {
+    pointer-events: none;
 }
 
 .audio-search-form {
