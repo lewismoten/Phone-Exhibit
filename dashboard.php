@@ -23,7 +23,7 @@ html_header('My Audio Files');
                 <form id="audio-upload-form" class="audio-upload-form" enctype="multipart/form-data">
                     <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                     <input id="audio_upload_file" name="audio_file" type="file" accept="audio/*" required hidden>
-                    <a id="audio-upload-choose" class="button" href="#">Choose audio file</a>
+                    <a id="audio-upload-choose" class="button" href="#">Choose File</a>
                     <div id="audio-upload-preview" class="audio-upload-preview audio-record-preview-disabled" aria-label="Selected audio preview unavailable"></div>
                     <p><a id="audio-upload-submit" class="button warn is-disabled" href="#" aria-disabled="true">Upload</a></p>
                 </form>
