@@ -1,6 +1,19 @@
 let currentPage = 1;
+const RECORD_MAX_SECONDS = 180;
+
+let recordStream = null;
+let recordRecorder = null;
+let recordChunks = [];
+let recordBlob = null;
+let recordObjectUrl = null;
+let recordStartTime = null;
+let recordTimer = null;
+let recordAudioCtx = null;
+let recordAnalyser = null;
 
 onReady(() => {
+    init_audio_record_panel();
+
     document
         .getElementById('audio-upload-form')
         .addEventListener('submit', event => {
@@ -31,6 +44,66 @@ onReady(() => {
 
     load_audio_files();
 });
+
+function init_audio_record_panel() {
+    const reveal = document.getElementById('audio-record-reveal');
+    const refresh = document.getElementById('audio-record-refresh');
+    const start = document.getElementById('audio-record-start');
+    const stop = document.getElementById('audio-record-stop');
+    const upload = document.getElementById('audio-record-upload');
+
+    if (!reveal || !refresh || !start || !stop || !upload) {
+        return;
+    }
+
+    reveal.addEventListener('click', async event => {
+        event.preventDefault();
+
+        document.getElementById('audio-record-intro').hidden = true;
+        document.getElementById('audio-record-panel').hidden = false;
+        await load_record_devices();
+    });
+
+    refresh.addEventListener('click', async event => {
+        event.preventDefault();
+        await load_record_devices();
+    });
+
+    start.addEventListener('click', async event => {
+        event.preventDefault();
+
+        if (is_anchor_disabled(start)) {
+            return;
+        }
+
+        await start_recording_from_panel();
+    });
+
+    stop.addEventListener('click', event => {
+        event.preventDefault();
+
+        if (is_anchor_disabled(stop)) {
+            return;
+        }
+
+        stop_recording_from_panel(false);
+    });
+
+    upload.addEventListener('click', async event => {
+        event.preventDefault();
+
+        if (is_anchor_disabled(upload)) {
+            return;
+        }
+
+        await upload_recording_from_panel();
+    });
+
+    reset_recording_visual();
+    set_anchor_enabled(start, true);
+    set_anchor_enabled(stop, false);
+    set_anchor_enabled(upload, false);
+}
 
 async function upload_audio_from_panel() {
     const form = document.getElementById('audio-upload-form');
@@ -66,6 +139,297 @@ async function upload_audio_from_panel() {
     status.innerHTML = `<div class="success">${escape_html(result.message || 'Audio uploaded successfully.')}</div>`;
     form.reset();
     load_audio_files(1);
+}
+
+async function load_record_devices() {
+    const status = document.getElementById('audio-record-status');
+    const device = document.getElementById('audio-record-device');
+
+    if (!status || !device) {
+        return;
+    }
+
+    status.innerHTML = '<p>Allow microphone access to choose a device.</p>';
+
+    try {
+        const tmp = await navigator.mediaDevices.getUserMedia({ audio: true });
+        tmp.getTracks().forEach(track => track.stop());
+
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const mics = devices.filter(item => item.kind === 'audioinput');
+
+        device.innerHTML = '';
+
+        mics.forEach((mic, index) => {
+            const option = document.createElement('option');
+            option.value = mic.deviceId;
+            option.text = mic.label || `Mic ${index + 1}`;
+            device.appendChild(option);
+        });
+
+        status.innerHTML = '';
+    } catch (error) {
+        status.innerHTML = '<div class="error">Microphone access denied.</div>';
+    }
+}
+
+async function start_recording_from_panel() {
+    const device = document.getElementById('audio-record-device');
+    const state = document.getElementById('audio-record-state');
+    const preview = document.getElementById('audio-record-preview');
+    const status = document.getElementById('audio-record-status');
+    const start = document.getElementById('audio-record-start');
+    const stop = document.getElementById('audio-record-stop');
+    const upload = document.getElementById('audio-record-upload');
+
+    if (!device || !state || !preview || !status || !start || !stop || !upload) {
+        return;
+    }
+
+    status.innerHTML = '';
+    recordChunks = [];
+    recordBlob = null;
+
+    if (recordObjectUrl) {
+        URL.revokeObjectURL(recordObjectUrl);
+        recordObjectUrl = null;
+    }
+
+    preview.innerHTML = 'No recording yet.';
+    reset_recording_visual();
+    set_anchor_enabled(upload, false);
+
+    try {
+        recordStream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+                deviceId: device.value ? { exact: device.value } : undefined
+            }
+        });
+
+        recordRecorder = new MediaRecorder(recordStream);
+        recordRecorder.ondataavailable = event => recordChunks.push(event.data);
+        recordRecorder.onstop = () => {
+            recordBlob = new Blob(recordChunks, { type: recordRecorder.mimeType });
+            recordObjectUrl = URL.createObjectURL(recordBlob);
+            render_recording_preview(recordObjectUrl, recordRecorder.mimeType);
+            set_anchor_enabled(upload, true);
+
+            if (state.textContent === 'Recording') {
+                state.textContent = 'Recorded';
+            }
+        };
+
+        recordRecorder.start();
+        recordStartTime = Date.now();
+        recordTimer = setInterval(update_recording_timer, 200);
+        begin_recording_meter(recordStream);
+        update_recording_visual(0);
+
+        state.textContent = 'Recording';
+        set_anchor_enabled(start, false);
+        set_anchor_enabled(stop, true);
+    } catch (error) {
+        status.innerHTML = '<div class="error">Recording failed.</div>';
+    }
+}
+
+function stop_recording_from_panel(reachedLimit) {
+    const state = document.getElementById('audio-record-state');
+    const start = document.getElementById('audio-record-start');
+    const stop = document.getElementById('audio-record-stop');
+    const elapsedSeconds = recordStartTime
+        ? Math.min((Date.now() - recordStartTime) / 1000, RECORD_MAX_SECONDS)
+        : 0;
+
+    if (recordRecorder && recordRecorder.state !== 'inactive') {
+        recordRecorder.stop();
+    }
+
+    if (recordStream) {
+        recordStream.getTracks().forEach(track => track.stop());
+        recordStream = null;
+    }
+
+    clearInterval(recordTimer);
+    recordTimer = null;
+    recordStartTime = null;
+    set_anchor_enabled(start, true);
+    set_anchor_enabled(stop, false);
+
+    document.getElementById('audio-record-duration').textContent = fmt_seconds(elapsedSeconds);
+    document.getElementById('audio-record-remaining').textContent = fmt_seconds(Math.max(0, RECORD_MAX_SECONDS - elapsedSeconds));
+    update_recording_visual(elapsedSeconds);
+
+    if (state && reachedLimit) {
+        state.textContent = 'Recorded (limit reached)';
+    }
+}
+
+async function upload_recording_from_panel() {
+    const form = document.getElementById('audio-upload-form');
+    const filename = document.getElementById('audio-record-filename');
+    const status = document.getElementById('audio-record-status');
+    const upload = document.getElementById('audio-record-upload');
+    const state = document.getElementById('audio-record-state');
+
+    if (!form || !filename || !status || !upload || !state || !recordBlob) {
+        return;
+    }
+
+    const name = (filename.value || 'recording').trim() || 'recording';
+    let extension = 'webm';
+
+    if ((recordBlob.type || '').includes('ogg')) {
+        extension = 'ogg';
+    }
+
+    const file = new File([recordBlob], `${name}.${extension}`, {
+        type: recordBlob.type || 'audio/webm'
+    });
+
+    status.innerHTML = '<p>Uploading…</p>';
+    set_anchor_enabled(upload, false);
+    state.textContent = 'Uploading';
+
+    const result = await api('upload-audio', {
+        method: 'POST',
+        data: {
+            csrf_token: form.csrf_token.value
+        },
+        files: {
+            audio_file: file
+        }
+    });
+
+    if (!result.success) {
+        status.innerHTML = `<div class="error">${escape_html(result.error || 'Unable to upload audio file.')}</div>`;
+        set_anchor_enabled(upload, true);
+        state.textContent = 'Recorded';
+        return;
+    }
+
+    status.innerHTML = `<div class="success">${escape_html(result.message || 'Audio uploaded successfully.')}</div>`;
+    state.textContent = 'Uploaded';
+    load_audio_files(1);
+}
+
+function render_recording_preview(url, mimeType) {
+    const preview = document.getElementById('audio-record-preview');
+
+    if (!preview) {
+        return;
+    }
+
+    preview.innerHTML = `
+        <div class="audio-record-preview-row">
+            ${compact_audio_player({
+                id: 'record-panel-preview',
+                playback_url: url,
+                playback_mime_type: mimeType || 'audio/webm'
+            })}
+            <span>Preview ready</span>
+        </div>
+    `;
+}
+
+function update_recording_timer() {
+    if (!recordStartTime) {
+        return;
+    }
+
+    const elapsedSeconds = (Date.now() - recordStartTime) / 1000;
+    document.getElementById('audio-record-duration').textContent = fmt_seconds(Math.min(elapsedSeconds, RECORD_MAX_SECONDS));
+    document.getElementById('audio-record-remaining').textContent = fmt_seconds(Math.max(0, RECORD_MAX_SECONDS - elapsedSeconds));
+    update_recording_visual(Math.min(elapsedSeconds, RECORD_MAX_SECONDS));
+
+    if (elapsedSeconds >= RECORD_MAX_SECONDS) {
+        stop_recording_from_panel(true);
+    }
+}
+
+function update_recording_visual(elapsedSeconds) {
+    const clamped = Math.max(0, Math.min(elapsedSeconds, RECORD_MAX_SECONDS));
+    const progress = clamped / RECORD_MAX_SECONDS;
+    const remainingProgress = 1 - progress;
+    const topMaxHeight = 19;
+    const bottomMaxHeight = 19;
+    const topHeight = Math.max(0, topMaxHeight * remainingProgress);
+    const bottomHeight = Math.max(0, bottomMaxHeight * progress);
+    const tick = Math.floor(clamped * 8);
+
+    document.getElementById('audio-record-progress').style.width = `${progress * 100}%`;
+    document.getElementById('audio-record-hourglass-top-clip-rect').setAttribute('y', String(14 + (topMaxHeight - topHeight)));
+    document.getElementById('audio-record-hourglass-top-clip-rect').setAttribute('height', String(topHeight));
+    document.getElementById('audio-record-hourglass-bottom-clip-rect').setAttribute('y', String(82 - bottomHeight));
+    document.getElementById('audio-record-hourglass-bottom-clip-rect').setAttribute('height', String(bottomHeight));
+    document.getElementById('audio-record-hourglass-bottom-sand').style.opacity = String(Math.max(0.25, progress));
+    document.getElementById('audio-record-hourglass-stream').style.opacity = progress > 0 && progress < 1 ? '1' : '0';
+    document.getElementById('audio-record-hourglass-stream-dot-1').setAttribute('cx', String(31.4 + (tick % 2) * 0.7));
+    document.getElementById('audio-record-hourglass-stream-dot-1').setAttribute('cy', String(39 + (tick % 6)));
+    document.getElementById('audio-record-hourglass-stream-dot-2').setAttribute('cx', String(32.6 - (tick % 2) * 0.8));
+    document.getElementById('audio-record-hourglass-stream-dot-2').setAttribute('cy', String(44 + ((tick + 2) % 6)));
+    document.getElementById('audio-record-hourglass-stream-dot-3').setAttribute('cx', String(31.2 + ((tick + 1) % 3) * 0.5));
+    document.getElementById('audio-record-hourglass-stream-dot-3').setAttribute('cy', String(49 + ((tick + 4) % 6)));
+    document.getElementById('audio-record-hourglass-stream-dot-4').setAttribute('cx', String(32.8 - ((tick + 1) % 3) * 0.4));
+    document.getElementById('audio-record-hourglass-stream-dot-4').setAttribute('cy', String(54 + ((tick + 3) % 6)));
+}
+
+function reset_recording_visual() {
+    document.getElementById('audio-record-state').textContent = 'Idle';
+    document.getElementById('audio-record-duration').textContent = '0:00';
+    document.getElementById('audio-record-remaining').textContent = fmt_seconds(RECORD_MAX_SECONDS);
+    document.getElementById('audio-record-progress').style.width = '0%';
+    document.getElementById('audio-record-level').style.width = '0%';
+    update_recording_visual(0);
+}
+
+function begin_recording_meter(stream) {
+    recordAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    recordAnalyser = recordAudioCtx.createAnalyser();
+    const src = recordAudioCtx.createMediaStreamSource(stream);
+    src.connect(recordAnalyser);
+
+    const data = new Uint8Array(recordAnalyser.fftSize);
+
+    function tick() {
+        if (!recordStream || !recordAnalyser) {
+            return;
+        }
+
+        recordAnalyser.getByteTimeDomainData(data);
+        let peak = 0;
+
+        for (const value of data) {
+            const normalized = Math.abs((value - 128) / 128);
+            if (normalized > peak) {
+                peak = normalized;
+            }
+        }
+
+        document.getElementById('audio-record-level').style.width = `${Math.min(100, peak * 140)}%`;
+        requestAnimationFrame(tick);
+    }
+
+    tick();
+}
+
+function set_anchor_enabled(element, enabled) {
+    if (!element) {
+        return;
+    }
+
+    element.classList.toggle('is-disabled', !enabled);
+    element.setAttribute('aria-disabled', enabled ? 'false' : 'true');
+    element.tabIndex = enabled ? 0 : -1;
+}
+
+function is_anchor_disabled(element) {
+    return !element || element.classList.contains('is-disabled') || element.getAttribute('aria-disabled') === 'true';
+}
+
+function fmt_seconds(sec) {
+    sec = Math.floor(sec);
+    return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
 }
 
 async function load_audio_files(page = 1) {

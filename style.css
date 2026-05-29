@@ -1071,7 +1071,7 @@ button {
 
 .audio-action-panels {
     display: grid;
-    grid-template-columns: minmax(240px, 0.9fr) minmax(320px, 1.1fr);
+    grid-template-columns: repeat(3, minmax(200px, 1fr));
     gap: 1rem;
     align-items: stretch;
 }
@@ -1092,6 +1092,11 @@ button {
     margin: 0;
 }
 
+.audio-action-card .button.is-disabled {
+    pointer-events: none;
+    opacity: 0.45;
+}
+
 .audio-upload-form {
     border: none;
     padding: 0;
@@ -1105,6 +1110,82 @@ button {
 
 .audio-upload-form p {
     margin: 0;
+}
+
+.audio-record-panel {
+    text-align: left;
+}
+
+.audio-record-panel label {
+    margin-top: 0.6rem;
+}
+
+.audio-record-panel select,
+.audio-record-panel input {
+    font-size: 0.95rem;
+}
+
+.audio-record-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+    margin-top: 0.75rem;
+}
+
+.audio-record-controls .button,
+.audio-record-panel > p .button {
+    margin: 0;
+}
+
+.audio-record-timer {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 0.85rem;
+}
+
+.audio-record-timer-copy {
+    font-size: 0.9rem;
+    line-height: 1.35;
+}
+
+.audio-record-bars {
+    display: grid;
+    gap: 0.45rem;
+    margin-top: 0.75rem;
+}
+
+.audio-record-progress-track {
+    background: #eee;
+    height: 10px;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.audio-record-progress-fill {
+    height: 100%;
+    width: 0;
+    background: #b78a42;
+    border-radius: 999px;
+}
+
+.audio-record-level-fill {
+    height: 100%;
+    width: 0;
+    background: #444;
+    border-radius: 999px;
+}
+
+.audio-record-preview {
+    margin-top: 0.8rem;
+    min-height: 1.2rem;
+}
+
+.audio-record-preview-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
 }
 
 .audio-search-form {
