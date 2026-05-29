@@ -108,6 +108,9 @@ $remoteManifest = loadRemoteManifest($connection, $remoteManifestPath);
 $remoteManifestFiles = isset($remoteManifest['files']) && is_array($remoteManifest['files']) ? $remoteManifest['files'] : [];
 $nextManifestFiles = [];
 $filesToUpload = [];
+$uploadedManifestFiles = [];
+$manifestFlushInterval = 10;
+$lastManifestFlushAt = time();
 
 echo $dryRun ? "Dry run only. No files will be uploaded.\n" : "Deploying files to {$config['host']}...\n";
 
@@ -118,6 +121,7 @@ foreach ($files as $relativePath) {
     $remoteManifestEntry = $remoteManifestFiles[$relativePath] ?? null;
 
     if (manifestEntriesMatch($localManifestEntry, $remoteManifestEntry)) {
+        $uploadedManifestFiles[$relativePath] = $localManifestEntry;
         echo "Skipped {$relativePath}\n";
         continue;
     }
@@ -128,6 +132,7 @@ foreach ($files as $relativePath) {
 foreach ($filesToUpload as $relativePath) {
     $localPath = $projectRoot . DIRECTORY_SEPARATOR . $relativePath;
     $remotePath = joinRemotePath($remoteRoot, $relativePath);
+    $localManifestEntry = $nextManifestFiles[$relativePath];
 
     if ($dryRun) {
         echo "PUT {$relativePath} -> {$remotePath}\n";
@@ -137,23 +142,33 @@ foreach ($filesToUpload as $relativePath) {
     ensureRemoteDirectory($connection, dirname($remotePath));
 
     if (!ftp_put($connection, $remotePath, $localPath, FTP_BINARY)) {
+        $manifestSaved = flushManifestSnapshot(
+            $connection,
+            $remoteManifestPath,
+            $uploadedManifestFiles,
+            true
+        );
         ftp_close($connection);
+        if ($manifestSaved) {
+            fwrite(STDERR, "Manifest checkpoint saved before aborting.\n");
+        } else {
+            fwrite(STDERR, "Manifest checkpoint could not be saved before aborting.\n");
+        }
         fwrite(STDERR, "Upload failed: {$relativePath}\n");
         exit(1);
     }
 
+    $uploadedManifestFiles[$relativePath] = $localManifestEntry;
     echo "Uploaded {$relativePath}\n";
-}
 
-$manifestPayload = json_encode([
-    'generatedAt' => gmdate(DATE_ATOM),
-    'files' => $nextManifestFiles,
-], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-
-if ($manifestPayload === false) {
-    ftp_close($connection);
-    fwrite(STDERR, "Unable to encode deployment manifest.\n");
-    exit(1);
+    if (time() - $lastManifestFlushAt >= $manifestFlushInterval) {
+        if (flushManifestSnapshot($connection, $remoteManifestPath, $uploadedManifestFiles, true)) {
+            echo "Checkpointed manifest {$remoteManifestPath}\n";
+            $lastManifestFlushAt = time();
+        } else {
+            fwrite(STDERR, "Warning: unable to checkpoint manifest during deploy.\n");
+        }
+    }
 }
 
 $shouldUploadManifest = !isset($remoteManifest['files']) || $remoteManifest['files'] !== $nextManifestFiles || count($filesToUpload) > 0;
@@ -163,7 +178,11 @@ if ($shouldUploadManifest) {
         echo "PUT manifest -> {$remoteManifestPath}\n";
     } else {
         ensureRemoteDirectory($connection, dirname($remoteManifestPath));
-        uploadManifest($connection, $remoteManifestPath, $manifestPayload);
+        if (!flushManifestSnapshot($connection, $remoteManifestPath, $nextManifestFiles, false)) {
+            ftp_close($connection);
+            fwrite(STDERR, "Unable to update manifest {$remoteManifestPath}\n");
+            exit(1);
+        }
         echo "Updated manifest {$remoteManifestPath}\n";
     }
 } else {
@@ -371,6 +390,34 @@ function uploadManifest($connection, string $remoteManifestPath, string $manifes
             fwrite(STDERR, "Upload failed: {$remoteManifestPath}\n");
             exit(1);
         }
+    } finally {
+        @unlink($tempFile);
+    }
+}
+
+function flushManifestSnapshot($connection, string $remoteManifestPath, array $manifestFiles, bool $partial): bool
+{
+    $manifestPayload = json_encode([
+        'generatedAt' => gmdate(DATE_ATOM),
+        'isPartial' => $partial,
+        'files' => $manifestFiles,
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+
+    if ($manifestPayload === false) {
+        return false;
+    }
+
+    $tempFile = tempnam(sys_get_temp_dir(), 'ftp-manifest-');
+    if ($tempFile === false) {
+        return false;
+    }
+
+    try {
+        if (file_put_contents($tempFile, $manifestPayload) === false) {
+            return false;
+        }
+
+        return ftp_put($connection, $remoteManifestPath, $tempFile, FTP_BINARY);
     } finally {
         @unlink($tempFile);
     }
