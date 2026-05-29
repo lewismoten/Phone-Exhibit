@@ -2,6 +2,20 @@ let currentPage = 1;
 
 onReady(() => {
     document
+        .getElementById('audio-upload-form')
+        .addEventListener('submit', event => {
+            event.preventDefault();
+            upload_audio_from_panel();
+        });
+
+    document
+        .getElementById('audio-upload-submit')
+        .addEventListener('click', event => {
+            event.preventDefault();
+            upload_audio_from_panel();
+        });
+
+    document
         .getElementById('audio-search-form')
         .addEventListener('submit', event => {
             event.preventDefault();
@@ -17,6 +31,42 @@ onReady(() => {
 
     load_audio_files();
 });
+
+async function upload_audio_from_panel() {
+    const form = document.getElementById('audio-upload-form');
+    const status = document.getElementById('audio-upload-status');
+    const fileInput = document.getElementById('audio_upload_file');
+
+    if (!form || !status || !fileInput) {
+        return;
+    }
+
+    if (!fileInput.files || !fileInput.files.length) {
+        status.innerHTML = '<div class="error">Please choose an audio file.</div>';
+        return;
+    }
+
+    status.innerHTML = '<p>Uploading…</p>';
+
+    const result = await api('upload-audio', {
+        method: 'POST',
+        data: {
+            csrf_token: form.csrf_token.value
+        },
+        files: {
+            audio_file: fileInput.files[0]
+        }
+    });
+
+    if (!result.success) {
+        status.innerHTML = `<div class="error">${escape_html(result.error || 'Unable to upload audio file.')}</div>`;
+        return;
+    }
+
+    status.innerHTML = `<div class="success">${escape_html(result.message || 'Audio uploaded successfully.')}</div>`;
+    form.reset();
+    load_audio_files(1);
+}
 
 async function load_audio_files(page = 1) {
     currentPage = page;

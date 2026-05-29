@@ -17,8 +17,12 @@ html_header('My Audio Files');
         <hr>
 
         <div class="audio-action-card-body center">
-            <p>Record a new contribution or add another file to your collection.</p>
-            <p><a class="button" href="upload-audio.php">Upload audio file</a></p>
+            <div id="audio-upload-status"></div>
+            <form id="audio-upload-form" class="audio-upload-form" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                <input id="audio_upload_file" name="audio_file" type="file" accept="audio/*" required>
+                <p><a id="audio-upload-submit" class="button" href="#">Upload audio file</a></p>
+            </form>
         </div>
     </div>
 
