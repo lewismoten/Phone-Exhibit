@@ -126,6 +126,7 @@ $deployStartedAt = gmdate(DATE_ATOM);
 $lastCheckpointAt = null;
 $deployCompletedAt = null;
 $manifestErrors = [];
+$uploadedCount = 0;
 
 echo $dryRun ? "Dry run only. No files will be uploaded.\n" : "Deploying files to {$config['host']}...\n";
 
@@ -137,14 +138,12 @@ foreach ($files as $relativePath) {
 
     if (manifestEntriesMatch($localManifestEntry, $remoteManifestEntry)) {
         $uploadedManifestFiles[$relativePath] = $localManifestEntry;
-        echo "Skipped {$relativePath}\n";
         continue;
     }
 
     if (shouldDeferFailedFile($relativePath, $localManifestEntry, $remoteFailedFiles)) {
         $deferredFailedUploads[] = $relativePath;
         $nextFailedFiles[$relativePath] = $localManifestEntry;
-        echo "Deferred {$relativePath}\n";
         continue;
     }
 
@@ -186,6 +185,7 @@ foreach (array_merge($filesToUpload, $deferredFailedUploads) as $relativePath) {
 
     $uploadedManifestFiles[$relativePath] = $localManifestEntry;
     unset($nextFailedFiles[$relativePath]);
+    $uploadedCount++;
     echo "Uploaded {$relativePath}\n";
 
     if (time() - $lastManifestFlushAt >= $manifestFlushInterval) {
@@ -198,7 +198,6 @@ foreach (array_merge($filesToUpload, $deferredFailedUploads) as $relativePath) {
             true,
             buildManifestMeta($deployStartedAt, $lastCheckpointAt, null, $manifestErrors)
         )) {
-            echo "Checkpointed manifest {$remoteManifestPath}\n";
             $lastManifestFlushAt = time();
         } else {
             $manifestErrors[] = buildManifestError(
@@ -218,9 +217,7 @@ $shouldUploadManifest = !isset($remoteManifest['files'])
     || count($deferredFailedUploads) > 0;
 
 if ($shouldUploadManifest) {
-    if ($dryRun) {
-        echo "PUT manifest -> {$remoteManifestPath}\n";
-    } else {
+    if (!$dryRun) {
         ensureRemoteDirectory($connection, dirname($remoteManifestPath));
         $deployCompletedAt = gmdate(DATE_ATOM);
         if (!flushManifestSnapshot(
@@ -235,14 +232,13 @@ if ($shouldUploadManifest) {
             fwrite(STDERR, "Unable to update manifest {$remoteManifestPath}\n");
             exit(1);
         }
-        echo "Updated manifest {$remoteManifestPath}\n";
     }
-} else {
-    echo "Manifest unchanged\n";
 }
 
 ftp_close($connection);
-echo $dryRun ? "Dry run complete.\n" : "Upload complete.\n";
+echo $dryRun
+    ? "Dry run complete.\n"
+    : "Upload complete. {$uploadedCount} file" . ($uploadedCount === 1 ? '' : 's') . " changed.\n";
 
 function expandHomePath(string $path): string
 {
