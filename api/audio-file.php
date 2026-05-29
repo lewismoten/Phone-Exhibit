@@ -181,6 +181,9 @@ function audio_file_payload(array $row): array
     }
 
     return [
+        'transcription_tty_preview' => !empty($row['transcription_text'])
+            ? tty_format_text((string)$row['transcription_text'])
+            : '',
         'id' => (int)$row['id'],
         'original_filename' => (string)($row['original_filename'] ?? ''),
         'short_name' => (string)($row['short_name'] ?? ''),

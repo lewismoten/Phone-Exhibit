@@ -548,13 +548,8 @@ function tty_wrap(string $text, int $width = 32): string
     return implode("\n", $wrapped);
 }
 
-function convert_text_for_tty(string $text, string $outputPath, bool $raw = false): array
+function tty_format_text(string $text, bool $raw = false): string
 {
-    $bin = get_minimodem_path();
-    if (!$bin) {
-        throw new RuntimeException('minimodem not found');
-    }
-
     $text = preg_replace('/[^\x09\x0A\x0D\x20-\x7E]/', ' ', $text) ?? '';
 
     if (!$raw) {
@@ -563,7 +558,18 @@ function convert_text_for_tty(string $text, string $outputPath, bool $raw = fals
 
     $text = tty_wrap($text);
     $text = str_replace(["\r\n", "\r"], "\n", $text);
-    $text .= "\n";
+
+    return rtrim($text);
+}
+
+function convert_text_for_tty(string $text, string $outputPath, bool $raw = false): array
+{
+    $bin = get_minimodem_path();
+    if (!$bin) {
+        throw new RuntimeException('minimodem not found');
+    }
+
+    $text = tty_format_text($text, $raw) . "\n";
 
     $tmpFile = tempnam(sys_get_temp_dir(), 'tty_txt_');
     if ($tmpFile === false) {

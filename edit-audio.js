@@ -31,10 +31,13 @@ async function load_audio_file() {
     document.getElementById('rolodex_title').value = row.rolodex_title || '';
     document.getElementById('rolodex_details').value = row.rolodex_details || '';
     document.getElementById('transcription_text').value = row.transcription_text || '';
+    document.getElementById('transcription_tty_preview').value = row.transcription_tty_preview || '';
     document.getElementById('tty_transcription_text').value = row.tty_transcription_text || '';
     document.getElementById('ai_transcription_opt_in').checked = row.ai_transcription_opt_in === 1;
     document.getElementById('ai-transcription-wrap').style.display =
         row.transcription_text ? 'block' : 'none';
+    document.getElementById('ai-transcription-tty-wrap').style.display =
+        row.transcription_tty_preview ? 'block' : 'none';
 
     render_audio_playback(row);
 
