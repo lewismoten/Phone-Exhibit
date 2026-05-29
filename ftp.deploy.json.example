@@ -1,0 +1,8 @@
+{
+  "remotePath": "/",
+  "dryRun": false,
+  "exclude": [
+    "uploads",
+    "uploads/**"
+  ]
+}

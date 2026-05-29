@@ -1,0 +1,9 @@
+{
+  "host": "ftp.regaldragondanceparty.com",
+  "port": 21,
+  "username": "YOUR_FTP_USERNAME",
+  "password": "YOUR_FTP_PASSWORD",
+  "passive": true,
+  "ssl": false,
+  "timeout": 90
+}

@@ -9,6 +9,37 @@ Converts audio files with a high pass filter 300-3000 Hz into 8kHz 16bit PCM mon
 
 AI transcriptions and Minimodem is used for TTY Teletype machines.
 
+## FTP Publishing
+
+Do not store FTP credentials inside this project, even in ignored files. If credentials are saved anywhere under the project folder, they can be read by local tools working in the repo.
+
+This repo includes a deploy script at `scripts/deploy-ftp.php` that reads secrets from a JSON file in your home directory and deploy settings from a JSON file in the project.
+
+1. Copy `ftp.regaldragondanceparty.com.json.example` to `~/ftp.regaldragondanceparty.com.json`.
+2. Fill in your FTP host, port, username, password, passive mode, SSL choice, and timeout in the home-directory copy.
+3. Copy `ftp.deploy.json.example` to `ftp.deploy.json`.
+4. Set `remotePath` in `ftp.deploy.json` to the destination folder on the server.
+5. Run `php scripts/deploy-ftp.php`.
+
+You can also pass a custom config path:
+`php scripts/deploy-ftp.php ~/some-other-config.json`
+
+Server details:
+* Host: `ftp.regaldragondanceparty.com`
+* Protocol: `ftp`
+* Port: `21`
+
+Recommended upload excludes:
+* `.git/`
+* `.vscode/`
+* `README.md`
+* `Archive.zip`
+* `error_log`
+* `logs/`
+* `.DS_Store`
+* `ftp.deploy.json.example`
+* `ftp.regaldragondanceparty.com.json.example`
+
 ## Cron Jobs
 
 Master worker, calls all other cron jobs to process audio files.
