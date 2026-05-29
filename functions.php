@@ -550,6 +550,12 @@ function tty_wrap(string $text, int $width = 32): string
 
 function tty_format_text(string $text, bool $raw = false): string
 {
+    $text = str_replace(
+        ['&', '%', "'"],
+        [' AND ', ' PERCENT ', ''],
+        $text
+    );
+
     $text = preg_replace('/[^\x09\x0A\x0D\x20-\x7E]/', ' ', $text) ?? '';
 
     if (!$raw) {
