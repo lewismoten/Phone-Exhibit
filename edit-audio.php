@@ -64,6 +64,11 @@ html_header('Edit Audio File');
             </label>
         </p>
 
+        <p id="ai-transcription-wrap" style="display:none;">
+            <label for="transcription_text">AI transcription</label><br>
+            <textarea id="transcription_text" rows="8" style="width:100%;" readonly></textarea>
+        </p>
+
         <p>
             <label for="tty_transcription_text">Separate TTY transcription</label><br>
             <textarea id="tty_transcription_text" name="tty_transcription_text" rows="8" style="width:100%;"></textarea>

@@ -188,6 +188,7 @@ function audio_file_payload(array $row): array
         'requested_phone_number' => (string)($row['requested_phone_number'] ?? ''),
         'rolodex_title' => (string)($row['rolodex_title'] ?? ''),
         'rolodex_details' => (string)($row['rolodex_details'] ?? ''),
+        'transcription_text' => (string)($row['transcription_text'] ?? ''),
         'tty_transcription_text' => (string)($row['tty_transcription_text'] ?? ''),
         'ai_transcription_opt_in' => (int)($row['ai_transcription_opt_in'] ?? 0),
         'transcription_status' => (string)($row['transcription_status'] ?? 'pending'),
