@@ -880,26 +880,31 @@ button {
 }
 .compact-player {
     position: relative;
-    width: 42px;
-    height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 1.4em;
+    height: 1.4em;
+    vertical-align: middle;
 }
 
 .progress-ring {
-    width: 42px;
-    height: 42px;
+    width: 1.4em;
+    height: 1.4em;
     transform: rotate(-90deg);
 }
 
 .progress-ring-bg {
     fill: none;
     stroke: #ddd;
-    stroke-width: 4;
+    stroke-width: 5;
 }
 
 .progress-ring-fill {
     fill: none;
     stroke: #333;
-    stroke-width: 4;
+    stroke-width: 5;
     stroke-linecap: round;
     transition: stroke-dashoffset 0.15s linear;
 }
@@ -907,11 +912,17 @@ button {
 .compact-player-button {
     position: absolute;
     inset: 0;
-    width: 42px;
-    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.4em;
+    height: 1.4em;
+    padding: 0;
     border: 0;
     background: transparent;
     cursor: pointer;
-    font-size: 14px;
+    line-height: 1;
+    font-size: 0.58em;
     font-weight: bold;
+    color: currentColor;
 }
