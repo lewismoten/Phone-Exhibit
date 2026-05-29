@@ -106,6 +106,6 @@ html_header('My Audio Files');
 <nav id="audio-pagination" style="margin-top:16px;"></nav>
 
 <script src="/common.js"></script>
-<script defer src="/audio-files.js"></script>
+<script defer src="/dashboard.js"></script>
 
 <?php html_footer(); ?>
