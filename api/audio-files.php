@@ -103,13 +103,19 @@ foreach ($rows as $row) {
         ?: $row['requested_phone_number']
         ?: null;
 
+    $phoneStatus = $row['exhibit_phone_number']
+        ? 'assigned'
+        : ($row['requested_phone_number'] ? 'requested' : 'unassigned');
+
     $out[] = [
         'id' => (int)$row['id'],
         'title' => (string)$title,
         'phone_number' => $phoneNumber,
+        'phone_status' => $phoneStatus,
         'conversion_status' => (string)($row['conversion_status'] ?? 'pending'),
         'playback_url' => $playbackUrl,
         'playback_mime_type' => $playbackMimeType,
+        'using_converted_audio' => $hasConverted,
         'created_at' => (string)$row['created_at'],
     ];
 }

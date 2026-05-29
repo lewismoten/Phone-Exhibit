@@ -60,6 +60,10 @@ async function load_audio_files(page = 1) {
 function audio_file_row(row) {
 
     const phone = format_phone_number(row.phone_number);
+    const phoneStatus = row.phone_status || 'unassigned';
+    const phoneStatusLabel = phoneStatus === 'assigned'
+        ? 'Assigned'
+        : (phoneStatus === 'requested' ? 'Requested' : 'Not assigned');
 
     const type = row.using_converted_audio
         ? 'Converted'
@@ -77,7 +81,12 @@ function audio_file_row(row) {
                 </a>
             </td>
 
-            <td>${escape_html(phone)}</td>
+            <td class="audio-file-phone">
+                <div>${escape_html(phone)}</div>
+                <div class="audio-file-phone-status audio-file-phone-status-${phoneStatus}">
+                    ${escape_html(phoneStatusLabel)}
+                </div>
+            </td>
 
             <td class="audio-file-audio">${player}</td>
 

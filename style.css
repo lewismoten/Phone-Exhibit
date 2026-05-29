@@ -1027,6 +1027,24 @@ button {
     text-underline-offset: 0.12em;
 }
 
+.audio-file-phone-status {
+    margin-top: 0.15rem;
+    font-size: 0.82rem;
+    line-height: 1.2;
+}
+
+.audio-file-phone-status-assigned {
+    color: #1f7a3d;
+}
+
+.audio-file-phone-status-requested {
+    color: #9a6700;
+}
+
+.audio-file-phone-status-unassigned {
+    color: var(--secondary-text);
+}
+
 .audio-file-audio .compact-player {
     margin-left: 0;
 }
