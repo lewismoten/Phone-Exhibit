@@ -1148,6 +1148,35 @@ button {
     margin: 0;
 }
 
+.upload-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    width: 100%;
+    margin: 0 0 0.5rem;
+}
+
+.upload-progress-label {
+    font-size: 0.9rem;
+    line-height: 1.2;
+}
+
+.upload-progress-track {
+    width: 100%;
+    height: 10px;
+    background: #eee;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.upload-progress-fill {
+    height: 100%;
+    width: 0;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #c49b52 0%, #8a5f24 100%);
+    transition: width 0.12s linear;
+}
+
 .audio-record-panel {
     text-align: left;
     display: flex;

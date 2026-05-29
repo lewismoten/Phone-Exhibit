@@ -97,8 +97,9 @@ async function upload_audio_from_panel() {
     const form = document.getElementById('audio-upload-form');
     const status = document.getElementById('audio-upload-status');
     const fileInput = document.getElementById('audio_upload_file');
+    const submit = document.getElementById('audio-upload-submit');
 
-    if (!form || !status || !fileInput) {
+    if (!form || !status || !fileInput || !submit) {
         return;
     }
 
@@ -107,26 +108,35 @@ async function upload_audio_from_panel() {
         return;
     }
 
-    status.innerHTML = '<p>Uploading…</p>';
+    render_upload_progress(status, 'Uploading file…', 0);
+    set_anchor_enabled(submit, false);
 
-    const result = await api('upload-audio', {
+    const result = await api_upload('upload-audio', {
         method: 'POST',
         data: {
             csrf_token: form.csrf_token.value
         },
         files: {
             audio_file: fileInput.files[0]
-        }
+        },
+        onUploadProgress: event => {
+            const percent = event.lengthComputable
+                ? Math.round((event.loaded / event.total) * 100)
+                : null;
+            render_upload_progress(status, 'Uploading file…', percent);
+        },
     });
 
     if (!result.success) {
         status.innerHTML = `<div class="error">${escape_html(result.error || 'Unable to upload audio file.')}</div>`;
+        set_anchor_enabled(submit, true);
         return;
     }
 
     status.innerHTML = `<div class="success">${escape_html(result.message || 'Audio uploaded successfully.')}</div>`;
     show_toast(result.message || 'Audio uploaded successfully.');
     form.reset();
+    set_anchor_enabled(submit, true);
     load_audio_files(1);
 }
 
@@ -259,8 +269,9 @@ async function upload_recording_from_panel() {
     const status = document.getElementById('audio-record-status');
     const upload = document.getElementById('audio-record-upload');
     const state = document.getElementById('audio-record-state');
+    const toggle = document.getElementById('audio-record-toggle');
 
-    if (!form || !status || !upload || !state || !recordBlob) {
+    if (!form || !status || !upload || !state || !toggle || !recordBlob) {
         return;
     }
 
@@ -275,23 +286,31 @@ async function upload_recording_from_panel() {
         type: recordBlob.type || 'audio/webm'
     });
 
-    status.innerHTML = '<p>Uploading…</p>';
+    render_upload_progress(status, 'Uploading recording…', 0);
     set_anchor_enabled(upload, false);
+    set_anchor_enabled(toggle, false);
     state.textContent = 'Uploading';
 
-    const result = await api('upload-audio', {
+    const result = await api_upload('upload-audio', {
         method: 'POST',
         data: {
             csrf_token: form.csrf_token.value
         },
         files: {
             audio_file: file
-        }
+        },
+        onUploadProgress: event => {
+            const percent = event.lengthComputable
+                ? Math.round((event.loaded / event.total) * 100)
+                : null;
+            render_upload_progress(status, 'Uploading recording…', percent);
+        },
     });
 
     if (!result.success) {
         status.innerHTML = `<div class="error">${escape_html(result.error || 'Unable to upload audio file.')}</div>`;
         set_anchor_enabled(upload, true);
+        set_anchor_enabled(toggle, true);
         state.textContent = 'Recorded';
         return;
     }
@@ -301,6 +320,29 @@ async function upload_recording_from_panel() {
     show_toast(result.message || 'Audio uploaded successfully.');
     collapse_record_panel();
     load_audio_files(1);
+}
+
+function render_upload_progress(container, message, percent = null) {
+    if (!container) {
+        return;
+    }
+
+    const clampedPercent = Number.isFinite(percent)
+        ? Math.max(0, Math.min(100, percent))
+        : null;
+    const label = clampedPercent === null
+        ? escape_html(message)
+        : `${escape_html(message)} ${clampedPercent}%`;
+    const width = clampedPercent === null ? 100 : clampedPercent;
+
+    container.innerHTML = `
+        <div class="upload-progress" role="status" aria-live="polite">
+            <div class="upload-progress-label">${label}</div>
+            <div class="upload-progress-track">
+                <div class="upload-progress-fill" style="width:${width}%"></div>
+            </div>
+        </div>
+    `;
 }
 
 function render_recording_preview(url, mimeType) {

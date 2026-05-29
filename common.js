@@ -82,6 +82,87 @@ async function api(path, options = {}) {
     };
   }
 }
+
+function api_upload(path, options = {}) {
+  const {
+    method = "POST",
+    data = null,
+    files = null,
+    headers = {},
+    onUploadProgress = null,
+  } = options;
+
+  const url = `/api/${String(path).replace(/^\/+/, "")}.php`;
+  const formData = new FormData();
+
+  if (data) {
+    for (const [key, value] of Object.entries(data)) {
+      formData.append(key, value);
+    }
+  }
+
+  if (files) {
+    for (const [key, value] of Object.entries(files)) {
+      if (value instanceof FileList || Array.isArray(value)) {
+        for (const file of value) {
+          formData.append(key, file);
+        }
+      } else {
+        formData.append(key, value);
+      }
+    }
+  }
+
+  return new Promise((resolve) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open(method, url, true);
+    xhr.setRequestHeader("Accept", "application/json");
+
+    for (const [key, value] of Object.entries(headers)) {
+      xhr.setRequestHeader(key, value);
+    }
+
+    if (typeof onUploadProgress === "function" && xhr.upload) {
+      xhr.upload.addEventListener("progress", onUploadProgress);
+    }
+
+    xhr.onload = () => {
+      const text = xhr.responseText || "";
+      let result;
+
+      try {
+        result = text ? JSON.parse(text) : {};
+      } catch {
+        result = {
+          success: false,
+          error: "The server returned an invalid JSON response.",
+          raw: text,
+        };
+      }
+
+      if (xhr.status < 200 || xhr.status >= 300) {
+        resolve({
+          success: false,
+          status: xhr.status,
+          error: result.error || xhr.statusText || "Request failed.",
+          result,
+        });
+        return;
+      }
+
+      resolve(result);
+    };
+
+    xhr.onerror = () => {
+      resolve({
+        success: false,
+        error: "Network request failed.",
+      });
+    };
+
+    xhr.send(formData);
+  });
+}
 function onReady(callback) {
   if (
     document.readyState === "complete" ||
