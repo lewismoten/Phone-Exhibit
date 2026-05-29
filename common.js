@@ -142,7 +142,11 @@ const show_recent_contributions = (id) => {
 
 function time_ago(dateString) {
 
-  const date = new Date(dateString);
+  const date = parse_api_date(dateString);
+  if (!date) {
+    return "just now";
+  }
+
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
 
   const units = [
@@ -164,6 +168,31 @@ function time_ago(dateString) {
   }
 
   return "just now";
+}
+
+function parse_api_date(dateString) {
+
+  if (!dateString) {
+    return null;
+  }
+
+  const mysqlStyle = String(dateString)
+    .trim()
+    .match(/^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2})$/);
+
+  if (mysqlStyle) {
+    const utcDate = new Date(`${mysqlStyle[1]}T${mysqlStyle[2]}Z`);
+    if (!Number.isNaN(utcDate.getTime())) {
+      return utcDate;
+    }
+  }
+
+  const direct = new Date(dateString);
+  if (Number.isNaN(direct.getTime())) {
+    return null;
+  }
+
+  return direct;
 }
 
 function escape_html(value) {
