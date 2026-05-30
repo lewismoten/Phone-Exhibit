@@ -53,6 +53,10 @@ Database schema files now live in `schema/` and are intended to be run in filena
 * `001-...sql`
 * `002-...sql`
 * `003-...sql`
+* ...
+* `011-schema-script-deployments.sql`
+
+The `schema_script_deployments` table created by `011-...sql` seeds records for the existing split schema files and can be used to record whether later schema deployments were started, succeeded, or failed.
 
 ## Cron Jobs
 
