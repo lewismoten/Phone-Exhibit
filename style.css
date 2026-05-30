@@ -1615,6 +1615,17 @@ body.login-modal-open {
     flex-wrap: wrap;
 }
 
+.audio-user-filter {
+    display: flex;
+    align-items: flex-end;
+}
+
+.audio-user-filter select {
+    min-width: 180px;
+    max-width: 220px;
+    margin-top: 0;
+}
+
 .audio-search-form-row input {
     flex: 0 1 220px;
 }

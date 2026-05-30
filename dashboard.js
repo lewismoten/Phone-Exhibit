@@ -1,5 +1,6 @@
 let currentPage = 1;
 const RECORD_MAX_SECONDS = 180;
+let audioUserFilterReady = false;
 
 let recordStream = null;
 let recordRecorder = null;
@@ -13,9 +14,10 @@ let recordAnalyser = null;
 let recordIsActive = false;
 let uploadPreviewObjectUrl = null;
 
-onReady(() => {
+onReady(async () => {
     init_audio_capture_panel();
     maybe_show_audio_deleted_toast();
+    await init_audio_user_filter();
 
     document
         .getElementById('audio-upload-choose')
@@ -58,6 +60,40 @@ onReady(() => {
 
     load_audio_files();
 });
+
+async function init_audio_user_filter() {
+    const wrap = document.getElementById('audio-user-filter-wrap');
+    const select = document.getElementById('audio-user-filter');
+
+    if (!wrap || !select) {
+        audioUserFilterReady = true;
+        return;
+    }
+
+    const result = await api('audio-users');
+
+    if (!result.success) {
+        audioUserFilterReady = true;
+        return;
+    }
+
+    const users = Array.isArray(result.users) ? result.users : [];
+
+    select.innerHTML = users.map(user => `
+        <option value="${escape_html(String(user.id ?? 'all'))}">
+            ${escape_html(String(user.username ?? ''))}
+        </option>
+    `).join('');
+
+    select.value = 'all';
+    wrap.hidden = !result.is_admin;
+
+    select.addEventListener('change', () => {
+        load_audio_files(1);
+    });
+
+    audioUserFilterReady = true;
+}
 
 function maybe_show_audio_deleted_toast() {
     const url = new URL(window.location.href);
@@ -726,14 +762,23 @@ function fmt_seconds(sec) {
 async function load_audio_files(page = 1) {
     currentPage = page;
 
-    const q = document.getElementById('q').value.trim();
+    const searchInput = document.getElementById('q');
+    const userFilter = document.getElementById('audio-user-filter');
     const results = document.getElementById('audio-results');
     const pagination = document.getElementById('audio-pagination');
+    const q = searchInput ? searchInput.value.trim() : '';
+    const userId = userFilter ? userFilter.value : 'all';
+
+    if (!audioUserFilterReady) {
+        results.innerHTML = '<p>Loading…</p>';
+        pagination.innerHTML = '';
+        return;
+    }
 
     results.innerHTML = '<p>Loading…</p>';
     pagination.innerHTML = '';
 
-    const result = await api('audio-files', { data: { q, page } });
+    const result = await api('audio-files', { data: { q, page, user_id: userId } });
 
     if (!result.success) {
         results.innerHTML = `<p class="error">${escape_html(result.error || 'Unable to load audio files.')}</p>`;

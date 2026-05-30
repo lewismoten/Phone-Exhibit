@@ -12,11 +12,23 @@ $user = current_user();
 
 $q = trim((string)($_GET['q'] ?? ''));
 $page = max(1, (int)($_GET['page'] ?? 1));
+$requestedUserId = trim((string)($_GET['user_id'] ?? 'all'));
 $perPage = 10;
 $offset = pagination_offset($page, $perPage);
 
-$where = 'WHERE user_id = ? AND is_deleted = 0';
-$params = [$user['id']];
+$where = 'WHERE is_deleted = 0';
+$params = [];
+
+if (!is_admin()) {
+    $where .= ' AND user_id = ?';
+    $params[] = $user['id'];
+} elseif ($requestedUserId !== '' && $requestedUserId !== 'all') {
+    $filterUserId = (int)$requestedUserId;
+    if ($filterUserId > 0) {
+        $where .= ' AND user_id = ?';
+        $params[] = $filterUserId;
+    }
+}
 
 if ($q !== '') {
     $where .= ' AND (
@@ -24,6 +36,8 @@ if ($q !== '') {
         OR short_name LIKE ?
         OR directory_title LIKE ?
         OR rolodex_title LIKE ?
+        OR exhibit_phone_number LIKE ?
+        OR requested_phone_number LIKE ?
         OR transcription_text LIKE ?
         OR tty_transcription_text LIKE ?
     )';
@@ -32,6 +46,8 @@ if ($q !== '') {
 
     array_push(
         $params,
+        $like,
+        $like,
         $like,
         $like,
         $like,
