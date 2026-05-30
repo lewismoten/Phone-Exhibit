@@ -103,6 +103,10 @@ function save_audio_file(array $user): void
         ? clean_paper_classification_code($_POST['paper_classification_code'] ?? null)
         : (($row['paper_classification_code'] ?? null) !== null ? (string)$row['paper_classification_code'] : null);
 
+    $paperClassificationWasChanged = is_admin()
+        && $paperClassificationCode !== (($row['paper_classification_code'] ?? null) !== null ? (string)$row['paper_classification_code'] : null);
+    $sharedAssignedNumber = trim((string)($row['exhibit_phone_number'] ?? ''));
+
     $stmt = db()->prepare(
         "UPDATE audio_files
          SET
@@ -128,6 +132,21 @@ function save_audio_file(array $user): void
         $aiTranscriptionOptIn,
         $id,
     ]);
+
+    if ($paperClassificationWasChanged && $sharedAssignedNumber !== '') {
+        $sharedNumberStatement = db()->prepare(
+            "UPDATE audio_files
+             SET
+                paper_classification_code = ?,
+                updated_at = CURRENT_TIMESTAMP
+             WHERE exhibit_phone_number = ?
+               AND is_deleted = 0"
+        );
+        $sharedNumberStatement->execute([
+            $paperClassificationCode,
+            $sharedAssignedNumber,
+        ]);
+    }
 
     if ($stmt->rowCount() < 1) {
         $check = find_editable_audio_file($id, $user);
