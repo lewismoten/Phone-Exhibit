@@ -1328,13 +1328,31 @@ body.login-modal-open {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    margin: 0 0 0.55rem;
+    margin: 0;
     font-size: 1.1rem;
     color: var(--secondary-text);
 }
 
+.phone-directory-group-description {
+    margin: 0.15rem 0 0.65rem 1.5rem;
+    font-size: 0.94rem;
+    color: rgba(43, 22, 13, 0.76);
+}
+
 .phone-directory-table-wrap {
     overflow-x: auto;
+}
+
+.phone-directory-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.phone-directory-random-indicator {
+    font-size: 0.95rem;
+    line-height: 1;
+    cursor: help;
 }
 
 .phone-directory-table {

@@ -51,6 +51,7 @@ try {
                 'title' => directory_entry_title($row),
                 'phone_number' => $phoneNumber,
                 'tty_phone_number' => trim((string)($row['tty_phone_number'] ?? '')),
+                'audio_count' => 1,
                 'paper_classification_code' => (string)($row['paper_classification_code'] ?? ''),
                 'paper_classification_label' => (string)($row['paper_classification_label'] ?? ''),
                 'paper_classification_color' => (string)($row['paper_classification_color'] ?? ''),
@@ -63,6 +64,8 @@ try {
         if ($entriesByPhone[$phoneNumber]['tty_phone_number'] === '') {
             $entriesByPhone[$phoneNumber]['tty_phone_number'] = trim((string)($row['tty_phone_number'] ?? ''));
         }
+
+        $entriesByPhone[$phoneNumber]['audio_count']++;
     }
 
     $entries = array_values($entriesByPhone);

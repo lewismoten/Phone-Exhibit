@@ -78,6 +78,7 @@ function render_directory_group(group) {
                 ${swatch}
                 <span>${escape_html(title)}</span>
             </h2>
+            <p class="phone-directory-group-description">${escape_html(group.description || '')}</p>
             <div class="phone-directory-table-wrap">
                 <table class="phone-directory-table">
                     <thead>
@@ -97,9 +98,25 @@ function render_directory_group(group) {
 }
 
 function render_directory_row(entry) {
+    const audioCount = Number(entry.audio_count || 0);
+    const randomIndicator = audioCount > 1
+        ? `
+            <span
+                class="phone-directory-random-indicator"
+                title="${escape_html(`${audioCount} audio files play at random for this number.`)}"
+                aria-label="${escape_html(`${audioCount} audio files play at random for this number.`)}"
+            >🎲</span>
+        `
+        : '';
+
     return `
         <tr>
-            <td>${escape_html(entry.title || 'Untitled listing')}</td>
+            <td>
+                <span class="phone-directory-title">
+                    <span>${escape_html(entry.title || 'Untitled listing')}</span>
+                    ${randomIndicator}
+                </span>
+            </td>
             <td>${escape_html(format_phone_number(entry.phone_number || ''))}</td>
             <td>${escape_html(entry.tty_phone_number ? format_phone_number(entry.tty_phone_number) : '—')}</td>
         </tr>
