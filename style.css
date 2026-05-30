@@ -1331,8 +1331,12 @@ body.login-modal-open {
 .assignment-dialog {
     width: min(720px, calc(100vw - 2rem));
     border: 0;
-    background: transparent;
+    background-image: var(--content-background);
+    background-repeat: repeat;
+    background-color: #efe4cf;
     padding: 0;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 .assignment-dialog::backdrop {
@@ -1346,8 +1350,7 @@ body.login-modal-open {
 .assignment-dialog-card {
     position: relative;
     padding: 1.25rem 1.25rem 1rem;
-    background-image: var(--content-background);
-    background-repeat: repeat;
+    background: transparent;
     overflow: hidden;
 }
 

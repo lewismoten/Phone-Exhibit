@@ -186,7 +186,11 @@ function populate_assignment_dialog(row, classifications) {
     const paperSelect = document.getElementById('audio-assignment-paper');
     paperSelect.innerHTML = classifications.map(option => `
         <option value="${escape_html(option.code || '')}">
-            ${escape_html(option.code ? `${option.label} (${option.code})` : option.label)}
+            ${escape_html(
+                option.code
+                    ? `${option.label} (${option.code}) - ${option.description || ''}`.replace(/ - $/, '')
+                    : `${option.label}${option.description ? ` - ${option.description}` : ''}`
+            )}
         </option>
     `).join('');
     paperSelect.value = row.paper_classification_code || '';
@@ -198,7 +202,11 @@ function populate_assignment_dialog(row, classifications) {
 
     ttyWrap.hidden = !hasTtyContent;
     ttyNumberWrap.hidden = !hasTtyContent;
-    ttyContent.textContent = row.tty_transcription_text || 'TTY audio exists, but no transcription text is available.';
+    ttyContent.textContent = row.tty_transcription_text
+        || row.tty_error
+        || ((row.tty_status && row.tty_status !== 'complete')
+            ? `TTY status: ${row.tty_status}`
+            : 'TTY audio exists, but no transcription text is available.');
 }
 
 async function save_audio_assignment() {

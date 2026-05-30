@@ -174,11 +174,12 @@ function find_assignment_audio_file(int $id): ?array
 
 function assignment_audio_payload(array $row): array
 {
-    $ttyText = trim((string)($row['tty_transcription_text'] ?? ''));
+    $ttyText = assignment_tty_preview_text($row);
     $hasTtyContent =
         $ttyText !== ''
         || trim((string)($row['tty_relative_path'] ?? '')) !== ''
-        || (string)($row['tty_status'] ?? '') === 'complete';
+        || (string)($row['tty_status'] ?? '') === 'complete'
+        || trim((string)($row['tty_error'] ?? '')) !== '';
 
     return [
         'id' => (int)$row['id'],
@@ -192,6 +193,8 @@ function assignment_audio_payload(array $row): array
         'paper_classification_description' => (string)($row['paper_classification_description'] ?? ''),
         'has_tty_content' => $hasTtyContent,
         'tty_transcription_text' => $ttyText,
+        'tty_status' => (string)($row['tty_status'] ?? ''),
+        'tty_error' => (string)($row['tty_error'] ?? ''),
     ];
 }
 
@@ -205,6 +208,26 @@ function assignment_audio_title(array $row): string
     }
 
     return 'Untitled audio file';
+}
+
+function assignment_tty_preview_text(array $row): string
+{
+    $manualTty = trim((string)($row['tty_transcription_text'] ?? ''));
+    if ($manualTty !== '') {
+        return $manualTty;
+    }
+
+    $transcription = trim((string)($row['transcription_text'] ?? ''));
+    if ($transcription !== '') {
+        return tty_format_text($transcription);
+    }
+
+    $ttyError = trim((string)($row['tty_error'] ?? ''));
+    if ($ttyError !== '') {
+        return $ttyError;
+    }
+
+    return '';
 }
 
 function paper_classification_assignment_options(): array
