@@ -40,17 +40,7 @@ function fetch_audio_file(array $user): void
         return;
     }
 
-    $stmt = db()->prepare(
-        "SELECT *
-         FROM audio_files
-         WHERE id = ?
-           AND user_id = ?
-           AND is_deleted = 0
-         LIMIT 1"
-    );
-
-    $stmt->execute([$id, $user['id']]);
-    $row = $stmt->fetch();
+    $row = find_editable_audio_file($id, $user);
 
     if (!$row) {
         http_response_code(404);
@@ -96,6 +86,17 @@ function save_audio_file(array $user): void
     $ttyTranscriptionText = clean_tty_transcription_text($_POST['tty_transcription_text'] ?? null, 20000);
     $aiTranscriptionOptIn = !empty($_POST['ai_transcription_opt_in']) ? 1 : 0;
 
+    $row = find_editable_audio_file($id, $user);
+
+    if (!$row) {
+        http_response_code(404);
+        echo json_encode([
+            'success' => false,
+            'error' => 'Audio file not found.',
+        ], JSON_THROW_ON_ERROR);
+        return;
+    }
+
     $stmt = db()->prepare(
         "UPDATE audio_files
          SET
@@ -107,7 +108,6 @@ function save_audio_file(array $user): void
             ai_transcription_opt_in = ?,
             updated_at = CURRENT_TIMESTAMP
          WHERE id = ?
-           AND user_id = ?
            AND is_deleted = 0"
     );
 
@@ -119,23 +119,12 @@ function save_audio_file(array $user): void
         $ttyTranscriptionText,
         $aiTranscriptionOptIn,
         $id,
-        $user['id'],
     ]);
 
     if ($stmt->rowCount() < 1) {
-        // Could mean no changes, so confirm ownership instead of treating it as failure.
-        $check = db()->prepare(
-            "SELECT id
-             FROM audio_files
-             WHERE id = ?
-               AND user_id = ?
-               AND is_deleted = 0
-             LIMIT 1"
-        );
+        $check = find_editable_audio_file($id, $user);
 
-        $check->execute([$id, $user['id']]);
-
-        if (!$check->fetch()) {
+        if (!$check) {
             http_response_code(404);
             echo json_encode([
                 'success' => false,
@@ -145,22 +134,44 @@ function save_audio_file(array $user): void
         }
     }
 
-    $fetch = db()->prepare(
-        "SELECT *
-         FROM audio_files
-         WHERE id = ?
-           AND user_id = ?
-           AND is_deleted = 0
-         LIMIT 1"
-    );
-
-    $fetch->execute([$id, $user['id']]);
-    $row = $fetch->fetch();
+    $row = find_editable_audio_file($id, $user);
 
     echo json_encode([
         'success' => true,
         'audio_file' => audio_file_payload($row),
     ], JSON_THROW_ON_ERROR);
+}
+
+function find_editable_audio_file(int $id, array $user): ?array
+{
+    if ($id <= 0) {
+        return null;
+    }
+
+    if (is_admin()) {
+        $stmt = db()->prepare(
+            "SELECT *
+             FROM audio_files
+             WHERE id = ?
+               AND is_deleted = 0
+             LIMIT 1"
+        );
+        $stmt->execute([$id]);
+    } else {
+        $stmt = db()->prepare(
+            "SELECT *
+             FROM audio_files
+             WHERE id = ?
+               AND user_id = ?
+               AND is_deleted = 0
+             LIMIT 1"
+        );
+        $stmt->execute([$id, $user['id']]);
+    }
+
+    $row = $stmt->fetch();
+
+    return $row ?: null;
 }
 
 function audio_file_payload(array $row): array
