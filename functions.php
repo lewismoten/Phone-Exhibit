@@ -292,8 +292,9 @@ function html_footer(): void
         echo '<a class="button" href="/forgot-password.php">Forgot Password</a>';
         echo '<a class="button" href="/register.php">Register</a>';
         echo '</div>';
-        echo '</div>';
-        echo '</div>';
+        echo '</div>'; // .login-modal-card
+        echo '</div>'; // .login-modal-shell
+        echo '</div>'; // #login-modal
     }
     echo '<div class="footer">';
     echo '<div class="left">';

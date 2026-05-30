@@ -160,6 +160,49 @@ body {
     font-size: 1.1rem;
     line-height: 1.6;
 }
+.footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin: 0 auto;
+    padding: 0.85rem 0.5rem 0.25rem;
+    color: var(--warn-text);
+    font-size: 0.95rem;
+    max-width: 1200px;
+}
+.footer > .left {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+.footer > .left:last-child {
+    margin-left: auto;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+.footer .center {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2rem;
+}
+.footer a {
+    color: inherit;
+    text-decoration: underline;
+}
+@media (max-width: 760px) {
+    .footer {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .footer > .left:last-child {
+        margin-left: 0;
+        justify-content: center;
+    }
+}
 /* Mast Head */
 .masthead {
     position: relative;
@@ -866,6 +909,9 @@ button {
 }
 .modal-backdrop[hidden] {
     display: none;
+}
+body.login-modal-open {
+    overflow: hidden;
 }
 .modal-card {
     width: min(460px, calc(100vw - 40px));

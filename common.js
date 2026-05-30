@@ -203,6 +203,7 @@ function open_login_modal() {
   }
 
   modal.hidden = false;
+  document.body.classList.add("login-modal-open");
   if (identity) {
     identity.focus();
   }
@@ -215,6 +216,7 @@ function close_login_modal() {
   }
 
   modal.hidden = true;
+  document.body.classList.remove("login-modal-open");
 
   const pathname = window.location.pathname.replace(/\/+$/, "");
   if (pathname === "/login.php" || pathname === "login.php") {
@@ -263,8 +265,11 @@ function init_login_modal() {
   const close = document.getElementById("login-modal-close");
 
   if (!modal || !form || !close) {
+    document.body.classList.remove("login-modal-open");
     return;
   }
+
+  document.body.classList.toggle("login-modal-open", !modal.hidden);
 
   document.querySelectorAll('a[href="/login.php"]').forEach((link) => {
     link.addEventListener("click", (event) => {
