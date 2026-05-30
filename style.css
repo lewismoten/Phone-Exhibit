@@ -1316,6 +1316,48 @@ body.login-modal-open {
     color: rgba(43, 22, 13, 0.9);
 }
 
+.phone-directory-results {
+    margin-top: 1rem;
+}
+
+.phone-directory-group + .phone-directory-group {
+    margin-top: 1.5rem;
+}
+
+.phone-directory-group-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 0.55rem;
+    font-size: 1.1rem;
+    color: var(--secondary-text);
+}
+
+.phone-directory-table-wrap {
+    overflow-x: auto;
+}
+
+.phone-directory-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.98rem;
+}
+
+.phone-directory-table th,
+.phone-directory-table td {
+    padding: 0.55rem 0.65rem;
+    border-bottom: 1px solid rgba(74, 60, 46, 0.18);
+    text-align: left;
+    vertical-align: middle;
+}
+
+.phone-directory-table thead th {
+    font-size: 0.9rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: rgba(43, 22, 13, 0.78);
+}
+
 .audio-file-date {
     white-space: nowrap;
 }
