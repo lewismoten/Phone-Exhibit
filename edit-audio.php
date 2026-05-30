@@ -55,7 +55,7 @@ html_header('Edit Audio File');
                     <select id="paper_classification_code" name="paper_classification_code" class="rolodex-paper-select">
                         <option value="">Optional</option>
                     </select>
-                    <small class="muted">W Residential, Y Business, B Government, G Information, P Emergency.</small>
+                    <small class="muted">W Residential, Y Business, B Government, G Information, O Arts/Stories, P Emergency.</small>
                 </p>
                 <?php endif; ?>
 
