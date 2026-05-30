@@ -19,16 +19,37 @@ if ($currentUser === null) {
     exit;
 }
 
+$userCounts = [];
+$countStmt = db()->query('
+    SELECT user_id, COUNT(*) AS file_count
+    FROM audio_files
+    WHERE is_deleted = 0
+    GROUP BY user_id
+');
+
+foreach ($countStmt->fetchAll() as $row) {
+    $userCounts[(int)$row['user_id']] = (int)$row['file_count'];
+}
+
+$allUsersCount = array_sum($userCounts);
+
 $users = [
     [
         'id' => 'all',
         'username' => 'All Users',
-    ],
-    [
-        'id' => (string)$currentUser['id'],
-        'username' => (string)$currentUser['username'],
+        'file_count' => $allUsersCount,
     ],
 ];
+
+$currentUserFileCount = $userCounts[(int)$currentUser['id']] ?? 0;
+
+if ($currentUserFileCount > 0) {
+    $users[] = [
+        'id' => (string)$currentUser['id'],
+        'username' => (string)$currentUser['username'],
+        'file_count' => $currentUserFileCount,
+    ];
+}
 
 if (is_admin()) {
     $stmt = db()->prepare('
@@ -41,9 +62,17 @@ if (is_admin()) {
     $stmt->execute([$currentUser['id']]);
 
     foreach ($stmt->fetchAll() as $row) {
+        $userId = (int)$row['id'];
+        $fileCount = $userCounts[$userId] ?? 0;
+
+        if ($fileCount <= 0) {
+            continue;
+        }
+
         $users[] = [
             'id' => (string)$row['id'],
             'username' => (string)$row['username'],
+            'file_count' => $fileCount,
         ];
     }
 }

@@ -81,7 +81,7 @@ async function init_audio_user_filter() {
 
     select.innerHTML = users.map(user => `
         <option value="${escape_html(String(user.id ?? 'all'))}">
-            ${escape_html(String(user.username ?? ''))}
+            ${escape_html(String(user.username ?? ''))} (${Number(user.file_count ?? 0)})
         </option>
     `).join('');
 

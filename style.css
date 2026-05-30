@@ -1607,6 +1607,12 @@ body.login-modal-open {
     margin: 0;
 }
 
+.audio-user-filter-row {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 0.75rem;
+}
+
 .audio-search-form-row {
     display: flex;
     align-items: flex-end;
@@ -1615,14 +1621,9 @@ body.login-modal-open {
     flex-wrap: wrap;
 }
 
-.audio-user-filter {
-    display: flex;
-    align-items: flex-end;
-}
-
-.audio-user-filter select {
+.audio-user-filter-row select {
     min-width: 180px;
-    max-width: 220px;
+    max-width: 320px;
     margin-top: 0;
 }
 

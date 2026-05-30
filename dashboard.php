@@ -90,10 +90,10 @@ html_header('My Audio Files');
     <div class="card secondary audio-search-card">
         <?php html_border_pieces(); ?>
         <form id="audio-search-form" class="audio-search-form">
+            <div id="audio-user-filter-wrap" class="audio-user-filter-row" hidden>
+                <select id="audio-user-filter" name="user_id" aria-label="Filter by user account"></select>
+            </div>
             <div class="audio-search-form-row">
-                <div id="audio-user-filter-wrap" class="audio-user-filter" hidden>
-                    <select id="audio-user-filter" name="user_id" aria-label="Filter by user account"></select>
-                </div>
                 <input id="q" name="q" placeholder="Search filename, title, phone number, or transcript">
                 <a id="audio-search-submit" class="button" href="#">Search</a>
             </div>
