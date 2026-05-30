@@ -63,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $useToken->execute([$record['id']]);
 
         flash_set('success', 'Your password has been reset. You can log in now.');
-        header('Location: login.php');
+        header('Location: /?login=1');
         exit;
     }
 }

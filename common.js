@@ -198,7 +198,7 @@ function open_login_modal() {
   const identity = document.getElementById("login-modal-identity");
 
   if (!modal) {
-    window.location.href = "/login.php";
+    window.location.href = "/?login=1";
     return;
   }
 
@@ -218,16 +218,6 @@ function close_login_modal() {
 
   modal.hidden = true;
   document.body.classList.remove("login-modal-open");
-
-  const pathname = window.location.pathname.replace(/\/+$/, "");
-  if (
-    pathname === "/login.php" ||
-    pathname === "login.php" ||
-    pathname === "/forgot-password.php" ||
-    pathname === "forgot-password.php"
-  ) {
-    window.location.href = "/";
-  }
 }
 
 async function submit_login_modal(event) {
@@ -336,7 +326,7 @@ function init_login_modal() {
 
   document.body.classList.toggle("login-modal-open", !modal.hidden);
 
-  document.querySelectorAll('a[href="/login.php"]').forEach((link) => {
+  document.querySelectorAll('a[href="/?login=1"]').forEach((link) => {
     link.addEventListener("click", (event) => {
       event.preventDefault();
       open_login_modal();
@@ -370,12 +360,11 @@ function init_login_modal() {
     }
   });
 
-  const pathname = window.location.pathname.replace(/\/+$/, "");
   const url = new URL(window.location.href);
-  if (pathname === "/forgot-password.php" || pathname === "forgot-password.php") {
+  if (url.searchParams.get("forgot") === "1") {
     open_login_modal();
     switch_login_modal_mode("forgot");
-  } else if (pathname === "/login.php" || pathname === "login.php" || url.searchParams.get("login") === "1") {
+  } else if (url.searchParams.get("login") === "1") {
     open_login_modal();
   }
 }

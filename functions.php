@@ -80,7 +80,7 @@ function require_guest(): void
 function require_login(): void
 {
     if (current_user() === null) {
-        header('Location: login.php');
+        header('Location: /?login=1');
         exit;
     }
 }
@@ -250,7 +250,7 @@ function html_header(string $title): void
 
         echo '<div class="topnav-utility-left"></div>';
         echo '<div class="topnav-utility">';
-        html_a('/login.php', 'Login', 'lock');
+        html_a('/?login=1', 'Login', 'lock');
         echo '</div>'; // .page .topnav .topnav-utility
         echo '<div class="topnav-utility-right"></div>';
     }
