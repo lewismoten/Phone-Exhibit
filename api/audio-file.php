@@ -54,6 +54,8 @@ function fetch_audio_file(array $user): void
     echo json_encode([
         'success' => true,
         'audio_file' => audio_file_payload($row),
+        'paper_classifications' => is_admin() ? paper_classification_options() : [],
+        'can_edit_paper_classification' => is_admin(),
     ], JSON_THROW_ON_ERROR);
 }
 
@@ -97,11 +99,16 @@ function save_audio_file(array $user): void
         return;
     }
 
+    $paperClassificationCode = is_admin()
+        ? clean_paper_classification_code($_POST['paper_classification_code'] ?? null)
+        : (($row['paper_classification_code'] ?? null) !== null ? (string)$row['paper_classification_code'] : null);
+
     $stmt = db()->prepare(
         "UPDATE audio_files
          SET
             directory_title = ?,
             requested_phone_number = ?,
+            paper_classification_code = ?,
             rolodex_title = ?,
             rolodex_details = ?,
             tty_transcription_text = ?,
@@ -114,6 +121,7 @@ function save_audio_file(array $user): void
     $stmt->execute([
         $directoryTitle,
         $requestedPhoneNumber,
+        $paperClassificationCode,
         $rolodexTitle,
         $rolodexDetails,
         $ttyTranscriptionText,
@@ -199,6 +207,7 @@ function audio_file_payload(array $row): array
         'original_filename' => (string)($row['original_filename'] ?? ''),
         'short_name' => (string)($row['short_name'] ?? ''),
         'directory_title' => (string)($row['directory_title'] ?? ''),
+        'paper_classification_code' => (string)($row['paper_classification_code'] ?? ''),
         'requested_phone_number' => (string)($row['requested_phone_number'] ?? ''),
         'exhibit_phone_number' => (string)($row['exhibit_phone_number'] ?? ''),
         'tty_phone_number' => (string)($row['tty_phone_number'] ?? ''),
@@ -213,6 +222,29 @@ function audio_file_payload(array $row): array
         'playback_mime_type' => $playbackMimeType,
         'using_converted_audio' => $hasConverted,
     ];
+}
+
+function paper_classification_options(): array
+{
+    $statement = db()->query(
+        'SELECT code, label, description, color_hex
+         FROM directory_paper_classifications
+         WHERE is_active = 1
+         ORDER BY sort_order ASC, code ASC'
+    );
+
+    $options = [];
+
+    foreach ($statement->fetchAll() as $row) {
+        $options[] = [
+            'code' => (string)($row['code'] ?? ''),
+            'label' => (string)($row['label'] ?? ''),
+            'description' => (string)($row['description'] ?? ''),
+            'color_hex' => (string)($row['color_hex'] ?? ''),
+        ];
+    }
+
+    return $options;
 }
 
 function clean_nullable_text(mixed $value, int $maxLength): ?string
@@ -259,6 +291,28 @@ function clean_requested_phone_number(mixed $value): ?string
     $digits = substr($digits, 0, 20);
 
     return $digits === '' ? null : $digits;
+}
+
+function clean_paper_classification_code(mixed $value): ?string
+{
+    $code = strtoupper(trim((string)$value));
+
+    if ($code === '') {
+        return null;
+    }
+
+    $statement = db()->prepare(
+        'SELECT code
+         FROM directory_paper_classifications
+         WHERE code = ?
+           AND is_active = 1
+         LIMIT 1'
+    );
+    $statement->execute([$code]);
+
+    $found = $statement->fetchColumn();
+
+    return $found === false ? null : (string)$found;
 }
 
 function clean_tty_transcription_text(mixed $value, int $maxLength): ?string

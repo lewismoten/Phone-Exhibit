@@ -5,6 +5,7 @@ const ROLODEX_DETAIL_LINES = 5;
 const ROLODEX_ALLOWED_CHARS_REGEX = /[^A-Za-z0123456789 \n,.\?!:;'&\-()@¢£½¼]/gu;
 let currentAudioRow = null;
 let currentRolodexTargetId = 'rolodex_details';
+let paperClassificationMap = {};
 
 onReady(() => {
     load_audio_file();
@@ -59,6 +60,11 @@ onReady(() => {
         .getElementById('requested_phone_number')
         .addEventListener('input', normalize_requested_phone_number_field);
 
+    const paperSelect = document.getElementById('paper_classification_code');
+    if (paperSelect) {
+        paperSelect.addEventListener('change', render_rolodex_preview);
+    }
+
     document
         .getElementById('delete-audio-modal')
         .addEventListener('click', event => {
@@ -92,9 +98,14 @@ async function load_audio_file() {
 
     const row = result.audio_file;
     currentAudioRow = row;
+    paperClassificationMap = build_paper_classification_map(result.paper_classifications || []);
 
     document.getElementById('directory_title').value = row.directory_title || '';
     document.getElementById('requested_phone_number').value = row.requested_phone_number || '';
+    const paperSelect = document.getElementById('paper_classification_code');
+    if (paperSelect) {
+        populate_paper_classification_select(paperSelect, result.paper_classifications || [], row.paper_classification_code || '');
+    }
     document.getElementById('rolodex_title').value = row.rolodex_title || '';
     document.getElementById('rolodex_details').value = row.rolodex_details || '';
     document.getElementById('transcription_text').value = row.transcription_text || '';
@@ -135,6 +146,7 @@ async function save_audio_file(event) {
             csrf_token: form.csrf_token.value,
             directory_title: form.directory_title.value,
             requested_phone_number: form.requested_phone_number.value,
+            paper_classification_code: form.paper_classification_code ? form.paper_classification_code.value : '',
             rolodex_title: form.rolodex_title.value,
             rolodex_details: form.rolodex_details.value,
             tty_transcription_text: form.tty_transcription_text.value,
@@ -148,6 +160,9 @@ async function save_audio_file(event) {
     }
 
     currentAudioRow = result.audio_file || currentAudioRow;
+    if (currentAudioRow && form.paper_classification_code) {
+        currentAudioRow.paper_classification_code = form.paper_classification_code.value || '';
+    }
     render_rolodex_preview();
     status.innerHTML = '<div class="success">Changes saved.</div>';
 }
@@ -432,6 +447,7 @@ function render_rolodex_preview() {
     const titleField = document.getElementById('rolodex_title');
     const detailsField = document.getElementById('rolodex_details');
     const requestedPhoneField = document.getElementById('requested_phone_number');
+    const paperSelect = document.getElementById('paper_classification_code');
 
     if (!container || !titleField || !detailsField || !requestedPhoneField) {
         return;
@@ -456,30 +472,34 @@ function render_rolodex_preview() {
     const ttyPhone = currentAudioRow && currentAudioRow.tty_phone_number
         ? `TTY ${format_phone_number(currentAudioRow.tty_phone_number)}`
         : '';
+    const paperCode = paperSelect
+        ? (paperSelect.value || '')
+        : ((currentAudioRow && currentAudioRow.paper_classification_code) || '');
+    const paperTheme = rolodex_paper_theme(paperCode);
 
     container.innerHTML = `
         <svg class="rolodex-preview-svg" viewBox="0 0 88.9 50.8" role="img" aria-label="Rolodex card preview">
             <defs>
                 <linearGradient id="rolodex-card-fill" x1="0" x2="0" y1="0" y2="1">
-                    <stop offset="0%" stop-color="#f8efdc"></stop>
-                    <stop offset="100%" stop-color="#ebdbc0"></stop>
+                    <stop offset="0%" stop-color="${paperTheme.top}"></stop>
+                    <stop offset="100%" stop-color="${paperTheme.bottom}"></stop>
                 </linearGradient>
             </defs>
             <rect x="0" y="39.2" width="88.9" height="11.6" fill="#2f2a27"></rect>
             <path
                 d="M 4.2751912 0.03824056 L 4.2751912 0.066145833 A 4.3817983 4.3817983 0 0 0 0 4.4462402 A 4.3817983 4.3817983 0 0 0 0.0010335286 4.5335734 L 0 4.5335734 L 0 46.418355 L 0 46.615759 L 0.0046508789 46.615759 A 4.3817983 4.3817983 0 0 0 4.3816447 50.8 A 4.3817983 4.3817983 0 0 0 4.9748901 50.759692 L 31.334005 50.759692 A 0.7070092 0.7070092 0 0 0 31.80426 50.137508 L 31.80426 46.78009 L 31.556213 46.78009 A 1.0795734 1.0795734 0 0 1 31.501436 46.781641 A 1.0795734 1.0795734 0 0 1 31.479732 46.78009 L 31.464746 46.78009 C 31.461446 46.78009 31.458344 46.77964 31.455444 46.77854 A 1.0795734 1.0795734 0 0 1 30.421916 45.731576 A 1.0795734 1.0795734 0 0 1 30.421916 45.728475 L 30.421916 45.724858 A 1.0795734 1.0795734 0 0 1 30.421916 45.701603 A 1.0795734 1.0795734 0 0 1 30.421916 45.678866 L 30.421916 40.683305 C 30.421916 40.682405 30.421833 40.681565 30.421916 40.680721 C 30.421907 40.680421 30.421931 40.67939 30.421916 40.679171 L 30.421916 40.678654 L 30.421916 40.678137 A 1.0795734 1.0795734 0 0 1 30.421916 40.645064 A 1.0795734 1.0795734 0 0 1 31.458545 39.566577 C 31.460045 39.566275 31.461596 39.56572 31.463196 39.565544 C 31.463496 39.565514 31.46397 39.565536 31.464229 39.565544 L 31.464746 39.565544 L 31.485933 39.565544 L 31.516939 39.565544 L 35.06866 39.565544 L 35.099666 39.565544 L 35.120854 39.565544 C 35.122954 39.565544 35.125055 39.566097 35.127055 39.566577 A 1.0795734 1.0795734 0 0 1 36.163684 40.645064 A 1.0795734 1.0795734 0 0 1 36.163167 40.678654 A 1.0795734 1.0795734 0 0 1 36.163167 40.681238 C 36.163217 40.681938 36.163167 40.682632 36.163167 40.683305 L 36.163167 45.662329 A 1.0795734 1.0795734 0 0 1 36.163684 45.701603 A 1.0795734 1.0795734 0 0 1 36.163167 45.709871 L 36.163167 45.728475 C 36.163167 45.731775 36.162717 45.734877 36.161617 45.737777 A 1.0795734 1.0795734 0 0 1 35.129639 46.77854 C 35.126939 46.779638 35.123954 46.78009 35.120854 46.78009 L 35.107935 46.78009 A 1.0795734 1.0795734 0 0 1 35.084163 46.781641 A 1.0795734 1.0795734 0 0 1 35.029386 46.78009 L 34.78134 46.78009 L 34.78134 50.064644 L 34.781856 50.064644 A 0.7070092 0.7070092 0 0 0 34.78134 50.079114 L 34.78134 50.105469 A 0.7070092 0.7070092 0 0 0 35.253145 50.759692 L 53.648405 50.759692 A 0.7070092 0.7070092 0 0 0 54.11866 50.137508 L 54.11866 46.78009 L 53.870614 46.78009 A 1.0795734 1.0795734 0 0 1 53.815837 46.781641 A 1.0795734 1.0795734 0 0 1 53.794132 46.78009 L 53.779146 46.78009 C 53.775846 46.78009 53.772745 46.77964 53.769845 46.77854 A 1.0795734 1.0795734 0 0 1 52.736316 45.731576 A 1.0795734 1.0795734 0 0 1 52.736316 45.728475 L 52.736316 45.724858 A 1.0795734 1.0795734 0 0 1 52.736316 45.701603 A 1.0795734 1.0795734 0 0 1 52.736316 45.678866 L 52.736316 40.683305 C 52.736316 40.682405 52.736233 40.681565 52.736316 40.680721 C 52.736307 40.680521 52.736331 40.67939 52.736316 40.679171 L 52.736316 40.678654 L 52.736316 40.678137 A 1.0795734 1.0795734 0 0 1 52.736316 40.645064 A 1.0795734 1.0795734 0 0 1 53.772945 39.566577 C 53.774445 39.566275 53.775996 39.56572 53.777596 39.565544 C 53.777896 39.565514 53.77837 39.565536 53.77863 39.565544 L 53.779146 39.565544 L 53.800334 39.565544 L 53.83134 39.565544 L 57.383061 39.565544 L 57.414067 39.565544 L 57.435254 39.565544 C 57.437354 39.565544 57.439455 39.566097 57.441455 39.566577 A 1.0795734 1.0795734 0 0 1 58.478084 40.645064 A 1.0795734 1.0795734 0 0 1 58.477568 40.678654 A 1.0795734 1.0795734 0 0 1 58.477568 40.681238 C 58.477618 40.681938 58.477568 40.682632 58.477568 40.683305 L 58.477568 45.662329 A 1.0795734 1.0795734 0 0 1 58.478084 45.701603 A 1.0795734 1.0795734 0 0 1 58.477568 45.709871 L 58.477568 45.728475 C 58.477568 45.731775 58.477634 45.734877 58.476534 45.737777 A 1.0795734 1.0795734 0 0 1 57.444556 46.77854 C 57.441856 46.779638 57.438354 46.78009 57.435254 46.78009 L 57.422335 46.78009 A 1.0795734 1.0795734 0 0 1 57.398564 46.781641 A 1.0795734 1.0795734 0 0 1 57.343787 46.78009 L 57.09574 46.78009 L 57.09574 50.064644 L 57.096257 50.064644 A 0.7070092 0.7070092 0 0 0 57.09574 50.079114 L 57.09574 50.105469 A 0.7070092 0.7070092 0 0 0 57.567546 50.759692 L 84.200545 50.759692 A 4.3817983 4.3817983 0 0 0 84.572616 50.775195 A 4.3817983 4.3817983 0 0 0 88.950126 46.590955 L 88.954777 46.590955 L 88.954777 46.393551 L 88.954777 4.5087687 L 88.953743 4.5087687 A 4.3817983 4.3817983 0 0 0 88.954777 4.4214355 A 4.3817983 4.3817983 0 0 0 84.572616 0.039790853 A 4.3817983 4.3817983 0 0 0 84.557113 0.039790853 L 84.557113 0.03824056 L 4.2751912 0.03824056 z"
                 fill="url(#rolodex-card-fill)"
-                stroke="#877156"
+                stroke="${paperTheme.stroke}"
                 stroke-width="0.36"
             ></path>
             <path d="M4.6 1.3H84.3" stroke="rgba(255,255,255,0.3)" stroke-width="0.28"></path>
-            <path d="M8.2 11.8H79.6" stroke="#dccdae" stroke-width="0.22"></path>
-            <path d="M8.2 15.55H79.6" stroke="#e5d7bf" stroke-width="0.18"></path>
-            <path d="M8.2 19.3H79.6" stroke="#e5d7bf" stroke-width="0.18"></path>
-            <path d="M8.2 23.05H79.6" stroke="#e5d7bf" stroke-width="0.18"></path>
-            <path d="M8.2 26.8H79.6" stroke="#e5d7bf" stroke-width="0.18"></path>
-            <path d="M8.2 30.55H79.6" stroke="#e5d7bf" stroke-width="0.18"></path>
-            <path d="M8.2 34.3H79.6" stroke="#e5d7bf" stroke-width="0.18"></path>
+            <path d="M8.2 11.8H79.6" stroke="${paperTheme.ruleStrong}" stroke-width="0.22"></path>
+            <path d="M8.2 15.55H79.6" stroke="${paperTheme.rule}" stroke-width="0.18"></path>
+            <path d="M8.2 19.3H79.6" stroke="${paperTheme.rule}" stroke-width="0.18"></path>
+            <path d="M8.2 23.05H79.6" stroke="${paperTheme.rule}" stroke-width="0.18"></path>
+            <path d="M8.2 26.8H79.6" stroke="${paperTheme.rule}" stroke-width="0.18"></path>
+            <path d="M8.2 30.55H79.6" stroke="${paperTheme.rule}" stroke-width="0.18"></path>
+            <path d="M8.2 34.3H79.6" stroke="${paperTheme.rule}" stroke-width="0.18"></path>
             ${rolodex_preview_line_svg(title, 9.2, 10.1, 'title')}
             ${rolodex_preview_phone_line_svg(phoneLine, ttyPhone, 9.2, 13.85)}
             ${rolodex_preview_line_svg(detailLines[0], 9.2, 17.6, 'detail-0')}
@@ -489,6 +509,93 @@ function render_rolodex_preview() {
             ${rolodex_preview_line_svg(detailLines[4], 9.2, 32.6, 'detail-4')}
         </svg>
     `;
+}
+
+function populate_paper_classification_select(select, classifications, selectedCode) {
+    const options = ['<option value="">Optional</option>'];
+
+    for (const classification of classifications) {
+        const code = String(classification.code || '');
+        const label = String(classification.label || '');
+        const description = String(classification.description || '');
+        options.push(
+            `<option value="${escape_html(code)}">${escape_html(`${code} ${label} - ${description}`)}</option>`
+        );
+    }
+
+    select.innerHTML = options.join('');
+    select.value = selectedCode || '';
+}
+
+function build_paper_classification_map(classifications) {
+    const map = {};
+
+    for (const classification of classifications) {
+        const code = String(classification.code || '');
+        if (!code) {
+            continue;
+        }
+
+        map[code] = {
+            code,
+            label: String(classification.label || ''),
+            description: String(classification.description || ''),
+            color_hex: String(classification.color_hex || ''),
+        };
+    }
+
+    return map;
+}
+
+function rolodex_paper_theme(code) {
+    const fallback = {
+        top: '#f8efdc',
+        bottom: '#ebdbc0',
+        stroke: '#877156',
+        ruleStrong: '#dccdae',
+        rule: '#e5d7bf',
+    };
+
+    const color = (paperClassificationMap[String(code || '')] || {}).color_hex || '';
+    if (!color) {
+        return fallback;
+    }
+
+    return {
+        top: mix_hex(color, '#ffffff', 0.58),
+        bottom: mix_hex(color, '#d6c3a2', 0.28),
+        stroke: mix_hex(color, '#6d5a45', 0.38),
+        ruleStrong: mix_hex(color, '#b59e7a', 0.3),
+        rule: mix_hex(color, '#e4d6bd', 0.22),
+    };
+}
+
+function mix_hex(baseHex, mixHex, mixAmount) {
+    const base = hex_to_rgb(baseHex);
+    const mix = hex_to_rgb(mixHex);
+    const amount = Math.max(0, Math.min(1, Number(mixAmount) || 0));
+
+    if (!base || !mix) {
+        return baseHex;
+    }
+
+    const channel = index => Math.round((base[index] * (1 - amount)) + (mix[index] * amount));
+    return `#${[channel(0), channel(1), channel(2)].map(value => value.toString(16).padStart(2, '0')).join('')}`;
+}
+
+function hex_to_rgb(hex) {
+    const normalized = String(hex || '').trim();
+    const match = normalized.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i);
+
+    if (!match) {
+        return null;
+    }
+
+    return [
+        parseInt(match[1], 16),
+        parseInt(match[2], 16),
+        parseInt(match[3], 16),
+    ];
 }
 
 function rolodex_preview_phone_line_svg(phone, ttyPhone, leftX, y) {

@@ -49,6 +49,16 @@ html_header('Edit Audio File');
                     <small class="muted">Line 1 only, up to 40 characters.</small>
                 </p>
 
+                <?php if (is_admin()): ?>
+                <p>
+                    <label for="paper_classification_code">Paper / class</label><br>
+                    <select id="paper_classification_code" name="paper_classification_code" class="rolodex-paper-select">
+                        <option value="">Optional</option>
+                    </select>
+                    <small class="muted">W Residential, Y Business, B Government, G Information, P Emergency.</small>
+                </p>
+                <?php endif; ?>
+
                 <p>
                     <label for="rolodex_details">Additional details for Rolodex card</label><br>
                     <textarea id="rolodex_details" name="rolodex_details" rows="5" maxlength="204" class="rolodex-textarea"></textarea>
