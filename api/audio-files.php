@@ -155,4 +155,5 @@ echo json_encode([
     'per_page' => $perPage,
     'total_rows' => $totalRows,
     'total_pages' => $totalPages,
+    'is_admin' => is_admin(),
 ], JSON_THROW_ON_ERROR);

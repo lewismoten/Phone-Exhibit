@@ -104,6 +104,53 @@ html_header('My Audio Files');
 <div id="audio-results">Loading…</div>
 <nav id="audio-pagination"></nav>
 
+<dialog id="audio-assignment-dialog" class="assignment-dialog">
+    <form id="audio-assignment-form" method="dialog" class="assignment-dialog-form">
+        <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+        <input type="hidden" name="id" value="">
+        <div class="assignment-dialog-card card secondary">
+            <?php html_border_pieces(); ?>
+            <button type="button" id="audio-assignment-close" class="assignment-dialog-close" aria-label="Close assignment dialog">X</button>
+            <h2 id="audio-assignment-title">Manage Listing</h2>
+            <div id="audio-assignment-status"></div>
+
+            <div class="assignment-dialog-grid">
+                <label>
+                    <strong>Requested number</strong><br>
+                    <input id="audio-assignment-requested" type="text" readonly>
+                </label>
+
+                <label>
+                    <strong>Page color</strong><br>
+                    <select id="audio-assignment-paper" name="paper_classification_code"></select>
+                </label>
+
+                <label>
+                    <strong>Exhibit number</strong><br>
+                    <div class="assignment-inline-row">
+                        <input id="audio-assignment-exhibit" name="exhibit_phone_number" type="text" inputmode="numeric">
+                        <a id="audio-assignment-accept-requested" class="button" href="#">Accept Requested</a>
+                    </div>
+                </label>
+
+                <label id="audio-assignment-tty-number-wrap" hidden>
+                    <strong>TTY number</strong><br>
+                    <input id="audio-assignment-tty-number" name="tty_phone_number" type="text" inputmode="numeric">
+                </label>
+            </div>
+
+            <div id="audio-assignment-tty-wrap" class="assignment-tty-wrap" hidden>
+                <strong>TTY content</strong>
+                <div id="audio-assignment-tty-content" class="assignment-tty-content"></div>
+            </div>
+
+            <div class="assignment-dialog-actions">
+                <button type="submit" class="button primary">Save</button>
+            </div>
+        </div>
+    </form>
+</dialog>
+
 <script defer src="/dashboard.js"></script>
 
 <?php html_footer(); ?>

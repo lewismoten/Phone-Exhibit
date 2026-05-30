@@ -1,6 +1,9 @@
 let currentPage = 1;
 const RECORD_MAX_SECONDS = 180;
 let audioUserFilterReady = false;
+let dashboardIsAdmin = false;
+let assignmentPaperClassifications = [];
+let currentAssignmentRow = null;
 
 let recordStream = null;
 let recordRecorder = null;
@@ -16,6 +19,7 @@ let uploadPreviewObjectUrl = null;
 
 onReady(async () => {
     init_audio_capture_panel();
+    init_audio_assignment_dialog();
     maybe_show_audio_deleted_toast();
     await init_audio_user_filter();
 
@@ -87,6 +91,7 @@ async function init_audio_user_filter() {
 
     select.value = 'all';
     wrap.hidden = !result.is_admin;
+    dashboardIsAdmin = !!result.is_admin;
 
     select.addEventListener('change', () => {
         load_audio_files(1);
@@ -105,6 +110,128 @@ function maybe_show_audio_deleted_toast() {
     show_toast('Audio file deleted.');
     url.searchParams.delete('audio_deleted');
     window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
+}
+
+function init_audio_assignment_dialog() {
+    const dialog = document.getElementById('audio-assignment-dialog');
+    const form = document.getElementById('audio-assignment-form');
+    const close = document.getElementById('audio-assignment-close');
+    const acceptRequested = document.getElementById('audio-assignment-accept-requested');
+
+    if (!dialog || !form || !close || !acceptRequested) {
+        return;
+    }
+
+    close.addEventListener('click', () => {
+        dialog.close();
+    });
+
+    acceptRequested.addEventListener('click', event => {
+        event.preventDefault();
+        const requested = document.getElementById('audio-assignment-requested');
+        const exhibit = document.getElementById('audio-assignment-exhibit');
+
+        if (!requested || !exhibit) {
+            return;
+        }
+
+        exhibit.value = requested.value || '';
+    });
+
+    form.addEventListener('submit', async event => {
+        event.preventDefault();
+        await save_audio_assignment();
+    });
+}
+
+async function open_audio_assignment_dialog(audioId) {
+    const dialog = document.getElementById('audio-assignment-dialog');
+    const status = document.getElementById('audio-assignment-status');
+
+    if (!dialog || !dashboardIsAdmin) {
+        return;
+    }
+
+    document.getElementById('audio-assignment-title').textContent = 'Manage Listing';
+    status.innerHTML = '<p>Loading assignment…</p>';
+    dialog.showModal();
+
+    const result = await api('audio-assignment', { data: { id: audioId } });
+
+    if (!result.success) {
+        status.innerHTML = `<div class="error">${escape_html(result.error || 'Unable to load assignment details.')}</div>`;
+        return;
+    }
+
+    currentAssignmentRow = result.audio_file || null;
+    assignmentPaperClassifications = Array.isArray(result.paper_classifications)
+        ? result.paper_classifications
+        : [];
+
+    populate_assignment_dialog(currentAssignmentRow, assignmentPaperClassifications);
+    status.innerHTML = '';
+}
+
+function populate_assignment_dialog(row, classifications) {
+    if (!row) {
+        return;
+    }
+
+    document.getElementById('audio-assignment-title').textContent = `Manage Listing: ${row.title || 'Untitled audio file'}`;
+    document.querySelector('#audio-assignment-form [name="id"]').value = String(row.id || '');
+    document.getElementById('audio-assignment-requested').value = row.requested_phone_number || '';
+    document.getElementById('audio-assignment-exhibit').value = row.exhibit_phone_number || '';
+    document.getElementById('audio-assignment-tty-number').value = row.tty_phone_number || '';
+
+    const paperSelect = document.getElementById('audio-assignment-paper');
+    paperSelect.innerHTML = classifications.map(option => `
+        <option value="${escape_html(option.code || '')}">
+            ${escape_html(option.code ? `${option.label} (${option.code})` : option.label)}
+        </option>
+    `).join('');
+    paperSelect.value = row.paper_classification_code || '';
+
+    const ttyWrap = document.getElementById('audio-assignment-tty-wrap');
+    const ttyNumberWrap = document.getElementById('audio-assignment-tty-number-wrap');
+    const ttyContent = document.getElementById('audio-assignment-tty-content');
+    const hasTtyContent = !!row.has_tty_content;
+
+    ttyWrap.hidden = !hasTtyContent;
+    ttyNumberWrap.hidden = !hasTtyContent;
+    ttyContent.textContent = row.tty_transcription_text || 'TTY audio exists, but no transcription text is available.';
+}
+
+async function save_audio_assignment() {
+    const form = document.getElementById('audio-assignment-form');
+    const status = document.getElementById('audio-assignment-status');
+    const dialog = document.getElementById('audio-assignment-dialog');
+
+    if (!form || !status || !dialog) {
+        return;
+    }
+
+    status.innerHTML = '<p>Saving assignment…</p>';
+
+    const result = await api('audio-assignment', {
+        method: 'POST',
+        data: {
+            csrf_token: form.csrf_token.value,
+            id: form.id.value,
+            exhibit_phone_number: form.exhibit_phone_number.value,
+            tty_phone_number: form.tty_phone_number.value,
+            paper_classification_code: form.paper_classification_code.value,
+        },
+    });
+
+    if (!result.success) {
+        status.innerHTML = `<div class="error">${escape_html(result.error || 'Unable to save assignment.')}</div>`;
+        return;
+    }
+
+    status.innerHTML = '<div class="success">Assignment saved.</div>';
+    show_toast('Assignment updated.');
+    dialog.close();
+    load_audio_files(currentPage);
 }
 
 function init_audio_capture_panel() {
@@ -786,6 +913,7 @@ async function load_audio_files(page = 1) {
     }
 
     const rows = Array.isArray(result.rows) ? result.rows : [];
+    dashboardIsAdmin = !!result.is_admin;
 
     if (!rows.length) {
         results.innerHTML = '<p>No audio files found.</p>';
@@ -832,12 +960,27 @@ function audio_file_row(row) {
         : 'None';
     const tooltip = `Status: ${statusLabel}\nCategorization: ${categorizationLabel}`;
     const swatch = `
-        <span
-            class="audio-file-classification-swatch${phoneStatus === 'assigned' ? ' audio-file-classification-swatch-assigned' : ''}${classificationColor ? '' : ' audio-file-classification-swatch-empty'}"
-            ${classificationColor ? `style="background:${escape_html(classificationColor)};"` : ''}
-            title="${escape_html(tooltip)}"
-            aria-label="${escape_html(tooltip)}"
-        >${phoneStatus === 'assigned' ? '<span class="audio-file-phone-indicator" aria-hidden="true">☎</span>' : ''}</span>
+        ${dashboardIsAdmin ? `
+            <button
+                type="button"
+                class="audio-file-classification-button"
+                onclick="open_audio_assignment_dialog(${Number(row.id)})"
+                title="${escape_html(tooltip)}"
+                aria-label="${escape_html(tooltip)}"
+            >
+                <span
+                    class="audio-file-classification-swatch${phoneStatus === 'assigned' ? ' audio-file-classification-swatch-assigned' : ''}${classificationColor ? '' : ' audio-file-classification-swatch-empty'}"
+                    ${classificationColor ? `style="background:${escape_html(classificationColor)};"` : ''}
+                >${phoneStatus === 'assigned' ? '<span class="audio-file-phone-indicator" aria-hidden="true">☎</span>' : ''}</span>
+            </button>
+        ` : `
+            <span
+                class="audio-file-classification-swatch${phoneStatus === 'assigned' ? ' audio-file-classification-swatch-assigned' : ''}${classificationColor ? '' : ' audio-file-classification-swatch-empty'}"
+                ${classificationColor ? `style="background:${escape_html(classificationColor)};"` : ''}
+                title="${escape_html(tooltip)}"
+                aria-label="${escape_html(tooltip)}"
+            >${phoneStatus === 'assigned' ? '<span class="audio-file-phone-indicator" aria-hidden="true">☎</span>' : ''}</span>
+        `}
     `;
 
     return `
