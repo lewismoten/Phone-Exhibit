@@ -800,7 +800,6 @@ async function load_audio_files(page = 1) {
                         <th scope="col">Title</th>
                         <th scope="col">Phone</th>
                         <th scope="col">Audio</th>
-                        <th scope="col">Type</th>
                         <th scope="col">Date</th>
                     </tr>
                 </thead>
@@ -815,20 +814,31 @@ async function load_audio_files(page = 1) {
 }
 
 function audio_file_row(row) {
-
     const phone = format_phone_number(row.phone_number);
     const phoneStatus = row.phone_status || 'unassigned';
-    const phoneAssignedIndicator = phoneStatus === 'assigned'
-        ? `<span class="audio-file-phone-indicator" title="Assigned phone number" aria-label="Assigned phone number">☎</span>`
-        : '';
-
-    const type = row.using_converted_audio
-        ? 'Converted'
-        : 'Original';
-
     const player = row.playback_url
         ? compact_audio_player(row)
         : `<span class="muted">Unavailable</span>`;
+    const classificationLabel = row.paper_classification_label || '';
+    const classificationColor = row.paper_classification_color || '';
+    const classificationDescription = row.paper_classification_description || '';
+    const statusLabel = ({
+        assigned: 'Assigned',
+        requested: 'Requested',
+        unassigned: 'Unassigned',
+    })[phoneStatus] || 'Unassigned';
+    const categorizationLabel = classificationLabel
+        ? `${classificationLabel}${classificationDescription ? ` - ${classificationDescription}` : ''}`
+        : 'None';
+    const tooltip = `Status: ${statusLabel}\nCategorization: ${categorizationLabel}`;
+    const swatch = `
+        <span
+            class="audio-file-classification-swatch${phoneStatus === 'assigned' ? ' audio-file-classification-swatch-assigned' : ''}${classificationColor ? '' : ' audio-file-classification-swatch-empty'}"
+            ${classificationColor ? `style="background:${escape_html(classificationColor)};"` : ''}
+            title="${escape_html(tooltip)}"
+            aria-label="${escape_html(tooltip)}"
+        >${phoneStatus === 'assigned' ? '<span class="audio-file-phone-indicator" aria-hidden="true">☎</span>' : ''}</span>
+    `;
 
     return `
         <tr>
@@ -839,15 +849,13 @@ function audio_file_row(row) {
             </td>
 
             <td class="audio-file-phone">
-                <span class="audio-file-phone-inline">
-                    ${phoneAssignedIndicator}
+                <span class="audio-file-phone-inline" title="${escape_html(tooltip)}" aria-label="${escape_html(tooltip)}">
+                    ${swatch}
                     <span>${escape_html(phone)}</span>
                 </span>
             </td>
 
             <td class="audio-file-audio">${player}</td>
-
-            <td>${escape_html(type)}</td>
 
             <td class="muted audio-file-date">
                 ${escape_html(format_local_datetime(row.created_at))}

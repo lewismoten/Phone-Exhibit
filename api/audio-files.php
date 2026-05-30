@@ -16,30 +16,30 @@ $requestedUserId = trim((string)($_GET['user_id'] ?? 'all'));
 $perPage = 10;
 $offset = pagination_offset($page, $perPage);
 
-$where = 'WHERE is_deleted = 0';
+$where = 'WHERE af.is_deleted = 0';
 $params = [];
 
 if (!is_admin()) {
-    $where .= ' AND user_id = ?';
+    $where .= ' AND af.user_id = ?';
     $params[] = $user['id'];
 } elseif ($requestedUserId !== '' && $requestedUserId !== 'all') {
     $filterUserId = (int)$requestedUserId;
     if ($filterUserId > 0) {
-        $where .= ' AND user_id = ?';
+        $where .= ' AND af.user_id = ?';
         $params[] = $filterUserId;
     }
 }
 
 if ($q !== '') {
     $where .= ' AND (
-        original_filename LIKE ?
-        OR short_name LIKE ?
-        OR directory_title LIKE ?
-        OR rolodex_title LIKE ?
-        OR exhibit_phone_number LIKE ?
-        OR requested_phone_number LIKE ?
-        OR transcription_text LIKE ?
-        OR tty_transcription_text LIKE ?
+        af.original_filename LIKE ?
+        OR af.short_name LIKE ?
+        OR af.directory_title LIKE ?
+        OR af.rolodex_title LIKE ?
+        OR af.exhibit_phone_number LIKE ?
+        OR af.requested_phone_number LIKE ?
+        OR af.transcription_text LIKE ?
+        OR af.tty_transcription_text LIKE ?
     )';
 
     $like = '%' . $q . '%';
@@ -57,7 +57,7 @@ if ($q !== '') {
     );
 }
 
-$countStmt = db()->prepare("SELECT COUNT(*) FROM audio_files $where");
+$countStmt = db()->prepare("SELECT COUNT(*) FROM audio_files af $where");
 $countStmt->execute($params);
 
 $totalRows = (int)$countStmt->fetchColumn();
@@ -69,22 +69,29 @@ $listParams[] = $offset;
 
 $listStmt = db()->prepare(
     "SELECT
-        id,
-        original_filename,
-        short_name,
-        directory_title,
-        rolodex_title,
-        exhibit_phone_number,
-        requested_phone_number,
-        conversion_status,
-        converted_relative_path,
-        converted_mime_type,
-        relative_path,
-        mime_type,
-        created_at
+        af.id,
+        af.original_filename,
+        af.short_name,
+        af.directory_title,
+        af.rolodex_title,
+        af.exhibit_phone_number,
+        af.requested_phone_number,
+        af.conversion_status,
+        af.converted_relative_path,
+        af.converted_mime_type,
+        af.relative_path,
+        af.mime_type,
+        af.created_at,
+        af.paper_classification_code,
+        dpc.label AS paper_classification_label,
+        dpc.color_hex AS paper_classification_color,
+        dpc.description AS paper_classification_description
      FROM audio_files
+     af
+     LEFT JOIN directory_paper_classifications dpc
+       ON dpc.code = af.paper_classification_code
      $where
-     ORDER BY created_at DESC, id DESC
+     ORDER BY af.created_at DESC, af.id DESC
      LIMIT ? OFFSET ?"
 );
 
@@ -129,6 +136,10 @@ foreach ($rows as $row) {
         'original_filename' => (string)($row['original_filename'] ?? ''),
         'phone_number' => $phoneNumber,
         'phone_status' => $phoneStatus,
+        'paper_classification_code' => (string)($row['paper_classification_code'] ?? ''),
+        'paper_classification_label' => (string)($row['paper_classification_label'] ?? ''),
+        'paper_classification_color' => (string)($row['paper_classification_color'] ?? ''),
+        'paper_classification_description' => (string)($row['paper_classification_description'] ?? ''),
         'conversion_status' => (string)($row['conversion_status'] ?? 'pending'),
         'playback_url' => $playbackUrl,
         'playback_mime_type' => $playbackMimeType,
