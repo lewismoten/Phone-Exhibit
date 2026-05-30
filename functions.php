@@ -899,3 +899,29 @@ function require_admin(): void
         exit('Administrator access required.');
     }
 }
+
+function request_bearer_token(): ?string
+{
+    $header = $_SERVER['HTTP_AUTHORIZATION']
+        ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION']
+        ?? $_SERVER['Authorization']
+        ?? '';
+
+    if (!is_string($header) || $header === '') {
+        $fallbackHeader = $_SERVER['HTTP_X_SCHEMA_DEPLOY_TOKEN']
+            ?? $_SERVER['REDIRECT_HTTP_X_SCHEMA_DEPLOY_TOKEN']
+            ?? '';
+
+        if (!is_string($fallbackHeader) || $fallbackHeader === '') {
+            return null;
+        }
+
+        return trim($fallbackHeader);
+    }
+
+    if (preg_match('/Bearer\s+(.+)$/i', $header, $matches) !== 1) {
+        return null;
+    }
+
+    return trim($matches[1]);
+}

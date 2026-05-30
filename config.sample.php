@@ -31,6 +31,8 @@ const OPENAI_API_KEY = 'YOUR_API_KEY';
 const OPENAI_TRANSCRIPTION_MODEL = 'gpt-4o-mini-transcribe';
 const OPENAI_TRANSCRIPTION_COST_PER_MINUTE = 0.003;
 
+const SCHEMA_DEPLOY_API_TOKEN = 'replace-with-a-long-random-token';
+
 //optional override
 //const MINIMODEM_BIN = '/usr/local/sbin/minimodem';
 const MINIMODEM_BIN = '/usr/local/bin/minimodem';

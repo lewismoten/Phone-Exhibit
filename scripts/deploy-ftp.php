@@ -301,6 +301,10 @@ function collectProjectPaths(string $projectRoot, array $explicitExcludePatterns
 
 function shouldExclude(string $relativePath, array $explicitExcludePatterns, array $gitignoreExcludePatterns): bool
 {
+    if ($relativePath === 'config.php') {
+        return false;
+    }
+
     if (matchesAnyPattern($relativePath, $explicitExcludePatterns)) {
         return true;
     }

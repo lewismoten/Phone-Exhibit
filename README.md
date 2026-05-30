@@ -58,6 +58,20 @@ Database schema files now live in `schema/` and are intended to be run in filena
 
 The `schema_script_deployments` table created by `011-...sql` seeds records for the existing split schema files and can be used to record whether later schema deployments were started, succeeded, or failed.
 
+To apply pending schema files:
+```bash
+php scripts/deploy-schema.php
+```
+
+The schema deploy script now reads from `config.php`:
+* `BASE_URL`
+  Example: `https://phone.lewismoten.com`
+* `SCHEMA_DEPLOY_API_TOKEN`
+  Used as the bearer token when posting schema files to:
+  `BASE_URL . '/api/deploy-schema.php'`
+
+If the tracker table does not exist yet, the script posts only `011-schema-script-deployments.sql` first, then uses `schema_script_deployments` from the remote server to determine the next unapplied file.
+
 ## Cron Jobs
 
 Master worker, calls all other cron jobs to process audio files.
