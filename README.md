@@ -44,10 +44,15 @@ Recommended upload excludes:
 * Anything matched by `.gitignore`, except `lib/`
 * `README.md`
 * `.gitignore`
-* `schema.sql`
+* `schema/`
 * `*.example`
 * `ftp.deploy.json`
 * `scripts/`
+
+Database schema files now live in `schema/` and are intended to be run in filename order:
+* `001-...sql`
+* `002-...sql`
+* `003-...sql`
 
 ## Cron Jobs
 
