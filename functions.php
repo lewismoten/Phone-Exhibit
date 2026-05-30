@@ -272,11 +272,12 @@ function html_footer(): void
         html_border_pieces();
         echo '<button type="button" id="login-modal-close" class="login-modal-close" aria-label="Close login dialog">X</button>';
         echo '<h2 id="login-modal-title">Login</h2>';
-        echo '<div id="login-modal-status">';
+        echo '<div id="login-modal-status" class="login-modal-status">';
         if ($msg = flash_get('success')) {
             echo '<div class="success">' . e($msg) . '</div>';
         }
         echo '</div>';
+        echo '<div id="login-modal-login-view">';
         echo '<form id="login-modal-form">';
         echo '<input type="hidden" name="csrf_token" value="' . e(csrf_token()) . '">';
         echo '<label for="login-modal-identity">Username or Email</label>';
@@ -289,8 +290,23 @@ function html_footer(): void
         echo '</form>';
         echo '<hr>';
         echo '<div class="login-modal-links">';
-        echo '<a class="button" href="/forgot-password.php">Forgot Password</a>';
+        echo '<button type="button" id="login-modal-forgot-trigger" class="button">Forgot Password</button>';
         echo '<a class="button" href="/register.php">Register</a>';
+        echo '</div>';
+        echo '</div>';
+        echo '<div id="login-modal-forgot-view" hidden>';
+        echo '<form id="forgot-modal-form">';
+        echo '<input type="hidden" name="csrf_token" value="' . e(csrf_token()) . '">';
+        echo '<label for="forgot-modal-email">Email</label>';
+        echo '<input id="forgot-modal-email" name="email" type="email" autocomplete="email" required>';
+        echo '<div class="login-modal-actions">';
+        echo '<button type="submit" class="button primary">Send Reset Link</button>';
+        echo '</div>';
+        echo '</form>';
+        echo '<hr>';
+        echo '<div class="login-modal-links login-modal-links-single">';
+        echo '<button type="button" id="login-modal-back-trigger" class="button">Back to Login</button>';
+        echo '</div>';
         echo '</div>';
         echo '</div>'; // .login-modal-card
         echo '</div>'; // .login-modal-shell

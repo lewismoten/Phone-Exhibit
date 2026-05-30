@@ -204,6 +204,7 @@ function open_login_modal() {
 
   modal.hidden = false;
   document.body.classList.add("login-modal-open");
+  switch_login_modal_mode("login");
   if (identity) {
     identity.focus();
   }
@@ -219,7 +220,12 @@ function close_login_modal() {
   document.body.classList.remove("login-modal-open");
 
   const pathname = window.location.pathname.replace(/\/+$/, "");
-  if (pathname === "/login.php" || pathname === "login.php") {
+  if (
+    pathname === "/login.php" ||
+    pathname === "login.php" ||
+    pathname === "/forgot-password.php" ||
+    pathname === "forgot-password.php"
+  ) {
     window.location.href = "/";
   }
 }
@@ -259,12 +265,71 @@ async function submit_login_modal(event) {
   window.location.href = result.redirect_url || "/dashboard.php";
 }
 
+function switch_login_modal_mode(mode) {
+  const title = document.getElementById("login-modal-title");
+  const loginView = document.getElementById("login-modal-login-view");
+  const forgotView = document.getElementById("login-modal-forgot-view");
+  const status = document.getElementById("login-modal-status");
+
+  if (!title || !loginView || !forgotView) {
+    return;
+  }
+
+  const isForgot = mode === "forgot";
+  title.textContent = isForgot ? "Forgot Password" : "Login";
+  loginView.hidden = isForgot;
+  forgotView.hidden = !isForgot;
+
+  if (status) {
+    status.innerHTML = "";
+  }
+
+  const focusTarget = isForgot
+    ? document.getElementById("forgot-modal-email")
+    : document.getElementById("login-modal-identity");
+
+  if (focusTarget) {
+    focusTarget.focus();
+  }
+}
+
+async function submit_forgot_password_modal(event) {
+  event.preventDefault();
+
+  const form = document.getElementById("forgot-modal-form");
+  const status = document.getElementById("login-modal-status");
+
+  if (!form || !status) {
+    return;
+  }
+
+  status.innerHTML = "<p>Sending reset link…</p>";
+
+  const result = await api("forgot-password", {
+    method: "POST",
+    data: {
+      csrf_token: form.csrf_token.value,
+      email: form.email.value,
+    },
+  });
+
+  if (!result.success) {
+    status.innerHTML = `<div class="error">${escape_html(result.error || "Unable to send reset link.")}</div>`;
+    return;
+  }
+
+  status.innerHTML = `<div class="success">${escape_html(result.message || "If that email exists in our system, a reset link has been sent.")}</div>`;
+}
+
 function init_login_modal() {
   const modal = document.getElementById("login-modal");
   const form = document.getElementById("login-modal-form");
+  const forgotForm = document.getElementById("forgot-modal-form");
   const close = document.getElementById("login-modal-close");
+  const forgotTrigger = document.getElementById("login-modal-forgot-trigger");
+  const backTrigger = document.getElementById("login-modal-back-trigger");
 
-  if (!modal || !form || !close) {
+  if (!modal || !form || !forgotForm || !close || !forgotTrigger || !backTrigger) {
     document.body.classList.remove("login-modal-open");
     return;
   }
@@ -279,6 +344,15 @@ function init_login_modal() {
   });
 
   form.addEventListener("submit", submit_login_modal);
+  forgotForm.addEventListener("submit", submit_forgot_password_modal);
+
+  forgotTrigger.addEventListener("click", () => {
+    switch_login_modal_mode("forgot");
+  });
+
+  backTrigger.addEventListener("click", () => {
+    switch_login_modal_mode("login");
+  });
 
   close.addEventListener("click", () => {
     close_login_modal();
@@ -298,7 +372,10 @@ function init_login_modal() {
 
   const pathname = window.location.pathname.replace(/\/+$/, "");
   const url = new URL(window.location.href);
-  if (pathname === "/login.php" || pathname === "login.php" || url.searchParams.get("login") === "1") {
+  if (pathname === "/forgot-password.php" || pathname === "forgot-password.php") {
+    open_login_modal();
+    switch_login_modal_mode("forgot");
+  } else if (pathname === "/login.php" || pathname === "login.php" || url.searchParams.get("login") === "1") {
     open_login_modal();
   }
 }
