@@ -679,6 +679,7 @@ html_header('Admin Audio Phone List');
                 <th style="text-align:left;border-bottom:1px solid #ddd;padding:6px;">Preview</th>
                 <th style="text-align:left;border-bottom:1px solid #ddd;padding:6px;">Requested #</th>
                 <th style="text-align:left;border-bottom:1px solid #ddd;padding:6px;">TTY #</th>
+                <th style="text-align:left;border-bottom:1px solid #ddd;padding:6px;">TTY Preview</th>
                 <th style="text-align:left;border-bottom:1px solid #ddd;padding:6px;">Transcript</th>
             </tr>
         </thead>
@@ -707,7 +708,13 @@ html_header('Admin Audio Phone List');
                     $audioMimeType = (string)($row['mime_type'] ?: 'audio/mpeg');
                 }
 
+                $ttyAudioUrl = !empty($row['tty_relative_path'])
+                    && ($row['tty_status'] ?? '') === 'complete'
+                    ? upload_file_url((string)$row['tty_relative_path'])
+                    : null;
+
                 $audioId = 'audio-' . $id;
+                $ttyAudioId = 'tty-audio-' . $id;
                 $audioTooltip = $name;
                 ?>
 
@@ -796,6 +803,50 @@ html_header('Admin Audio Phone List');
                             placeholder="201"
                             style="width:100px;"
                         >
+                    </td>
+                    <td style="border-bottom:1px solid #eee;padding:6px;vertical-align:middle;width:60px;text-align:center;">
+                        <?php if ($ttyAudioUrl): ?>
+                            <div class="compact-player" title="<?= e($audioTooltip) ?> TTY audio">
+                                <svg class="progress-ring" viewBox="0 0 48 48" aria-hidden="true">
+                                    <circle class="progress-ring-bg" cx="24" cy="24" r="20"></circle>
+                                    <circle
+                                        id="<?= e($ttyAudioId) ?>-progress"
+                                        class="progress-ring-fill"
+                                        cx="24"
+                                        cy="24"
+                                        r="20"
+                                        stroke-dasharray="126"
+                                        stroke-dashoffset="126"
+                                    ></circle>
+                                </svg>
+                                <button
+                                    type="button"
+                                    class="compact-player-button"
+                                    onclick="toggle_audio_player('<?= e($ttyAudioId) ?>')"
+                                    id="<?= e($ttyAudioId) ?>-button"
+                                    aria-label="Play TTY audio"
+                                    title="<?= e($audioTooltip) ?> TTY audio"
+                                >
+                                    <span class="compact-player-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 16 16" class="compact-player-icon-svg">
+                                            <polygon class="compact-player-play-shape" points="3.5,2 13.5,8 3.5,14"></polygon>
+                                            <g class="compact-player-pause-shape">
+                                                <rect x="3.5" y="2.25" width="3.25" height="11.5" rx="0.8"></rect>
+                                                <rect x="9.25" y="2.25" width="3.25" height="11.5" rx="0.8"></rect>
+                                            </g>
+                                        </svg>
+                                    </span>
+                                </button>
+                                <audio
+                                    id="<?= e($ttyAudioId) ?>"
+                                    preload="none"
+                                    ontimeupdate="update_audio_progress('<?= e($ttyAudioId) ?>')"
+                                    onended="reset_audio_player('<?= e($ttyAudioId) ?>')"
+                                >
+                                    <source src="<?= e($ttyAudioUrl) ?>" type="audio/wav">
+                                </audio>
+                            </div>
+                        <?php endif; ?>
                     </td>
                     <td style="border-bottom:1px solid #eee;padding:6px;vertical-align:middle;">
                         <small><?= e($previewText ?: 'No transcript') ?></small>
