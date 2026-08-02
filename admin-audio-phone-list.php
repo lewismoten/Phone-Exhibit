@@ -424,7 +424,9 @@ $stmt = db()->query("
         af.exhibit_phone_number,
         af.requested_phone_number,
         af.converted_relative_path,
+        af.converted_mime_type,
         af.relative_path,
+        af.mime_type,
         af.transcription_text,
         af.conversion_status,
         af.created_at,
@@ -674,9 +676,9 @@ html_header('Admin Audio Phone List');
                 <th style="text-align:left;border-bottom:1px solid #ddd;padding:6px;">Name</th>
                 <th style="text-align:left;border-bottom:1px solid #ddd;padding:6px;">Requested Title</th>
                 <th style="text-align:left;border-bottom:1px solid #ddd;padding:6px;">Phone #</th>
+                <th style="text-align:left;border-bottom:1px solid #ddd;padding:6px;">Preview</th>
                 <th style="text-align:left;border-bottom:1px solid #ddd;padding:6px;">Requested #</th>
                 <th style="text-align:left;border-bottom:1px solid #ddd;padding:6px;">TTY #</th>
-                <th style="text-align:left;border-bottom:1px solid #ddd;padding:6px;">Preview</th>
                 <th style="text-align:left;border-bottom:1px solid #ddd;padding:6px;">Transcript</th>
             </tr>
         </thead>
@@ -699,9 +701,14 @@ html_header('Admin Audio Phone List');
 
                 if (!empty($row['converted_relative_path']) && ($row['conversion_status'] ?? '') === 'complete') {
                     $audioUrl = upload_file_url((string)$row['converted_relative_path']);
+                    $audioMimeType = (string)($row['converted_mime_type'] ?: 'audio/wav');
                 } elseif (!empty($row['relative_path'])) {
                     $audioUrl = upload_file_url((string)$row['relative_path']);
+                    $audioMimeType = (string)($row['mime_type'] ?: 'audio/mpeg');
                 }
+
+                $audioId = 'audio-' . $id;
+                $audioTooltip = $name;
                 ?>
 
                 <tr>
@@ -732,6 +739,52 @@ html_header('Admin Audio Phone List');
                             style="width:100px;"
                         >
                     </td>
+                    <td style="border-bottom:1px solid #eee;padding:6px;vertical-align:middle;width:60px;text-align:center;">
+                        <?php if ($audioUrl): ?>
+                            <div class="compact-player" title="<?= e($audioTooltip) ?>">
+                                <svg class="progress-ring" viewBox="0 0 48 48" aria-hidden="true">
+                                    <circle class="progress-ring-bg" cx="24" cy="24" r="20"></circle>
+                                    <circle
+                                        id="<?= e($audioId) ?>-progress"
+                                        class="progress-ring-fill"
+                                        cx="24"
+                                        cy="24"
+                                        r="20"
+                                        stroke-dasharray="126"
+                                        stroke-dashoffset="126"
+                                    ></circle>
+                                </svg>
+                                <button
+                                    type="button"
+                                    class="compact-player-button"
+                                    onclick="toggle_audio_player('<?= e($audioId) ?>')"
+                                    id="<?= e($audioId) ?>-button"
+                                    aria-label="Play audio"
+                                    title="<?= e($audioTooltip) ?>"
+                                >
+                                    <span class="compact-player-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 16 16" class="compact-player-icon-svg">
+                                            <polygon class="compact-player-play-shape" points="3.5,2 13.5,8 3.5,14"></polygon>
+                                            <g class="compact-player-pause-shape">
+                                                <rect x="3.5" y="2.25" width="3.25" height="11.5" rx="0.8"></rect>
+                                                <rect x="9.25" y="2.25" width="3.25" height="11.5" rx="0.8"></rect>
+                                            </g>
+                                        </svg>
+                                    </span>
+                                </button>
+                                <audio
+                                    id="<?= e($audioId) ?>"
+                                    preload="none"
+                                    ontimeupdate="update_audio_progress('<?= e($audioId) ?>')"
+                                    onended="reset_audio_player('<?= e($audioId) ?>')"
+                                >
+                                    <source src="<?= e($audioUrl) ?>" type="<?= e($audioMimeType) ?>">
+                                </audio>
+                            </div>
+                        <?php else: ?>
+                            <small>No audio preview</small>
+                        <?php endif; ?>
+                    </td>
                     <td style="border-bottom:1px solid #eee;padding:6px;vertical-align:middle;width:130px;">
                         <?= e((string)($row['requested_phone_number'] ?? '')) ?>
                     </td>
@@ -744,16 +797,6 @@ html_header('Admin Audio Phone List');
                             style="width:100px;"
                         >
                     </td>
-                    <td style="border-bottom:1px solid #eee;padding:6px;vertical-align:middle;width:260px;">
-                        <?php if ($audioUrl): ?>
-                            <audio controls preload="none" style="width:240px;">
-                                <source src="<?= e($audioUrl) ?>" type="audio/wav">
-                            </audio>
-                        <?php else: ?>
-                            <small>No audio preview</small>
-                        <?php endif; ?>
-                    </td>
-
                     <td style="border-bottom:1px solid #eee;padding:6px;vertical-align:middle;">
                         <small><?= e($previewText ?: 'No transcript') ?></small>
                     </td>
