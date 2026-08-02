@@ -1480,6 +1480,13 @@ body.login-modal-open {
     color: rgba(43, 22, 13, 0.78);
 }
 
+.phone-directory-table th:nth-child(2),
+.phone-directory-table th:nth-child(3),
+.phone-directory-table td:nth-child(2),
+.phone-directory-table td:nth-child(3) {
+    text-align: right;
+}
+
 .audio-file-date {
     white-space: nowrap;
 }
