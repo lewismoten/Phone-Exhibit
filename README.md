@@ -101,3 +101,43 @@ Delete old logs
 ```
 0 3 * * * find /path/to/logs -name "cron-*.log" -mtime +90 -delete
 ```
+
+## Install phone files on the Asterisk PBX
+
+From the Admin Audio Phone List, download both **Phone config** and **WAV
+archive**. The downloads are `phone-exhibit.conf` and a timestamped
+`phone-exhibit-wavs-*.zip` file. The archive contains the `phone-exhibit/` and
+`phone-exhibit-tty/` sound directories expected by the generated dialplan.
+
+From the computer where the downloads were saved, copy both files to the PBX:
+
+```bash
+cd ~/Downloads
+scp phone-exhibit.conf phone-exhibit-wavs-*.zip user@host.local:/tmp/
+```
+
+Connect to the PBX, install the dialplan config, extract the WAV files into
+Asterisk's sounds directory, and reload the dialplan:
+
+```bash
+ssh user@host.local
+sudo install -o root -g root -m 0644 /tmp/phone-exhibit.conf /etc/asterisk/phone-exhibit.conf
+sudo unzip -o /tmp/phone-exhibit-wavs-*.zip -d /var/lib/asterisk/sounds/
+sudo asterisk -rx 'dialplan reload'
+```
+
+There is no requirement for an `asterisk` system user. Root-owned WAV files
+are fine when they are readable by the account running Asterisk, as the files
+from this archive normally are. If playback reports a permissions error, find
+the service account with `ps -eo user,comm | grep '[a]sterisk'` and grant it
+read access rather than assuming an `asterisk:asterisk` owner.
+
+`/etc/asterisk/extensions.conf` must include the generated config, usually with this line:
+
+```ini
+#include phone-exhibit.conf
+```
+
+Only add that include once. The extraction overwrites WAVs included in the new
+archive; WAVs for removed assignments are left in place but are not reachable
+unless a dialplan entry still references them.
