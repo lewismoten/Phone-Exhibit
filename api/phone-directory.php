@@ -40,10 +40,14 @@ try {
          ORDER BY
             coalesce(dpc.sort_order, 9999) ASC,
             dpc.code ASC,
+            COALESCE(
+                NULLIF(TRIM(af.short_name), ''),
+                NULLIF(TRIM(af.directory_title), ''),
+                NULLIF(TRIM(af.rolodex_title), ''),
+                NULLIF(TRIM(af.original_filename), '')
+            ) ASC,
             af.exhibit_phone_number ASC,
-            af.short_name ASC,
-            af.directory_title ASC,
-            af.rolodex_title ASC,
+            af.tty_phone_number ASC,
             af.original_filename ASC,
             af.id ASC"
     );
