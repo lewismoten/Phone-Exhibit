@@ -427,6 +427,7 @@ $stmt = db()->query("
         af.converted_mime_type,
         af.relative_path,
         af.mime_type,
+        af.tty_transcription_text,
         af.transcription_text,
         af.conversion_status,
         af.created_at,
@@ -693,7 +694,10 @@ html_header('Admin Audio Phone List');
                     $name = (string)$row['original_filename'];
                 }
 
-                $previewText = trim((string)($row['transcription_text'] ?? ''));
+                $previewText = trim((string)($row['tty_transcription_text'] ?? ''));
+                if ($previewText === '') {
+                    $previewText = trim((string)($row['transcription_text'] ?? ''));
+                }
                 if (mb_strlen($previewText) > 80) {
                     $previewText = mb_substr($previewText, 0, 79) . '…';
                 }
