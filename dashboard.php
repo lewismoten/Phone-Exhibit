@@ -8,6 +8,10 @@ require_current_terms_acceptance();
 html_header('My Audio Files');
 ?>
 
+<?php if (is_admin()): ?>
+    <p><a class="button" href="/admin-audio-phone-list.php">Admin Phone List</a></p>
+<?php endif; ?>
+
 <div class="audio-action-panels">
     <div class="card secondary audio-action-card audio-capture-card">
         <?php html_border_pieces(); ?>
