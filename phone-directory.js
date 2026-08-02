@@ -74,11 +74,13 @@ function render_directory_group(group) {
 
     return `
         <section class="phone-directory-group">
-            <h2 class="phone-directory-group-title" title="${tooltip}">
-                ${swatch}
-                <span>${escape_html(title)}</span>
-            </h2>
-            <p class="phone-directory-group-description">${escape_html(group.description || '')}</p>
+            <div class="phone-directory-group-heading">
+                <h2 class="phone-directory-group-title" title="${tooltip}">
+                    ${swatch}
+                    <span>${escape_html(title)}</span>
+                </h2>
+                <p class="phone-directory-group-description">${escape_html(group.description || '')}</p>
+            </div>
             <div class="phone-directory-table-wrap">
                 <table class="phone-directory-table">
                     <thead>
