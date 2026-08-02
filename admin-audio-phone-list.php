@@ -420,6 +420,7 @@ $stmt = db()->query("
         af.user_id,
         af.original_filename,
         af.short_name,
+        af.directory_title,
         af.exhibit_phone_number,
         af.requested_phone_number,
         af.converted_relative_path,
@@ -671,6 +672,7 @@ html_header('Admin Audio Phone List');
         <thead>
             <tr>
                 <th style="text-align:left;border-bottom:1px solid #ddd;padding:6px;">Name</th>
+                <th style="text-align:left;border-bottom:1px solid #ddd;padding:6px;">Requested Title</th>
                 <th style="text-align:left;border-bottom:1px solid #ddd;padding:6px;">Phone #</th>
                 <th style="text-align:left;border-bottom:1px solid #ddd;padding:6px;">Requested #</th>
                 <th style="text-align:left;border-bottom:1px solid #ddd;padding:6px;">TTY #</th>
@@ -715,6 +717,10 @@ html_header('Admin Audio Phone List');
                         <div style="font-size:12px;color:#666;margin-top:3px;">
                             @<?= e((string)$row['username']) ?> · Audio ID <?= $id ?>
                         </div>
+                    </td>
+
+                    <td style="border-bottom:1px solid #eee;padding:6px;vertical-align:middle;">
+                        <?= e((string)($row['directory_title'] ?? '')) ?>
                     </td>
 
                     <td style="border-bottom:1px solid #eee;padding:6px;vertical-align:middle;width:130px;">
