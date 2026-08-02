@@ -19,6 +19,13 @@ try {
 
     fetch_audio_file($user);
 } catch (Throwable $e) {
+    error_log(sprintf(
+        'Audio file API error: %s in %s on line %d',
+        $e->getMessage(),
+        $e->getFile(),
+        $e->getLine()
+    ));
+
     http_response_code(500);
 
     echo json_encode([
@@ -107,6 +114,7 @@ function save_audio_file(array $user): void
         && $paperClassificationCode !== (($row['paper_classification_code'] ?? null) !== null ? (string)$row['paper_classification_code'] : null);
     $sharedAssignedNumber = trim((string)($row['exhibit_phone_number'] ?? ''));
     $ttyTranscriptWasChanged = $ttyTranscriptionText !== ($row['tty_transcription_text'] ?? null);
+    $ttyTranscriptChangedFlag = $ttyTranscriptWasChanged ? 1 : 0;
 
     $stmt = db()->prepare(
         "UPDATE audio_files
@@ -134,10 +142,10 @@ function save_audio_file(array $user): void
         $rolodexTitle,
         $rolodexDetails,
         $ttyTranscriptionText,
-        $ttyTranscriptWasChanged,
-        $ttyTranscriptWasChanged,
-        $ttyTranscriptWasChanged,
-        $ttyTranscriptWasChanged,
+        $ttyTranscriptChangedFlag,
+        $ttyTranscriptChangedFlag,
+        $ttyTranscriptChangedFlag,
+        $ttyTranscriptChangedFlag,
         $aiTranscriptionOptIn,
         $id,
     ]);
