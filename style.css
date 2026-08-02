@@ -1487,6 +1487,102 @@ body.login-modal-open {
     text-align: right;
 }
 
+@page {
+    size: letter portrait;
+    margin: 0.3in;
+}
+
+@media print {
+    html,
+    body {
+        font-size: 12px;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        background: none;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .masthead,
+    .topnav,
+    .footer {
+        display: none;
+    }
+
+    .page {
+        min-height: 0;
+        padding: 12px 18px;
+        box-shadow: none;
+    }
+
+    .page-content {
+        font-size: 1rem;
+        line-height: 1.25;
+    }
+
+    .phone-directory-page {
+        margin: 0;
+        padding: 0.55rem 0.75rem;
+    }
+
+    .phone-directory-page h1 {
+        margin: 0;
+        font-size: 1.35rem;
+    }
+
+    .phone-directory-page hr {
+        margin: 0.3rem 0;
+    }
+
+    .phone-directory-results {
+        margin-top: 0.4rem;
+    }
+
+    .phone-directory-group + .phone-directory-group {
+        margin-top: 0.7rem;
+    }
+
+    .phone-directory-group-title {
+        font-size: 1rem;
+    }
+
+    .phone-directory-group-description {
+        margin: 0.05rem 0 0.3rem 1.2rem;
+        font-size: 0.78rem;
+        line-height: 1.15;
+    }
+
+    .phone-directory-table {
+        font-size: 0.82rem;
+        line-height: 1.15;
+    }
+
+    .phone-directory-table th,
+    .phone-directory-table td {
+        padding: 0.2rem 0.35rem;
+    }
+
+    .phone-directory-table th:nth-child(2),
+    .phone-directory-table th:nth-child(3),
+    .phone-directory-table td:nth-child(2),
+    .phone-directory-table td:nth-child(3) {
+        width: 14%;
+        white-space: nowrap;
+    }
+
+    .phone-directory-table thead {
+        display: table-header-group;
+    }
+
+    .phone-directory-table tr {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+}
+
 .audio-file-date {
     white-space: nowrap;
 }

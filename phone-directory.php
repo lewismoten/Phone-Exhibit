@@ -6,7 +6,7 @@ require_once __DIR__ . '/functions.php';
 html_header('Phone Directory');
 ?>
 
-<div class="card secondary">
+<div class="card secondary phone-directory-page">
     <?php html_border_pieces(); ?>
     <h1 class="center">
         <?php html_span('icon book'); ?>
