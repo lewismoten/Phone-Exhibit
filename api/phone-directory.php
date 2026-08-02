@@ -24,8 +24,19 @@ try {
          LEFT JOIN directory_paper_classifications dpc
            ON dpc.code = af.paper_classification_code
          WHERE af.is_deleted = 0
-           AND af.exhibit_phone_number IS NOT NULL
-           AND af.exhibit_phone_number <> ''
+           AND (
+               (
+                   af.exhibit_phone_number IS NOT NULL
+                   AND af.exhibit_phone_number <> ''
+                   AND TRIM(af.exhibit_phone_number) <> '00'
+               )
+               OR
+               (
+                   af.tty_phone_number IS NOT NULL
+                   AND af.tty_phone_number <> ''
+                   AND TRIM(af.tty_phone_number) <> '00'
+               )
+           )
          ORDER BY
             coalesce(dpc.sort_order, 9999) ASC,
             dpc.code ASC,
@@ -41,16 +52,28 @@ try {
 
     foreach ($statement->fetchAll() as $row) {
         $phoneNumber = trim((string)($row['exhibit_phone_number'] ?? ''));
-        if ($phoneNumber === '') {
+        $ttyPhoneNumber = trim((string)($row['tty_phone_number'] ?? ''));
+
+        if ($phoneNumber === '00') {
+            $phoneNumber = '';
+        }
+        if ($ttyPhoneNumber === '00') {
+            $ttyPhoneNumber = '';
+        }
+        if ($phoneNumber === '' && $ttyPhoneNumber === '') {
             continue;
         }
 
-        if (!isset($entriesByPhone[$phoneNumber])) {
-            $entriesByPhone[$phoneNumber] = [
+        $entryKey = $phoneNumber !== ''
+            ? 'phone:' . $phoneNumber
+            : 'tty:' . $ttyPhoneNumber;
+
+        if (!isset($entriesByPhone[$entryKey])) {
+            $entriesByPhone[$entryKey] = [
                 'id' => (int)$row['id'],
                 'title' => directory_entry_title($row),
                 'phone_number' => $phoneNumber,
-                'tty_phone_number' => trim((string)($row['tty_phone_number'] ?? '')),
+                'tty_phone_number' => $ttyPhoneNumber,
                 'audio_count' => 1,
                 'paper_classification_code' => (string)($row['paper_classification_code'] ?? ''),
                 'paper_classification_label' => (string)($row['paper_classification_label'] ?? ''),
@@ -61,11 +84,11 @@ try {
             continue;
         }
 
-        if ($entriesByPhone[$phoneNumber]['tty_phone_number'] === '') {
-            $entriesByPhone[$phoneNumber]['tty_phone_number'] = trim((string)($row['tty_phone_number'] ?? ''));
+        if ($entriesByPhone[$entryKey]['tty_phone_number'] === '') {
+            $entriesByPhone[$entryKey]['tty_phone_number'] = $ttyPhoneNumber;
         }
 
-        $entriesByPhone[$phoneNumber]['audio_count']++;
+        $entriesByPhone[$entryKey]['audio_count']++;
     }
 
     $entries = array_values($entriesByPhone);
