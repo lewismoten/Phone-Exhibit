@@ -1179,7 +1179,7 @@ body.login-modal-open {
     cursor: pointer;
     appearance: none;
     line-height: 1;
-    vertical-align: middle;
+    /* vertical-align: middle; */
     color: currentColor;
     z-index: 1;
 }
