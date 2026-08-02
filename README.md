@@ -74,9 +74,27 @@ If the tracker table does not exist yet, the script posts only `011-schema-scrip
 
 ## Cron Jobs
 
-Master worker, calls all other cron jobs to process audio files.
+Master worker, calls all other cron jobs to process audio files. Use a PHP binary
+whose SAPI is `cli`; some hosting providers map `/usr/bin/php` to CGI/FastCGI,
+which cannot run this worker.
+
+Find and verify the CLI binary before adding the cron entry:
+
+```bash
+command -v php
+php -r 'echo PHP_SAPI, PHP_EOL;'
 ```
-* * * * * /usr/bin/php /home/USER/public_html/phone/cron/cron.php >> /home/USER/logs/cron-$(date +\%Y-\%m-\%d).log 2>&1
+
+The second command must print `cli`. If it does not, try the provider's CLI PHP
+path and verify it the same way. For example, this server uses:
+
+```bash
+/usr/local/bin/php -r 'echo PHP_SAPI, PHP_EOL;'
+```
+
+Master worker cron entry (replace the PHP and project paths for your server):
+```
+* * * * * /usr/local/bin/php /home/USER/public_html/phone/cron/cron.php >> /home/USER/logs/cron-$(date +\%Y-\%m-\%d).log 2>&1
 ```
 
 Delete old logs
