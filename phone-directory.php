@@ -12,7 +12,6 @@ html_header('Phone Directory');
         <?php html_span('icon book'); ?>
         Phone Directory
     </h1>
-    <hr>
     <div id="phone-directory-results" class="phone-directory-results">Loading directory…</div>
 </div>
 
