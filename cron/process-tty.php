@@ -36,7 +36,10 @@ function claim_pending_audio_tty_batch(int $limit): array
         FROM audio_files
         WHERE is_deleted = 0
           AND tty_status = 'pending'
-          AND transcription_status = 'complete'
+          AND (
+              NULLIF(TRIM(tty_transcription_text), '') IS NOT NULL
+              OR transcription_status = 'complete'
+          )
         ORDER BY created_at ASC, id ASC
         LIMIT ?
         FOR UPDATE
@@ -181,7 +184,10 @@ function run_tty_worker(): void
 
     foreach ($rows as $row) {
         $id = (int)$row['id'];
-        $text = (string)$row['transcription_text'];
+        $customText = trim((string)($row['tty_transcription_text'] ?? ''));
+        $text = $customText !== ''
+            ? $customText
+            : (string)($row['transcription_text'] ?? '');
         log_line("TTY ID {$id}: Processing");
 
         try {

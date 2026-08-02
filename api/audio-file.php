@@ -106,6 +106,7 @@ function save_audio_file(array $user): void
     $paperClassificationWasChanged = is_admin()
         && $paperClassificationCode !== (($row['paper_classification_code'] ?? null) !== null ? (string)$row['paper_classification_code'] : null);
     $sharedAssignedNumber = trim((string)($row['exhibit_phone_number'] ?? ''));
+    $ttyTranscriptWasChanged = $ttyTranscriptionText !== ($row['tty_transcription_text'] ?? null);
 
     $stmt = db()->prepare(
         "UPDATE audio_files
@@ -116,6 +117,10 @@ function save_audio_file(array $user): void
             rolodex_title = ?,
             rolodex_details = ?,
             tty_transcription_text = ?,
+            tty_status = CASE WHEN ? THEN 'pending' ELSE tty_status END,
+            tty_error = CASE WHEN ? THEN NULL ELSE tty_error END,
+            tty_started_at = CASE WHEN ? THEN NULL ELSE tty_started_at END,
+            tty_completed_at = CASE WHEN ? THEN NULL ELSE tty_completed_at END,
             ai_transcription_opt_in = ?,
             updated_at = CURRENT_TIMESTAMP
          WHERE id = ?
@@ -129,6 +134,10 @@ function save_audio_file(array $user): void
         $rolodexTitle,
         $rolodexDetails,
         $ttyTranscriptionText,
+        $ttyTranscriptWasChanged,
+        $ttyTranscriptWasChanged,
+        $ttyTranscriptWasChanged,
+        $ttyTranscriptWasChanged,
         $aiTranscriptionOptIn,
         $id,
     ]);
