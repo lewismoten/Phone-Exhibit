@@ -1,5 +1,7 @@
 # Phone Exhibit
 
+![Restoring the Signal](./images/social-preview.jpg)
+
 Converts audio files with a high pass filter 300-3000 Hz into 8kHz 16bit PCM mono WAV files to simulate telephone quality audio, and a format that can be used with an Asterisk PBX server.
 
 * Copy config.sample.php to config.php and modify settings
@@ -8,6 +10,10 @@ Converts audio files with a high pass filter 300-3000 Hz into 8kHz 16bit PCM mon
 * Install minimodem and use which miinimodem to determine where it is installed
 
 AI transcriptions and Minimodem is used for TTY Teletype machines.
+
+| Website | Exhibit |
+| --- | --- |
+| ![Screenshot](./images/screenshot.jpg) | ![Exhibit](./images/exhibit.jpg) |
 
 ## FTP Publishing
 
@@ -141,3 +147,5 @@ read access rather than assuming an `asterisk:asterisk` owner.
 Only add that include once. The extraction overwrites WAVs included in the new
 archive; WAVs for removed assignments are left in place but are not reachable
 unless a dialplan entry still references them.
+
+![Logo](./images/logo.png)
